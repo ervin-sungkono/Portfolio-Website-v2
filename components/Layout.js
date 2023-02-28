@@ -19,6 +19,7 @@ export default function Layout({title, children}){
                 <meta name="title" content={profile.title}/>
                 <meta name="description" content={profile.description}/>
                 <meta name="image" content={profile.imagePath}/>
+                <meta name="google-site-verification" content="jLLM3Ixp912VQKjForDH4RgiloICf3pWTgnbLen3ilY" />
 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website"/>
