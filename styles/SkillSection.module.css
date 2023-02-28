@@ -1,0 +1,19 @@
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.skill-content{
+    max-width: 960px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.skill-content > h2{
+    text-align: center;
+    font-size: var(--heading-secondary);
+    color: var(--black);
+}

@@ -1,0 +1,56 @@
+.container{
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+
+.container > h2{
+    text-align: center;
+    font-size: var(--heading-secondary);
+    color: var(--black);
+}
+
+.dribbble-shots{
+    max-width: 960px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.shot{
+    width: 298px;
+    height: 224px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--light-shadow);
+    text-align: center;
+}
+
+.shot > a{
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+@keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+.shot > a > img{
+    width: 100%;
+    height: 100%;
+}
+
+.more-btn{
+    cursor: pointer;
+    display: none;
+    margin-top: 1rem;
+}
