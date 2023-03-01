@@ -54,7 +54,7 @@ export default function Navbar(){
             <div className="container mx-auto flex justify-between items-center py-4">
                 <div className={styles["nav-left"]}>
                     <Link href="/" className={styles["nav-logo"]}>
-                        <Image src={theme === 'light' ? NavbarLogo : NavbarLogoWhite} alt="Navbar Logo" height={48}/>
+                        <Image src={theme === 'light' ? NavbarLogo : NavbarLogoWhite} priority={true} alt="Navbar Logo" width={120} height={48} style={{objectFit:'contain'}}/>
                     </Link>
                     <div className="toggle-btn w-16 h-8 py-1 px-2 bg-blue-50 dark:bg-gray-700 rounded-full cursor-pointer hidden lg:block" onClick={() => toggleTheme()}>
                         <div className="toggle-btn-circle w-6 h-6 flex justify-center items-center bg-blue-500 dark:bg-blue-200 rounded-full transition-transform ease-in-out duration-500 dark:translate-x-full">

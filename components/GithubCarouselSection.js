@@ -45,9 +45,8 @@ export default function GithubCarouselSection({githubProjects}){
                                     <ImageWithFallback
                                         src={project.image}
                                         fallbackSrc={`https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/no-image.png`}
-                                        width={400}
-                                        height={400}
-                                        style={{aspectRatio: '16 / 10', objectFit: 'cover'}}
+                                        fill
+                                        style={{objectFit: 'cover'}}
                                         alt={project.name}
                                     />
                                     <div className="overlay p-3 absolute left-0 w-full bg-black/50 backdrop-blur">
@@ -91,7 +90,9 @@ export default function GithubCarouselSection({githubProjects}){
                     </div> 
                 </div> 
             </div>
-            <Link href={"/github"} className="btn btn-primary mt-4" data-aos="fade-up">More Projects</Link>
+            <div className="mt-4" data-aos="fade-up">
+                <Link href={"/github"} className="btn btn-primary">More Projects</Link>
+            </div>
         </section>
     )
 }

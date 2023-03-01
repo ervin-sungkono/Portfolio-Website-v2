@@ -1,18 +1,19 @@
 .project{
-    width: min(298px, 100%);
+    width: min(298px, 100vw);
     display: flex;
     flex-direction: column;
     gap: 1rem;
     text-align: justify;
 }
 
-.project > img{
+.project-img{
+    height: calc(min(298px, 100vw)*0.625);
     border-radius: 8px;
     box-shadow: var(--light-shadow);
 }
 
 .project-content{
-    height: 100%;
+    flex-grow: 1;
 }
 
 .project-content > h3{

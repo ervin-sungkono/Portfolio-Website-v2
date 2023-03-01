@@ -53,8 +53,8 @@ export default function HeroSection(){
                 ))}
             </div>
             <div className="relative">
-                <Image src={HeroImage} width={400} height={400} unoptimized alt="Gambar Ervin" className="relative animate-float"/>
-                <Image src={Square} width={360} height={360} className="-z-10 absolute rotate-12 top-0 right-2 animate-rotate scale-75" alt="-"/>
+                <Image src={HeroImage} width={400} height={400} quality={100} priority={true} alt="Gambar Ervin" className="relative animate-float"/>
+                <Image src={Square} width={360} height={360} priority={true} className="-z-10 absolute rotate-12 top-0 right-2 animate-rotate scale-75" alt="-"/>
             </div>
             <div className={styles["arrow-btn"]} onClick={() => ScrollIntoView({id: 'about-section', block: 'center'})}>
                 <div className='cursor-pointer hover:text-white transition-colors duration-300'>

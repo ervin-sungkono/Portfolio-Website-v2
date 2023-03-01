@@ -8,15 +8,15 @@ import Link from "next/link"
 export default function GithubCard({project}){
     return(
         <div className={`${styles["project"]} mb-4`} data-aos="fade-up">
-            <ImageWithFallback
-                src={project.image}
-                fallbackSrc={`https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/no-image.png`}
-                className="border border-black/25 dark:border-white/25"
-                width={300}
-                height={300}
-                style={{aspectRatio: '16 / 10', objectFit: 'cover'}}
-                alt={project.name}
-            />
+            <div className={`${styles["project-img"]} relative border border-black/25 dark:border-white/25`}>
+                <ImageWithFallback
+                    src={project.image}
+                    fallbackSrc={`https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/no-image.png`}
+                    fill
+                    style={{aspectRatio: '16 / 10', objectFit: 'cover'}}
+                    alt={project.name}
+                />
+            </div>
             <div className={styles["project-content"]}>
                 <h3>{project.name}</h3>
                 <div className="mb-2 text-xs md:text-sm">{formatDate(new Date(project.created_at))}</div>
