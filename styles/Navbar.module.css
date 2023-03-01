@@ -131,6 +131,12 @@
         box-shadow: var(--light-shadow);
     }
 
+    @supports (height: 100svh) {
+        .nav-list{
+            height: 100svh;
+        }
+    }
+
     .nav-list.active{
         right: 0;
     }

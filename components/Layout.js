@@ -10,7 +10,7 @@ export default function Layout({title, children}){
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
             </Head>
             <Navbar/>
-            <main className="container mx-auto pt-20">
+            <main className="container mx-auto pt-20 lg:pt-18">
                 {children}
             </main>
             <Footer/>

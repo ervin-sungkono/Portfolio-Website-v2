@@ -29,7 +29,7 @@ export default function HeroSection(){
             .start()
     })
     return (
-        <section className={`${styles.container} py-8 md:py-16`}>
+        <section className={`${styles.container} py-6 md:py-16`}>
             <div className={styles["hero-content"]}>
                 <div className={styles["heading-text"]}>
                     <p>Hello, my name is</p>
@@ -52,7 +52,7 @@ export default function HeroSection(){
                     </div>
                 ))}
             </div>
-            <div className="relative">
+            <div className="relative px-4 sm:px-0">
                 <Image src={HeroImage} width={400} height={400} quality={100} alt="Gambar Ervin" className="relative animate-float"/>
                 <Image src={Square} width={360} height={360} priority={true} className="-z-10 absolute rotate-12 top-0 right-2 animate-rotate scale-75" alt="-"/>
             </div>

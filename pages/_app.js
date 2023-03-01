@@ -17,9 +17,9 @@ export default function App({ Component, pageProps }) {
     })
     Aos.refresh();
     let timeout;
-    window.addEventListener('resize',()=>{
-      clearTimeout(timeout);
-      timeout = setTimeout(() => Aos.refresh(), 100);
+    window.addEventListener('resize', () => {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => Aos.refresh(), 100)
     })
   })
   return (
@@ -27,5 +27,4 @@ export default function App({ Component, pageProps }) {
       {isMounted && <Component {...pageProps} />}
     </ThemeProvider>
   )
-  
 }

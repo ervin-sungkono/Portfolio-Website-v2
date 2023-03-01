@@ -16,7 +16,6 @@ export async function getStaticProps(){
     return{
       props:{
         githubProjects: githubData
-      },
-      revalidate: 60
+      }
     }
   }

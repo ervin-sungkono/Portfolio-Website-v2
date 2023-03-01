@@ -31,7 +31,7 @@ export default function GithubCarouselSection({githubProjects}){
         <section className={`${styles["container"]} pb-8 md:pb-12`}>
             <h2>Github Projects</h2>
             <div className="hr"></div>
-            <div className="glide-wrapper pb-8 md:pb-12">
+            <div className="glide-wrapper pb-12">
                 <div className="glide" ref={ref}>
                     <div className="glide__arrows hidden md:block" data-glide-el="controls">
                         <button className="glide__arrow glide__arrow--left" data-glide-dir="<">
@@ -90,7 +90,7 @@ export default function GithubCarouselSection({githubProjects}){
                     </div> 
                 </div> 
             </div>
-            <div className="mt-4" data-aos="fade-up">
+            <div className="mt-6" data-aos="fade-up">
                 <Link href={"/github"} className="btn btn-primary">More Projects</Link>
             </div>
         </section>

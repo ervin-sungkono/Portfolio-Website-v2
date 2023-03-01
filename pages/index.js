@@ -24,7 +24,6 @@ export async function getStaticProps(){
     props:{
       dribbbleShots: dribbbleData,
       githubProjects: githubData
-    },
-    revalidate: 60
+    }
   }
 }
