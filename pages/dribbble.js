@@ -1,6 +1,7 @@
-import Layout from "../components/Layout"
-import DribbbleSection from "../components/DribbbleSection"
+import dynamic from "next/dynamic"
 
+const Layout = dynamic(() => import("../components/Layout"))
+const DribbbleSection = dynamic(() => import("../components/DribbbleSection"))
 import { getDribbbleUserData } from "../lib/fetch"
 
 export default function Dribbble({dribbbleShots}) {

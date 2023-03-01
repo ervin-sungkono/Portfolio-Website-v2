@@ -34,7 +34,7 @@ export default function GithubCarouselSection({githubProjects}){
             <div className="glide-wrapper pb-12">
                 <div className="glide" ref={ref}>
                     <div className="glide__arrows hidden md:block" data-glide-el="controls">
-                        <button className="glide__arrow glide__arrow--left" data-glide-dir="<">
+                        <button className="glide__arrow glide__arrow--left" data-glide-dir="<" aria-label="Left Arrow">
                             <AiOutlineArrowLeft className="text-black dark:text-white"/>
                         </button>
                     </div>
@@ -57,13 +57,13 @@ export default function GithubCarouselSection({githubProjects}){
                                             </div>
                                             <div className="flex items-start gap-2">
                                                 {project.homepage ? 
-                                                    <Link href={project.homepage} className="text-white" target={"_blank"}>
+                                                    <Link href={project.homepage} className="text-white" target={"_blank"} aria-label={`${project.name} Website Link`}>
                                                         <IoBrowsersOutline size={20}/>
                                                     </Link> 
                                                     : 
                                                     ""
                                                 }
-                                                <Link href={project.html_url} className="text-white" target={"_blank"}>
+                                                <Link href={project.html_url} className="text-white" target={"_blank"} aria-label={`${project.name} Github Link`}>
                                                     <AiFillGithub size={20}/>
                                                 </Link>
                                             </div>
@@ -79,13 +79,13 @@ export default function GithubCarouselSection({githubProjects}){
                         </ul>
                     </div>
                     <div className="glide__arrows hidden md:block" data-glide-el="controls">
-                        <button className="glide__arrow glide__arrow--right" data-glide-dir=">">
+                        <button className="glide__arrow glide__arrow--right" data-glide-dir=">" aria-label="Right Arrow">
                             <AiOutlineArrowRight className="text-black dark:text-white"/>
                         </button>
                     </div>
                     <div className="glide__bullets bottom-0" data-glide-el="controls[nav]">
-                        {githubProjects.map((project, index) => (
-                            <button className="glide__bullet" data-glide-dir={`=${index}`} key={index}></button>
+                        {githubProjects.map((_, index) => (
+                            <button className="glide__bullet" data-glide-dir={`=${index}`} key={index} aria-label={`Slide ${index}`}></button>
                         ))}
                     </div> 
                 </div> 

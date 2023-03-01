@@ -22,7 +22,7 @@
     text-align: justify;
     font-size: var(--body-text-default);
     color: var(--black);
-    opacity: 0.7;
+    opacity: 0.8;
 }
 
 .about-description{
@@ -39,7 +39,7 @@
 
 .section-wrapper > p {
     color: var(--black);
-    opacity: 0.7;
+    opacity: 0.8;
 }
 
 @media only screen and (max-width: 768px) {

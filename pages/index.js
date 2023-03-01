@@ -1,9 +1,11 @@
-import Layout from "../components/Layout"
+import dynamic from "next/dynamic"
 import { getDribbbleUserData, getGithubUserData } from "../lib/fetch"
-import HeroSection from "../components/HeroSection"
-import AboutSection from "../components/AboutSection"
-import DribbbleSection from "../components/DribbbleSection"
-import GithubCarouselSection from "../components/GithubCarouselSection"
+
+const Layout = dynamic(() => import("../components/Layout"))
+const HeroSection = dynamic(() => import("../components/HeroSection"))
+const AboutSection = dynamic(() => import("../components/AboutSection"))
+const DribbbleSection = dynamic(() => import("../components/DribbbleSection"))
+const GithubCarouselSection = dynamic(() => import("../components/GithubCarouselSection"))
 
 export default function Home({dribbbleShots, githubProjects}) {
   return(
