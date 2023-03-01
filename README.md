@@ -1,5 +1,5 @@
-# Portofolio-Website-v2
-An improvement of my old portofolio website, built using NextJS and Tailwind to showcase my projects and designs, this project uses ISR(Incremental Static Regeneration) to increase website performance while reducing server load. 
+# Portfolio-Website-v2
+An improvement of my old portfolio website, built using NextJS and Tailwind to showcase my projects and designs, this project uses ISR(Incremental Static Regeneration) to increase website performance while reducing server load. 
 
 ## Resources
 - [Github API](https://api.github.com)
