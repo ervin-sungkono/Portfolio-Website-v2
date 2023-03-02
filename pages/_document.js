@@ -10,7 +10,8 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+        <link rel="icon" href="/images/favicon-light.png" media="(prefers-color-scheme: light)"/>
+        <link rel="icon" href="/images/favicon-dark.png" media="(prefers-color-scheme: dark)"/>
 
         <meta name="title" content={profile.title}/>
         <meta name="description" content={profile.description}/>
