@@ -8,7 +8,7 @@ import Link from "next/link"
 export default function GithubCard({project}){
     return(
         <div className={`${styles["project"]} mb-4`} data-aos="fade-up">
-            <div className={`${styles["project-img"]} relative border border-black/25 dark:border-white/25`}>
+            <div className={`${styles["project-img"]} relative border border-black/25 dark:border-white/25 overflow-hidden`}>
                 <ImageWithFallback
                     src={project.image}
                     fallbackSrc={`https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/no-image.png`}
