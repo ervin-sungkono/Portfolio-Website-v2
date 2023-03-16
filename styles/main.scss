@@ -86,3 +86,83 @@
         }
     }
 }
+
+.react-tabs {
+    -webkit-tap-highlight-color: transparent;
+  
+    &__tab-list { 
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        padding: 0;
+    }
+  
+    &__tab {
+        border: 1px solid transparent;
+        list-style: none;
+        padding: 8px 20px;
+        border-radius: 99px;
+        font-weight: 600;
+        color: var(--blue);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: 0.4s color ease-in-out;
+        
+        &--selected {
+            color: white;
+            background: var(--main-gradient);
+            box-shadow: var(--light-shadow);
+        }
+
+        &::after{
+            content: "";
+            width: 0%;
+            height: 100%;
+            background: var(--main-gradient);
+            position: absolute;
+            top: 0;
+            left: -20px;
+            transform: skewX(30deg);
+            transition: 0.4s width ease-in-out;
+            z-index: -1;
+        }
+        
+        &:hover{
+            color: white;
+            &::after{
+                width: 150%;
+            }
+        }
+
+        &::before{
+            content: "";
+            inset: 0;
+            position: absolute;
+            border: 2px solid transparent;
+            border-radius: 99px;
+            background: var(--main-gradient) border-box;
+            mask:
+                linear-gradient(#fff 0 0) padding-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask:
+                linear-gradient(#fff 0 0) padding-box, 
+                linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask-composite: xor;
+        }
+    
+        &:focus {
+            outline: none;
+        }
+    }
+  
+    &__tab-panel {
+      display: none;
+  
+      &--selected {
+        display: flex;
+      }
+    }
+  }

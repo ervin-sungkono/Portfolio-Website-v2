@@ -49,7 +49,7 @@ export default function GithubCarouselSection({githubProjects}){
                                         style={{objectFit: 'cover'}}
                                         alt={project.name}
                                     />
-                                    <div className="overlay p-3 absolute left-0 w-full bg-black/50 backdrop-blur">
+                                    <div className="overlay p-3 absolute left-0 w-full bg-black/50 backdrop-blur-md">
                                         <div className="flex justify-between mb-2">
                                             <div className="flex flex-col">
                                                 <h2 className="text-white text-base md:text-lg mb-1">{project.name}</h2>

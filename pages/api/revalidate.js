@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     }
   
     try {
-      pages.forEach(async(page) => await res.revalidate(page))
+      await Promise.all(pages.map(page => res.revalidate(page)))
       return res.json({ revalidated: true })
     } catch (err) {
       return res.status(500).send('Error revalidating')
