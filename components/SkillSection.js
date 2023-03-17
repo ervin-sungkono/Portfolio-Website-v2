@@ -17,7 +17,7 @@ export default function SkillSection({skills}){
                                 height={32}
                                 className={`${skill === 'nextjs' ? "invert" : ""}`}
                                 style={{aspectRatio: '1 / 1', objectFit: 'contain'}}
-                                alt={"Skills Icon"}
+                                alt=""
                                 key={skill}
                             />
                         </div>

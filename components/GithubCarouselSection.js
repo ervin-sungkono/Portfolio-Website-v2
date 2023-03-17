@@ -47,7 +47,7 @@ export default function GithubCarouselSection({githubProjects}){
                                         fallbackSrc={`https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/no-image.png`}
                                         fill
                                         style={{objectFit: 'cover'}}
-                                        alt={project.name}
+                                        alt=""
                                     />
                                     <div className="overlay p-3 absolute left-0 w-full bg-black/50 backdrop-blur-md">
                                         <div className="flex justify-between mb-2">
