@@ -13,7 +13,7 @@ export default function GithubSection({githubProjects, categories}){
             <Tabs className="w-full">
                 <TabList>
                     {categories.map(category => (
-                        <Tab>{category}</Tab>
+                        <Tab className="react-tabs__tab text-sm md:text-base">{category}</Tab>
                     ))}
                 </TabList>
                 {categories.map(category => (
