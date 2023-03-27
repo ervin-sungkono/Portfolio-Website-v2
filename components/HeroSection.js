@@ -11,8 +11,8 @@ import Square from '../public/images/rectangle.png'
 
 export default function HeroSection(){
     const socials = [
-        {url: "https://www.instagram.com/ervin.cs_09/", label: <AiFillInstagram size={24}/>},
-        {url: "https://www.linkedin.com/in/ervin-cahyadinata-sungkono-970a691b6/", label: <AiFillLinkedin size={24}/>},
+        {url: "https://www.instagram.com/ervin.cs_09", label: <AiFillInstagram size={24}/>},
+        {url: "https://www.linkedin.com/in/ervin-cahyadinata-sungkono", label: <AiFillLinkedin size={24}/>},
         {url: "https://dribbble.com/ErvinCS", label: <AiFillDribbbleCircle size={24}/>}
     ]
     const typewriterConfig = {
