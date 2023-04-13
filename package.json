@@ -12,6 +12,8 @@
     "@glidejs/glide": "^3.5.2",
     "@next/font": "13.1.6",
     "aos": "^2.3.4",
+    "flowbite": "^1.6.5",
+    "flowbite-react": "^0.4.3",
     "next": "13.1.6",
     "next-themes": "^0.2.1",
     "react": "18.2.0",
