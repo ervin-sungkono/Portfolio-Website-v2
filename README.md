@@ -20,6 +20,6 @@ An improvement of my old portfolio website, built using NextJS and Tailwind to s
 7. Dynamic Web using API
 
 ## Preview Image
-<img src="https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Javascript-2D-Chess-Game.png" width=480/>
+<img src="https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Portfolio-Website-v2.png" width=480/>
 
 This project is deployed using Vercel, [click here](https://ervin-sungkono.vercel.app) to see the result.
