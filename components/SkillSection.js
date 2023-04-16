@@ -10,7 +10,7 @@ export default function SkillSection({skills}){
                 <div className="hr"></div>
                 <div className="skills grid grid-cols-5 gap-3">
                     {skills.map(skill => (
-                        <Tooltip placement="bottom" content={skill.label}>
+                        <Tooltip placement="bottom" content={skill.label} key={skill.label}>
                             <div className="bg-neutral-700 p-2 md:p-3 rounded hover:bg-blue-500 hover:-translate-y-2 cursor-pointer transition duration-300">
                                 <Image 
                                     src={skill.src}

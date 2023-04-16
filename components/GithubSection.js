@@ -6,7 +6,6 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 const GithubCard = dynamic(() => import("./GithubCard"))
 
 export default function GithubSection({githubProjects, categories}){
-    console.log(githubProjects)
     return(
         <div className={`${styles["container"]} py-8 md:py-12`}>
             <h2>My Github Projects</h2>
