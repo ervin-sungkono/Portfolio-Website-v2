@@ -43,8 +43,8 @@ export default function Navbar(){
     const navigations = [
         {label: "Home", url: "/"},
         {label: "About", url: "/about"},
-        {label: "Dribbble", url: "/dribbble"},
-        {label: "Github", url: "/github"},
+        {label: "Design", url: "/design"},
+        {label: "Project", url: "/project"},
     ]
     const router = useRouter()
     const isActive = (url, pathname) => pathname === url ? `${styles["nav-link"]} ${styles["active"]}` : styles["nav-link"]

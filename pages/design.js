@@ -6,7 +6,7 @@ import { getDribbbleUserData } from "../lib/fetch"
 
 export default function Dribbble({dribbbleShots}) {
     return(
-        <Layout title={"Ervin | Dribbble"}>
+        <Layout title={"Ervin | Design"}>
             <DribbbleSection title={"My Dribbble shots!"} dribbbleShots={dribbbleShots}/>
         </Layout>
     )

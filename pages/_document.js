@@ -13,8 +13,6 @@ export default function Document() {
         <link rel="icon" href="/images/favicon-light.png" media="(prefers-color-scheme: light)"/>
         <link rel="icon" href="/images/favicon-dark.png" media="(prefers-color-scheme: dark)"/>
 
-        <meta name="title" content={profile.title}/>
-        <meta name="description" content={profile.description}/>
         <meta name="image" content={profile.imagePath}/>
 
         {/* Open Graph / Facebook */}

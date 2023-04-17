@@ -9,7 +9,10 @@ const GithubCarouselSection = dynamic(() => import("../components/GithubCarousel
 
 export default function Home({dribbbleShots, githubProjects}) {
   return(
-    <Layout title="Ervin Cahyadinata Sungkono">
+    <Layout 
+      title="Ervin Cahyadinata Sungkono"
+      description="Hello! im known as Ervin Cahyadinata Sungkono, a student at Binus University who has a passion for Web Development and Web Design. This is my personal website where i put my past projects and designs."
+    >
       <HeroSection/>
       <AboutSection/>
       <DribbbleSection title={"Latest Dribbble shots!"} dribbbleShots={dribbbleShots}/>

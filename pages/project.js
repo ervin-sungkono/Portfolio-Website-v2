@@ -6,7 +6,7 @@ import { getGithubUserData, getProjectCategories } from "../lib/fetch"
 
 export default function Github({githubProjects, categories}) {
     return(
-        <Layout title={"Ervin | Github"}>
+        <Layout title={"Ervin | Projects"}>
             <GithubSection githubProjects={githubProjects} categories={categories}/>
         </Layout>
     )
