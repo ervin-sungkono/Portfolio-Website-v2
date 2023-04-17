@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "next lint"
   },
@@ -15,6 +16,7 @@
     "flowbite": "^1.6.5",
     "flowbite-react": "^0.4.3",
     "next": "13.1.6",
+    "next-sitemap": "^4.0.7",
     "next-themes": "^0.2.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
