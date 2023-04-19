@@ -1,8 +1,10 @@
 import Head from "next/head";
-import Navbar from "./Navbar";
-import Footer from "./Footer";
+import dynamic from "next/dynamic";
 
-export default function Layout({title, description = "", children}){
+const Navbar = dynamic(() => import("./Navbar"))
+const Footer = dynamic(() => import("./Footer"))
+
+export default function Layout({title, description = "", children, showNavbar = true, showFooter = true}){
     return(
         <>
             <Head>
@@ -10,11 +12,11 @@ export default function Layout({title, description = "", children}){
                 <meta name="description" content={description}></meta>
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
             </Head>
-            <Navbar/>
-            <main className="container mx-auto pt-20 lg:pt-18">
+            {showNavbar && <Navbar/>}
+            <main className={`container mx-auto ${showNavbar && "pt-20 lg:pt-18"}`}>
                 {children}
             </main>
-            <Footer/>
+            {showFooter && <Footer/>}
         </>
     )
 }

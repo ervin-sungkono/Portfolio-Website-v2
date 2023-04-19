@@ -1,5 +1,5 @@
 import styles from '../styles/HeroSection.module.css'
-import { AiFillDribbbleCircle, AiFillInstagram, AiFillLinkedin, AiOutlineArrowDown } from 'react-icons/ai'
+import { AiFillDribbbleCircle, AiFillInstagram, AiFillLinkedin, AiFillGithub, AiOutlineArrowDown } from 'react-icons/ai'
 import Typewriter from 'typewriter-effect/dist/core'
 import { useEffect } from 'react'
 import { ScrollIntoView } from '../lib/scroll'
@@ -13,7 +13,8 @@ export default function HeroSection(){
     const socials = [
         {url: "https://www.instagram.com/ervin.cs_09", label: <AiFillInstagram size={24}/>},
         {url: "https://www.linkedin.com/in/ervin-cahyadinata-sungkono", label: <AiFillLinkedin size={24}/>},
-        {url: "https://dribbble.com/ErvinCS", label: <AiFillDribbbleCircle size={24}/>}
+        {url: "https://dribbble.com/ErvinCS", label: <AiFillDribbbleCircle size={24}/>},
+        {url: "https://github.com/ervin-sungkono", label: <AiFillGithub size={24}/>}
     ]
     const typewriterConfig = {
         autoStart: true,
@@ -56,10 +57,10 @@ export default function HeroSection(){
                 <Image src={HeroImage} width={400} height={400} priority={true} alt="Main Image" className="relative animate-float"/>
                 <Image src={Square} width={360} height={360} priority={true} className="-z-10 absolute rotate-12 top-0 right-2 animate-rotate scale-75" alt=""/>
             </div>
-            <div className={styles["arrow-btn"]} onClick={() => ScrollIntoView({id: 'about-section', block: 'center'})}>
-                <div className='cursor-pointer hover:text-white transition-colors duration-300'>
+            <div className={styles["arrow-btn"]}>
+                <button className='cursor-pointer hover:text-white transition-colors duration-300' onClick={() => ScrollIntoView({id: 'about-section', block: 'center'})}>
                     <AiOutlineArrowDown size={24}/>
-                </div>
+                </button>
             </div>
         </section>
     )
