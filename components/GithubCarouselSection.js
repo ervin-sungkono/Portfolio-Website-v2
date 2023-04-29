@@ -3,8 +3,10 @@ import { useEffect, useRef } from "react";
 import Glide from "@glidejs/glide";
 import Link from "next/link";
 import ImageWithFallback from "./ImageWithFallback";
-import { AiOutlineArrowLeft, AiOutlineArrowRight, AiFillGithub } from "react-icons/ai"
-import { IoBrowsersOutline } from "react-icons/io5"
+import { AiOutlineArrowLeft } from "@react-icons/all-files/ai/AiOutlineArrowLeft"
+import { AiOutlineArrowRight } from "@react-icons/all-files/ai/AiOutlineArrowRight"
+import { AiFillGithub } from "@react-icons/all-files/ai/AiFillGithub";
+import { IoBrowsersOutline } from "@react-icons/all-files/io5/IoBrowsersOutline";
 import { formatDate } from "../lib/date";
 
 const glideConfig = {
@@ -91,7 +93,7 @@ export default function GithubCarouselSection({githubProjects}){
                 </div> 
             </div>
             <div className="mt-6" data-aos="fade-up">
-                <Link href={"/github"} className="btn btn-primary">More Projects</Link>
+                <Link href={"/project"} className="btn btn-primary">More Projects</Link>
             </div>
         </section>
     )

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import styles from "../styles/Footer.module.css"
-import { AiFillMail } from 'react-icons/ai'
+import { AiFillMail } from '@react-icons/all-files/ai/AiFillMail'
 
 export default function Footer(){
     return(

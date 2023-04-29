@@ -1,8 +1,8 @@
 import styles from "../styles/GithubCard.module.css"
 import ImageWithFallback from "./ImageWithFallback"
 import { formatDate } from "../lib/date"
-import { AiFillGithub } from "react-icons/ai"
-import { IoBrowsersOutline } from "react-icons/io5"
+import { AiFillGithub } from "@react-icons/all-files/ai/AiFillGithub"
+import { IoBrowsersOutline } from "@react-icons/all-files/io5/IoBrowsersOutline"
 import Link from "next/link"
 
 export default function GithubCard({project}){

@@ -1,6 +1,6 @@
 {
   "name": "portofolio-web-v2",
-  "version": "1.1",
+  "version": "1.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,33 +12,33 @@
   "dependencies": {
     "@glidejs/glide": "^3.5.2",
     "@next/font": "13.1.6",
+    "@react-icons/all-files": "^4.1.0",
     "aos": "^2.3.4",
     "flowbite": "^1.6.5",
     "flowbite-react": "^0.4.3",
-    "i": "^0.3.7",
     "next": "13.1.6",
     "next-sitemap": "^4.0.7",
     "next-themes": "^0.2.1",
-    "npm": "^9.6.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-icons": "^4.7.1",
     "react-snow-particle": "^1.0.6",
     "react-tabs": "^6.0.0",
     "react-tsparticles": "^2.9.3",
+    "sass": "^1.58.3",
+    "sharp": "^0.31.3",
     "tsparticles-move-base": "^2.0.5",
     "tsparticles-shape-circle": "^2.0.5",
     "tsparticles-updater-color": "^2.0.5",
     "tsparticles-updater-opacity": "^2.0.5",
     "tsparticles-updater-out-modes": "^2.0.5",
     "tsparticles-updater-size": "^2.0.5",
-    "sass": "^1.58.3",
-    "sharp": "^0.31.3",
     "typewriter-effect": "^2.19.0"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^13.3.1",
     "autoprefixer": "^10.4.13",
     "dotenv": "^16.0.3",
+    "next-compose-plugins": "^2.2.1",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7"
   }

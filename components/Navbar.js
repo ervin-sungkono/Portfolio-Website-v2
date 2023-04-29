@@ -5,7 +5,8 @@ import NavbarLogo from "../public/images/navbar-logo.png";
 import NavbarLogoWhite from "../public/images/navbar-logo-white.png"
 import styles from "../styles/Navbar.module.css"
 import { useRouter } from "next/router";
-import { BsBrightnessHigh, BsMoonStars } from 'react-icons/bs'
+import { BsBrightnessHigh } from "@react-icons/all-files/bs/BsBrightnessHigh"
+import { RiMoonClearLine } from "@react-icons/all-files/ri/RiMoonClearLine"
 import { useTheme } from "next-themes";
 
 export default function Navbar(){ 
@@ -62,7 +63,7 @@ export default function Navbar(){
                     </Link>
                     <div className="toggle-btn w-16 h-8 py-1 px-2 bg-blue-50 dark:bg-gray-700 rounded-full cursor-pointer hidden lg:block" onClick={() => toggleTheme()}>
                         <div className="toggle-btn-circle w-6 h-6 flex justify-center items-center bg-blue-500 dark:bg-blue-200 rounded-full transition-transform ease-in-out duration-500 dark:translate-x-full">
-                            {theme === 'light' ? <BsBrightnessHigh className="text-white"/> : <BsMoonStars className="text-black"/>}
+                            {theme === 'light' ? <BsBrightnessHigh className="text-white"/> : <RiMoonClearLine className="text-black"/>}
                         </div>
                     </div>
                 </div>
@@ -73,7 +74,7 @@ export default function Navbar(){
                         ))}
                         <div className="toggle-btn block mb-4 w-16 h-8 py-1 px-2 bg-blue-50 dark:bg-gray-700 rounded-full cursor-pointer lg:hidden" onClick={() => toggleTheme()}>
                             <div className="toggle-btn-circle w-6 h-6 flex justify-center items-center bg-blue-500 dark:bg-blue-200 rounded-full transition-transform ease-in-out duration-500 dark:translate-x-full">
-                                {theme === 'light' ? <BsBrightnessHigh className="text-white"/> : <BsMoonStars className="text-black"/>}
+                                {theme === 'light' ? <BsBrightnessHigh className="text-white"/> : <RiMoonClearLine className="text-black"/>}
                             </div>
                         </div>
                     </div>

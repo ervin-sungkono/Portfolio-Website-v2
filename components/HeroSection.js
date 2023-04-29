@@ -1,5 +1,9 @@
 import styles from '../styles/HeroSection.module.css'
-import { AiFillDribbbleCircle, AiFillInstagram, AiFillLinkedin, AiFillGithub, AiOutlineArrowDown } from 'react-icons/ai'
+import { AiFillDribbbleCircle } from "@react-icons/all-files/ai/AiFillDribbbleCircle"
+import { AiFillInstagram } from "@react-icons/all-files/ai/AiFillInstagram"
+import { AiFillLinkedin } from "@react-icons/all-files/ai/AiFillLinkedin"
+import { AiFillGithub } from "@react-icons/all-files/ai/AiFillGithub"
+import { AiOutlineArrowDown } from '@react-icons/all-files/ai/AiOutlineArrowDown'
 import Typewriter from 'typewriter-effect/dist/core'
 import { useEffect } from 'react'
 import { ScrollIntoView } from '../lib/scroll'
