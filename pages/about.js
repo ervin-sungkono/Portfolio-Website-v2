@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic"
 
-const Layout = dynamic(() => import("../components/Layout"))
-const AboutSection = dynamic(() => import("../components/AboutSection"))
-const SkillSection = dynamic(() => import("../components/SkillSection"))
+import Layout from "../components/layout/Layout"
+const AboutSection = dynamic(() => import("../components/about/AboutSection"))
+const SkillSection = dynamic(() => import("../components/about/SkillSection"))
 import { getSkillsData } from "../lib/fetch"
 
 export default function About({skills}) {

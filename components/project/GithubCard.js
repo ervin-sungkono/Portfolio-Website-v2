@@ -1,9 +1,11 @@
-import styles from "../styles/GithubCard.module.css"
-import ImageWithFallback from "./ImageWithFallback"
-import { formatDate } from "../lib/date"
+import styles from "../../styles/GithubCard.module.css"
+import Link from "next/link"
+import { formatDate } from "../../lib/date"
+
+import ImageWithFallback from "../common/ImageWithFallback"
 import { AiFillGithub } from "@react-icons/all-files/ai/AiFillGithub"
 import { IoBrowsersOutline } from "@react-icons/all-files/io5/IoBrowsersOutline"
-import Link from "next/link"
+
 
 export default function GithubCard({project}){
     return(
@@ -28,14 +30,11 @@ export default function GithubCard({project}){
                 </div>
             </div>
             <div className={styles["button-wrapper"]}>
-                {project.homepage ? 
+                {project.homepage &&
                 <Link href={project.homepage} className="btn btn-secondary" target="_blank">
                     <IoBrowsersOutline size={18}/>
                     <p>Website</p>
-                </Link> 
-                : 
-                ""
-                }
+                </Link>}
                 <Link href={project.html_url} className="btn btn-primary" target="_blank">
                     <AiFillGithub size={20}/>
                     <p>Github</p>

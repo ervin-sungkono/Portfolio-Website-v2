@@ -1,13 +1,16 @@
-import styles from "../styles/GithubCarouselSection.module.css"
+import styles from "../../styles/GithubCarouselSection.module.css"
 import { useEffect, useRef } from "react";
 import Glide from "@glidejs/glide";
 import Link from "next/link";
-import ImageWithFallback from "./ImageWithFallback";
+
+import Section from "../common/Section";
+import ImageWithFallback from "../common/ImageWithFallback";
+
 import { AiOutlineArrowLeft } from "@react-icons/all-files/ai/AiOutlineArrowLeft"
 import { AiOutlineArrowRight } from "@react-icons/all-files/ai/AiOutlineArrowRight"
 import { AiFillGithub } from "@react-icons/all-files/ai/AiFillGithub";
 import { IoBrowsersOutline } from "@react-icons/all-files/io5/IoBrowsersOutline";
-import { formatDate } from "../lib/date";
+import { formatDate } from "../../lib/date";
 
 const glideConfig = {
     type: "carousel",
@@ -30,9 +33,7 @@ export default function GithubCarouselSection({githubProjects}){
         return () => carousel.destroy()
     },[])
     return (
-        <section className={`${styles["container"]} pb-8 md:pb-12`}>
-            <h2>Github Projects</h2>
-            <div className="hr"></div>
+        <Section title="Latest Projects" className={`${styles["container"]} pb-8 md:pb-12`}>
             <div className="glide-wrapper pb-12">
                 <div className="glide" ref={ref}>
                     <div className="glide__arrows hidden md:block" data-glide-el="controls">
@@ -95,6 +96,6 @@ export default function GithubCarouselSection({githubProjects}){
             <div className="mt-6" data-aos="fade-up">
                 <Link href={"/project"} className="btn btn-primary">More Projects</Link>
             </div>
-        </section>
+        </Section>
     )
 }

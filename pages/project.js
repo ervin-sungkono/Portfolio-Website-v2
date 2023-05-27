@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic"
 
-const Layout = dynamic(() => import("../components/Layout"))
-const GithubSection = dynamic(() => import("../components/GithubSection"))
+import Layout from "../components/layout/Layout"
+const GithubSection = dynamic(() => import("../components/project/GithubSection"))
 import { getGithubUserData, getProjectCategories } from "../lib/fetch"
 
 export default function Github({githubProjects, categories}) {

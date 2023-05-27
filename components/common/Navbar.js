@@ -1,9 +1,9 @@
 import Image from "next/image"
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import NavbarLogo from "../public/images/navbar-logo.png";
-import NavbarLogoWhite from "../public/images/navbar-logo-white.png"
-import styles from "../styles/Navbar.module.css"
+import NavbarLogo from "../../public/images/navbar-logo.png";
+import NavbarLogoWhite from "../../public/images/navbar-logo-white.png"
+import styles from "../../styles/Navbar.module.css"
 import { useRouter } from "next/router";
 import { BsBrightnessHigh } from "@react-icons/all-files/bs/BsBrightnessHigh"
 import { RiMoonClearLine } from "@react-icons/all-files/ri/RiMoonClearLine"

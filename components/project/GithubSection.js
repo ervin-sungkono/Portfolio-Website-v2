@@ -1,15 +1,14 @@
 import dynamic from "next/dynamic";
 
-import styles from "../styles/GithubSection.module.css"
+import styles from "../../styles/GithubSection.module.css"
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 
+import Section from "../common/Section"
 const GithubCard = dynamic(() => import("./GithubCard"))
 
 export default function GithubSection({githubProjects, categories}){
     return(
-        <div className={`${styles["container"]} py-8 md:py-12`}>
-            <h2>My Github Projects</h2>
-            <div className="hr"></div>
+        <Section title={"My Projects"} className={styles.container}>
             <Tabs className="w-full">
                 <TabList>
                     {categories.map(category => (
@@ -32,6 +31,6 @@ export default function GithubSection({githubProjects, categories}){
                     </TabPanel>
                 ))}
             </Tabs>
-        </div>
+        </Section>
     )
 }

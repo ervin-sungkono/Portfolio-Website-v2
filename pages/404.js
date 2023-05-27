@@ -1,6 +1,4 @@
-import dynamic from "next/dynamic"
 import Link from "next/link"
-import { useCallback } from "react"
 
 import Particles from "react-tsparticles";
 import { loadColorUpdater } from "tsparticles-updater-color";
@@ -10,7 +8,8 @@ import { loadSizeUpdater } from "tsparticles-updater-size";
 import { loadOpacityUpdater } from "tsparticles-updater-opacity";
 import { loadOutModesUpdater } from "tsparticles-updater-out-modes";
 
-const Layout = dynamic(() => import("../components/Layout"))
+import Layout from "../components/layout/Layout";
+import { useTheme } from "next-themes";
 
 export default function NotFoundPage() {
     async function particlesInit(engine) {
@@ -22,6 +21,7 @@ export default function NotFoundPage() {
         await loadOutModesUpdater(engine);
     }
 
+    const {theme} = useTheme()
     return(
         <Layout title={"404 Not Found"} showNavbar={false} showFooter={false}>
             <Particles
@@ -29,7 +29,7 @@ export default function NotFoundPage() {
                 options={{
                     fpsLimit: 90,
                     particles: {
-                        color: { value: "#ffffff" },
+                        color: { value: theme === 'light' ? "#D5D5D5" : "#FFFFFF" },
                         move: {
                             direction: "none",
                             enable: true,
@@ -51,9 +51,11 @@ export default function NotFoundPage() {
                     }
                 }}
             />
-            <div className="h-screen flex flex-col gap-6 justify-center items-center">
-                <div className="text-3xl sm:text-5xl text-black dark:text-white font-bold">404 Not Found</div>
-                <Link href={"/"} className="btn btn-primary">Back to Home</Link>
+            <div className="h-screen flex flex-col justify-center items-center">
+                <div className="w-full max-w-md flex flex-col items-center px-8 py-12 shadow-lg dark:shadow-gray-700 border-[1px] border-black dark:border-white border-opacity-10 dark:border-opacity-20 rounded-lg gap-6">
+                    <div className="text-3xl sm:text-5xl text-black dark:text-white font-bold">404 Not Found</div>
+                    <Link href={"/"} className="btn btn-primary">Back to Home</Link>
+                </div>
             </div>
         </Layout>
     )

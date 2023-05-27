@@ -1,34 +1,28 @@
 .container{
     display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.about-content{
-    max-width: 960px;
-    display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     gap: 1rem;
 }
 
-.about-content > h2{
+.container > h2{
     text-align: center;
     font-size: var(--heading-secondary);
     color: var(--black);
 }
 
-.about-content p{
-    text-align: justify;
-    font-size: var(--body-text-default);
-    color: var(--black);
-    opacity: 0.8;
-}
-
 .about-description{
+    max-width: 960px;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+}
+
+.about-description p {
+    font-size: var(--body-text-default);
+    color: var(--black);
+    opacity: 0.8;
 }
 
 .section-wrapper{

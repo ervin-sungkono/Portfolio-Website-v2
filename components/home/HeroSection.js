@@ -1,4 +1,4 @@
-import styles from '../styles/HeroSection.module.css'
+import styles from '../../styles/HeroSection.module.css'
 import { AiFillDribbbleCircle } from "@react-icons/all-files/ai/AiFillDribbbleCircle"
 import { AiFillInstagram } from "@react-icons/all-files/ai/AiFillInstagram"
 import { AiFillLinkedin } from "@react-icons/all-files/ai/AiFillLinkedin"
@@ -6,12 +6,12 @@ import { AiFillGithub } from "@react-icons/all-files/ai/AiFillGithub"
 import { AiOutlineArrowDown } from '@react-icons/all-files/ai/AiOutlineArrowDown'
 import Typewriter from 'typewriter-effect/dist/core'
 import { useEffect } from 'react'
-import { ScrollIntoView } from '../lib/scroll'
+import { ScrollIntoView } from '../../lib/scroll'
 import Link from 'next/link'
 import Image from 'next/image'
 
-import HeroImage from '../public/images/hero-image.png'
-import Square from '../public/images/rectangle.png'
+import HeroImage from '../../public/images/hero-image.png'
+import Square from '../../public/images/rectangle.png'
 
 export default function HeroSection(){
     const socials = [

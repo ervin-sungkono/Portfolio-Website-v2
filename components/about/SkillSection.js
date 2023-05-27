@@ -1,4 +1,4 @@
-import styles from "../styles/SkillSection.module.css"
+import styles from "../../styles/SkillSection.module.css"
 import Image from "next/image"
 import { Tooltip } from "flowbite-react"
 
