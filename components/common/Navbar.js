@@ -78,7 +78,7 @@ export default function Navbar(){
                             </div>
                         </div>
                     </div>
-                    <Link href="mailto:ervinsung@gmail.com" className="btn btn-secondary w-full">Contact</Link>
+                    <Link href="/contact" className="btn btn-secondary w-full">Contact</Link>
                 </div>
                 <div className={`${hamburgerState ? `${styles["hamburger-btn"]} ${styles["active"]}` : styles["hamburger-btn"]}`} onClick={() => toggleHamburgerActive()}>
                     <div></div>

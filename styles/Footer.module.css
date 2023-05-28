@@ -21,7 +21,7 @@
     gap: 1rem;
 }
 
-.footer-content > h2{
+.footer-content > h3{
     font-size: var(--heading-tertiary);
     color: var(--black);
 }
