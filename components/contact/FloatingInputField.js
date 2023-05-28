@@ -7,7 +7,7 @@ export default function FloatingInputField({type = "text", name, label, textarea
                     <textarea
                         id={name}
                         name={name}
-                        className="block px-2.5 pb-2.5 pt-4 w-full text-sm md:text-base text-gray-900 bg-transparent rounded-lg border-1 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                        className="block px-2.5 pb-2.5 pt-4 w-full text-sm md:text-base bg-transparent rounded-lg border-1 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
                         placeholder=" "
                         rows={row}
                     >
@@ -17,7 +17,7 @@ export default function FloatingInputField({type = "text", name, label, textarea
                         type={type}
                         id={name}
                         name={name}
-                        className="block px-2.5 pb-2.5 pt-4 text-sm md:text-base w-full text-gray-900 bg-transparent rounded-lg border-1 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                        className="block px-2.5 pb-2.5 pt-4 text-sm md:text-base w-full bg-transparent rounded-lg border-1 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
                         placeholder=" "
                     />
                 }
