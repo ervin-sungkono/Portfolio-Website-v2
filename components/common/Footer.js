@@ -11,7 +11,7 @@ export default function Footer(){
                     <div className="hr"></div>
                     <div className="flex flex-col items-center gap-2">
                         <p className="text-sm md:text-base">Click the button below to reach me out!</p>
-                        <Link href="mailto:ervinsung@gmail.com" className="btn btn-secondary flex gap-2 items-center">
+                        <Link href="/contact" className="btn btn-secondary flex gap-2 items-center">
                             <AiFillMail/>
                             <p>Contact Me</p>
                         </Link>
