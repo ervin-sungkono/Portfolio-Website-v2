@@ -63,7 +63,8 @@ export default function ContactForm(){
                     name: name,
                     subject: subject,
                     email: email,
-                    message: message
+                    message: message,
+                    recaptcha_token: token
                 })
             })
             .then(res => {

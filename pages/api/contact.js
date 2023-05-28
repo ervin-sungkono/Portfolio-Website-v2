@@ -26,6 +26,14 @@ const generateEmailContent = (data) => {
 export default async function handler(req, res){
     if (req.method === "POST") {
       const data = req.body
+
+      const status = await fetch(
+        `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${data.recaptcha_token}`,
+        {method: "POST"}
+      ).then(res => res.json())
+
+      if(!status.success) return res.status(400).send(status)
+      
       if (!data || !data.name || !data.email || !data.subject || !data.message) {
         return res.status(400).send({ message: "Bad request" })
       }
