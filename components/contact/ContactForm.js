@@ -17,13 +17,17 @@ export default function ContactForm(){
         message: ""
     })
     const [reCAPTCHAToken, setReCAPTCHAToken] = useState(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const onSubmitWithReCAPTCHA = async (e) => {
+    const handleChange = (value) => {
+        setReCAPTCHAToken(value)
+    }
+    
+    const onSubmitWithReCAPTCHA = async(e) => {
         e.preventDefault()
+        if(isSubmitting) return
+        setIsSubmitting(true)
         const token = reCAPTCHAToken ?? await reCAPTCHAref.current.executeAsync()
-
-        if(!token) return
-        if(!reCAPTCHAToken) setReCAPTCHAToken(token)
 
         const name = document.getElementById("name").value
         const subject = document.getElementById("subject").value
@@ -32,29 +36,28 @@ export default function ContactForm(){
 
         let errorArray = {
             name: "",
-            email: "",
             subject: "",
+            email: "",
             message: ""
         }
-        setErrorMessage(errorArray)
+        setErrorMessage((errorMesssage) => ({...errorMesssage, ...errorArray}))
         let isValid = true
         if(name.length === 0){
-            errorArray.name = "Name must be filled"
+            setErrorMessage((errorMesssage) => ({...errorMesssage, name: "Name must be filled"}))
             isValid = false
         }
-        if(subject.length === 0) {
-            errorArray.subject = "Subject must be filled"
+        if(subject.length === 0){
+            setErrorMessage((errorMesssage) => ({...errorMesssage, subject: "Subject must be filled"}))
             isValid = false
         }
         if(email.length === 0) {
-            errorArray.email = "Email must be filled"
+            setErrorMessage((errorMesssage) => ({...errorMesssage, email: "Email must be filled"}))
             isValid = false
         }
         if(message.length === 0) {
-            errorArray.message = "Message must be filled"
+            setErrorMessage((errorMesssage) => ({...errorMesssage, message: "Message must be filled"}))
             isValid = false
         }
-        setErrorMessage(errorArray)
         
         if(isValid){
             await fetch("/api/contact", { 
@@ -71,17 +74,21 @@ export default function ContactForm(){
                     recaptcha_token: token
                 })
             })
-            .then(res => {
-                if(res.ok){
+            .then(res => res.json())
+            .then(data => {
+                if(data.success){
+                    setReCAPTCHAToken(null)
                     alert("Form has been submitted")
+                    e.target.reset()
                 }else{
-                    alert("Fail to submit form")
+                    alert("Failed to submit form")
                 }
             })
-
-            e.target.reset()
+            .catch(err => console.log(err))
         }
+        setIsSubmitting(false)
     }
+
     return(
         <Section title={"Get in touch"} className={styles.container}>
             <form 
@@ -97,6 +104,7 @@ export default function ContactForm(){
                     size="invisible"
                     sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_KEY}
                     theme={theme}
+                    onChange={handleChange}
                 />
                 <button type="submit" className="btn btn-primary mt-6">Submit</button>
             </form>
