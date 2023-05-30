@@ -16,10 +16,14 @@ export default function ContactForm(){
         subject: "",
         message: ""
     })
+    const [reCAPTCHAToken, setReCAPTCHAToken] = useState(null)
+
     const onSubmitWithReCAPTCHA = async (e) => {
         e.preventDefault()
-        const token = await reCAPTCHAref.current.executeAsync()
+        const token = reCAPTCHAToken ?? await reCAPTCHAref.current.executeAsync()
+
         if(!token) return
+        if(!reCAPTCHAToken) setReCAPTCHAToken(token)
 
         const name = document.getElementById("name").value
         const subject = document.getElementById("subject").value
