@@ -29,10 +29,10 @@ export default function ContactForm(){
         setIsSubmitting(true)
         const token = reCAPTCHAToken ?? await reCAPTCHAref.current.executeAsync()
 
-        const name = document.getElementById("name").value
-        const subject = document.getElementById("subject").value
-        const email = document.getElementById("email").value
-        const message = document.getElementById("message").value
+        const name = document.getElementById("name").value.trim()
+        const subject = document.getElementById("subject").value.trim()
+        const email = document.getElementById("email").value.trim()
+        const message = document.getElementById("message").value.trim()
 
         let errorArray = {
             name: "",
@@ -92,13 +92,15 @@ export default function ContactForm(){
     return(
         <Section title={"Get in touch"} className={styles.container}>
             <form 
-                className="w-full max-w-xl p-4 md:p-6 flex flex-col gap-4 shadow-lg bg-white dark:bg-neutral-800 dark:shadow-gray-700 rounded-lg"
+                className="w-full max-w-xl px-4 py-6 md:px-6 md:py-8  shadow-lg bg-white dark:bg-neutral-800 dark:shadow-gray-700 rounded-lg"
                 onSubmit={onSubmitWithReCAPTCHA}
             >
-                <FloatingInputField name={"name"} label={"Name"} errorMessage={errorMesssage.name}/>
-                <FloatingInputField name={"subject"} label={"Subject"} errorMessage={errorMesssage.subject}/>
-                <FloatingInputField type={"email"} name={"email"} label={"Email"} errorMessage={errorMesssage.email}/>
-                <FloatingInputField name={"message"} label={"Message"} textarea errorMessage={errorMesssage.message}/>
+                <div className="flex flex-col gap-4">
+                    <FloatingInputField name={"name"} label={"Name"} errorMessage={errorMesssage.name}/>
+                    <FloatingInputField name={"subject"} label={"Subject"} errorMessage={errorMesssage.subject}/>
+                    <FloatingInputField type={"email"} name={"email"} label={"Email"} errorMessage={errorMesssage.email}/>
+                    <FloatingInputField name={"message"} label={"Message"} textarea errorMessage={errorMesssage.message}/>
+                </div>
                 <ReCAPTCHA 
                     ref={reCAPTCHAref}
                     size="invisible"
@@ -106,7 +108,7 @@ export default function ContactForm(){
                     theme={theme}
                     onChange={handleChange}
                 />
-                <button type="submit" className="btn btn-primary mt-6">Submit</button>
+                <button type="submit" className="w-full btn btn-primary mt-6">{isSubmitting ? "Loading.." : "Submit"}</button>
             </form>
         </Section>
     )
