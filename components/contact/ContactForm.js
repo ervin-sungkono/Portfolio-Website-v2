@@ -3,11 +3,16 @@ import styles from "../../styles/ContactForm.module.css"
 
 import ReCAPTCHA from "react-google-recaptcha";
 import Section from "../common/Section";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
+import { initDismisses } from "flowbite";
+import { IoClose } from "@react-icons/all-files/io5/IoClose"
 const FloatingInputField = dynamic(() => import("./FloatingInputField"))
 
 export default function ContactForm(){
+    useEffect(() => {
+        initDismisses()
+    })
     const reCAPTCHAref = useRef()
     const {theme} = useTheme()
     const [errorMesssage, setErrorMessage] = useState({
@@ -15,6 +20,10 @@ export default function ContactForm(){
         email: "",
         subject: "",
         message: ""
+    })
+    const [alertMessage, setAlertMessage] = useState({
+        message: "",
+        success: false
     })
     const [reCAPTCHAToken, setReCAPTCHAToken] = useState(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -40,7 +49,11 @@ export default function ContactForm(){
             email: "",
             message: ""
         }
-        setErrorMessage((errorMesssage) => ({...errorMesssage, ...errorArray}))
+        setErrorMessage({...errorArray})
+        setAlertMessage({
+            message: "",
+            success: false
+        })
         let isValid = true
         if(name.length === 0){
             setErrorMessage((errorMesssage) => ({...errorMesssage, name: "Name must be filled"}))
@@ -78,10 +91,16 @@ export default function ContactForm(){
             .then(data => {
                 if(data.success){
                     setReCAPTCHAToken(null)
-                    alert("Form has been submitted")
+                    setAlertMessage({
+                        message: "Form has been submitted",
+                        success: true
+                    })
                     e.target.reset()
                 }else{
-                    alert("Failed to submit form")
+                    setAlertMessage({
+                        message: "Failed to submit form",
+                        success: true
+                    })
                 }
             })
             .catch(err => console.log(err))
@@ -109,6 +128,16 @@ export default function ContactForm(){
                     onChange={handleChange}
                 />
                 <button type="submit" className="w-full btn btn-primary mt-6">{isSubmitting ? "Loading.." : "Submit"}</button>
+                {alertMessage.message &&
+                <div id="alert-box" className={`flex p-4 mt-4 ${alertMessage.success ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50"} rounded-lg`} role="alert">
+                    <div className="ml-3 text-sm font-medium">
+                        {alertMessage.message}
+                    </div>
+                    <button type="button" className={`ml-auto -mx-1.5 -my-1.5 focus:ring-0 ${alertMessage.success ? "text-green-500 bg-green-50 hover:bg-green-200" : "text-red-500 bg-red-50 hover:bg-red-200"} rounded-lg focus:ring-2  p-1.5 inline-flex h-8 w-8`} data-dismiss-target="#alert-box" aria-label="Close">
+                        <span className="sr-only">Close</span>
+                        <IoClose size={20}/>
+                    </button>
+                </div>}
             </form>
         </Section>
     )
