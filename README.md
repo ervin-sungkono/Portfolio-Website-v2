@@ -27,4 +27,34 @@ An improvement of my old portfolio website, built using NextJS and Tailwind to s
 ## Preview Image
 <img src="https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Portfolio-Website-v2.png" width=480/>
 
+## Installation and Setup
+1. Clone this repository
+```sh
+git clone https://github.com/ervin-sungkono/Portfolio-Website-v2.git
+```
+2. Setup env variables
+```sh
+cp .env.example .env
+```
+| Variable | Description |
+| :--- | :--- |
+| `DRIBBBLE_TOKEN` | Dribbble API token, get it [here](https://developer.dribbble.com/v2/) |
+| `GITHUB_USERNAME` | Your Github username |
+| `GITHUB_TOKEN` | Your Github API token(optional), get it [here](https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api?apiVersion=2022-11-28#authenticating) |
+| `SECRET_TOKEN` | Secret token for on-demand ISR using /api/revalidate?secret={SECRET_TOKEN} route |
+| `SITE_URL` | Your site URL |
+| `EMAIL` | Your email for nodemailer |
+| `EMAIL_PASS` | Your email's password for nodemailer, see how to get it [here](https://support.google.com/accounts/answer/185833?hl=en) for gmail | 
+| `NEXT_PUBLIC_RECAPTCHA_KEY` | Your ReCAPTCHA site key |
+| `RECAPTCHA_SECRET` | Your ReCAPTCHA secret, register it [here](https://www.google.com/recaptcha/admin) |
+
+3. Install dependency
+```sh
+npm install
+```
+4. Run the app
+```sh
+npm run dev
+```
+
 This project is deployed using Vercel, [click here](https://ervin-sungkono.vercel.app) to see the result.
