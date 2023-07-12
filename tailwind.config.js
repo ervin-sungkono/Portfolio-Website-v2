@@ -16,6 +16,9 @@ module.exports = {
       },
     },
     extend: {
+      zIndex: {
+        'fixed': '9999'
+      },
       keyframes: {
         float: {
           '0%, 100%' : { translate: '0px 0px', rotate: '5deg' },

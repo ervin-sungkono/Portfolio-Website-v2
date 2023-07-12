@@ -54,17 +54,8 @@ body{
     background-color: var(--white);
 }
 
-img{
-    pointer-events: none;
-}
-
 a{
     text-decoration: none;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -webkit-user-drag: none;
 }
 
 h1,h2,h3,h4,h5,h6{
