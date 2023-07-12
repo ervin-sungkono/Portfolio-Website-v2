@@ -56,9 +56,9 @@ export default function Navbar(){
                 <div className={styles["nav-left"]}>
                     <Link href="/" className={styles["nav-logo"]}>
                         {theme === 'light' ?
-                        <Image src={NavbarLogo} alt="Logo" width={120} height={48} style={{objectFit:'contain'}}/>
+                        <Image src={NavbarLogo} alt="Logo" fill/>
                         :
-                        <Image src={NavbarLogoWhite} alt="Logo White" width={120} height={48} style={{objectFit:'contain'}}/>
+                        <Image src={NavbarLogoWhite} alt="Logo White" fill/>
                         }
                     </Link>
                     <div className="toggle-btn w-16 h-8 py-1 px-2 bg-blue-50 dark:bg-gray-700 rounded-full cursor-pointer hidden lg:block" onClick={() => toggleTheme()}>

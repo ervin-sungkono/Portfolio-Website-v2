@@ -60,15 +60,10 @@
 }
 
 .nav-logo{
+    position: relative;
     cursor: pointer;
-    display: flex;
-    align-items: center;
+    width: 121px;
     height: 48px;
-}
-
-.nav-logo > img{
-    width: 100%;
-    height: 100%;
 }
 
 .hamburger-btn{
@@ -112,6 +107,7 @@
 
 @media only screen and (max-width: 1024px) {
     .nav-logo{
+        width: 100px;
         height: 40px;
     }
 
