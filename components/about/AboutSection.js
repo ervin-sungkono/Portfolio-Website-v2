@@ -13,7 +13,7 @@ import Section from "../common/Section"
 export default function AboutSection(){
     const {theme} = useTheme()
     return (
-        <Section title={"About me"} className={styles.container}>
+        <Section title={"About me"} id="about-section" className={styles.container}>
             <div className={styles["about-description"]} data-aos="fade-up">
                 <p>Hello! I'm a student at Binus University who has a passion for Web Development and Design. I like to focus and work hard when it comes to my passion. This is my personal website which i intend to use for sharing my personal designs and projects.</p>
                 <div className={styles["section-wrapper"]}>
