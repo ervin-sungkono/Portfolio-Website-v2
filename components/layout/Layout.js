@@ -8,9 +8,8 @@ export default function Layout({title, description = "", children, showNavbar = 
     return(
         <>
             <Head>
-                <title>{title}</title>
-                <meta name="description" content={description}/>
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <title key={"site-title"}>{title}</title>
+                <meta key={"site-desc"} name="description" content={description}/>
             </Head>
             {showNavbar && <Navbar/>}
             <main className={`container mx-auto ${showNavbar && "pt-20 lg:pt-18"}`}>

@@ -10,6 +10,10 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        <title key={"site-title"}>{profile.title}</title>
+        <meta key={"site-desc"} name="description" content={profile.description}/>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
         <link rel="icon" href="/images/favicon-light.png" type='image/png' media="(prefers-color-scheme: light)"/>
         <link rel="icon" href="/images/favicon-dark.png" type='image/png' media="(prefers-color-scheme: dark)"/>
 
