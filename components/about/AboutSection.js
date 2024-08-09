@@ -15,15 +15,15 @@ export default function AboutSection(){
     return (
         <Section title={"About me"} id="about-section" className={styles.container}>
             <div className={styles["about-description"]} data-aos="fade-up">
-                <p>Hello! I'm a student at Binus University who has a passion for Web Development and Design. I like to focus and work hard when it comes to my passion. This is my personal website which i intend to use for sharing my personal designs and projects.</p>
+                <p>Hello! I'm a student at Binus University who has a passion for Web Development and Design. I like to focus and work hard when it comes to my passion. This is my personal website which I intend to use for sharing my personal designs and projects.</p>
                 <div className={styles["section-wrapper"]}>
                     <Link href="https://bncc.net" target="_blank">
                         <Image src={theme === 'light' ? BNCCLogoDefault : BNCCLogoWhite} alt="" width={240}/>
                     </Link>
-                    <p>I joined a student organization called BNCC (Bina Nusantara Computer Club), became an Activist and learnt new softskills such as public speaking, time management, and teamwork. I also learn hardskills like Web Development, Mobile Development, and UI Design.</p>
+                    <p>I joined a student organization called BNCC (Bina Nusantara Computer Club), became an activist and learned new soft skills such as public speaking, time management, and teamwork. I also learn hard skills like Web Development, Mobile Development, and UI Design.</p>
                 </div>
                 <div className={styles["section-wrapper"]}>
-                    <p>While working for BNCC, i am entrusted the position of FAVE Solution Staff. My job is to work with team on handling software projects.</p>
+                    <p>While working for BNCC, I am entrusted the position of FAVE Solution Staff. My job is to work with team on handling software projects.</p>
                     <Link href="https://favesolution.com" target="_blank">
                         <Image src={theme === 'light' ? FAVELogoDefault : FAVELogoWhite} alt="" width={240}/>
                     </Link>

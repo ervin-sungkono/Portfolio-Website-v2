@@ -4,7 +4,7 @@ export default function Document() {
   const profile = {
     url: "https://ervin-sungkono.vercel.app",
     title: "Ervin Cahyadinata Sungkono",
-    description: "Hello! im known as Ervin Cahyadinata Sungkono, a student at Binus University who has a passion for Web Development and Web Design. This is my personal website where i put my past projects and designs.",
+    description: "Hello! im known as Ervin Cahyadinata Sungkono, a student at Binus University who has a passion for Web Development and Web Design. This is my personal website where I put my past projects and designs.",
     imagePath: "/images/preview-img.png"
   }
   return (
