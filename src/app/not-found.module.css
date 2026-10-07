@@ -1,0 +1,58 @@
+.page {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  min-height: 100dvh;
+  padding: var(--section-space) var(--page-gutter);
+  padding-bottom: max(var(--section-space), calc(2.75rem + var(--space-8)));
+  overflow: clip;
+  background: var(--background);
+}
+
+/* Match the original standalone 404, including without JavaScript. */
+:global(body:has([data-not-found]) > header),
+:global(body:has([data-not-found]) > footer) {
+  display: none;
+}
+
+.copy {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 42rem);
+  min-width: 0;
+  padding: clamp(var(--space-6), 5vw, var(--space-12));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--background);
+  text-align: center;
+}
+
+.code {
+  margin: 0 0 var(--space-5);
+  color: var(--accent);
+  font-size: clamp(5rem, 18vw, 10rem);
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.075em;
+}
+
+.copy h1 {
+  font-size: var(--text-heading);
+  margin-bottom: var(--space-5);
+}
+
+.description {
+  color: var(--muted);
+  font-size: var(--text-body);
+  margin: 0 auto var(--space-8);
+  max-width: 35ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3) var(--space-6);
+}

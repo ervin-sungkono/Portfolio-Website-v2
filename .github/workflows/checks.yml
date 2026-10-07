@@ -1,0 +1,32 @@
+name: Checks
+
+on:
+  push:
+    branches: [main, feat/portfolio-rework-phase-1]
+  pull_request:
+    branches: [main, feat/portfolio-rework-phase-1]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint:css
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_RECAPTCHA_KEY: review-test-key
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+        env:
+          NEXT_PUBLIC_RECAPTCHA_KEY: review-test-key

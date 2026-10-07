@@ -1,0 +1,40 @@
+.canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.canvas canvas,
+.pageCanvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pageCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+/* Prevent a duplicate field during the route transition to the standalone 404. */
+:global(body:has([data-not-found])) .pageCanvas {
+  display: none;
+}
+
+.control {
+  position: absolute;
+  bottom: var(--space-4);
+  right: var(--page-gutter);
+  min-height: 2.75rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--background);
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
