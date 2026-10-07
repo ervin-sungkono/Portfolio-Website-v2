@@ -46,7 +46,8 @@
 .nav a[aria-current] {
   color: var(--text);
 }
-.nav .contact {
+.nav .contact,
+.nav .contact[aria-current] {
   color: var(--button-text);
   background: var(--button);
   padding: 11px 22px;
