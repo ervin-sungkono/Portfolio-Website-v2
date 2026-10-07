@@ -1,60 +1,56 @@
-# Portfolio-Website-v2
-An improvement of my old portfolio website, built using NextJS and Tailwind to showcase my projects and designs, this project uses ISR(Incremental Static Regeneration) to increase website performance while reducing server load. 
+# Ervin Sungkono’s Portfolio
 
-## Resources
-- [Github API](https://api.github.com)
-- [Dribbble v2 API](https://developer.dribbble.com/v2/)
-- [Animate on Scroll](https://www.npmjs.com/package/aos)
-- [Typewriter Effect](https://www.npmjs.com/package/typewriter-effect)
-- [Glide JS](https://glidejs.com/)
-- [NextJS v13](https://nextjs.org/)
-- [Next Themes](https://www.npmjs.com/package/next-themes)
-- [TS Particles](https://www.npmjs.com/package/tsparticles)
-- [Nodemailer](https://www.npmjs.com/package/nodemailer)
-- [React Google ReCAPTCHA](https://www.npmjs.com/package/react-google-recaptcha)
+Phase 1 rework of the original portfolio, built with Next.js 16.4 App Router, React, and strict TypeScript. The original logo, avatar, screenshots, Dribbble artwork, CV, social links, and five public routes are preserved.
 
-## Key Features
-1. Direction Aware Card Hover
-2. Scroll Animations using AoS
-3. Carousel using Glide JS
-4. Responsive Layout
-5. Themes Switch (light and dark mode) using next-themes
-6. ISR (revalidates every 60 seconds)
-7. Dynamic Web using API
-8. 404 Page with particle animations (Recently added)
-9. Contact Form integration using nodemailer, with ReCAPTCHA v2 (Recently added)
+## Development
 
-## Preview Image
-<img src="https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Portfolio-Website-v2.png" width=480/>
+Requires Node.js 22 or newer (Node.js 24 recommended).
 
-## Installation and Setup
-1. Clone this repository
 ```sh
-git clone https://github.com/ervin-sungkono/Portfolio-Website-v2.git
-```
-2. Setup env variables
-```sh
-cp .env.example .env
-```
-| Variable | Description |
-| :--- | :--- |
-| `DRIBBBLE_TOKEN` | Dribbble API token, get it [here](https://developer.dribbble.com/v2/) |
-| `GITHUB_USERNAME` | Your Github username |
-| `GITHUB_TOKEN` | Your Github API token(optional), get it [here](https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api?apiVersion=2022-11-28#authenticating) |
-| `SECRET_TOKEN` | Secret token for on-demand ISR using /api/revalidate?secret={SECRET_TOKEN} route |
-| `SITE_URL` | Your site URL |
-| `EMAIL` | Your email for nodemailer |
-| `EMAIL_PASS` | Your email's password for nodemailer, see how to get it [here](https://support.google.com/accounts/answer/185833?hl=en) for gmail | 
-| `NEXT_PUBLIC_RECAPTCHA_KEY` | Your ReCAPTCHA site key |
-| `RECAPTCHA_SECRET` | Your ReCAPTCHA secret, register it [here](https://www.google.com/recaptcha/admin) |
-
-3. Install dependency
-```sh
-npm install
-```
-4. Run the app
-```sh
+npm ci
+cp .env.example .env.local
 npm run dev
 ```
 
-This project is deployed using Vercel, [click here](https://ervin-sungkono.vercel.app) to see the result.
+```sh
+npm run typecheck
+npm test
+npm run build
+npm start
+```
+
+## Architecture
+
+- `src/app`: routes, metadata, layouts, and contact API.
+- `src/components`: shared navigation, footer, cards, experience, and contact form.
+- `src/content`: typed profile facts and project/design content snapshots.
+- `src/lib/content.ts`: single content boundary used by pages.
+- `src/lib/contact`: shared validation and server-only Gmail/reCAPTCHA services.
+- `src/styles`: design tokens and responsive page styles. Small component styles use CSS Modules.
+
+Pages are Server Components. Only the header and contact form require browser JavaScript. Project detail pages are generated at build time; search and category filters use shareable query parameters and server rendering. There is no database, CMS SDK, global state library, or background synchronisation in phase 1.
+
+## Updating content
+
+Edit `src/content/profile.ts`, `projects.json`, and `designs.json`. Put featured projects first in `projects.json`; the homepage selects the first three. Keep existing slugs stable because they are public URLs. Additional verified detail-page notes live in `src/lib/content.ts`.
+
+Images point to the owner’s existing `web-assets` repository and original Dribbble CDN. Add local images to `public/images`; configure new remote hosts in `next.config.ts`.
+
+CMS integration is deferred to phase 2. Replace the exports and lookup functions in `src/lib/content.ts` when a CMS is selected. No speculative CMS adapters or admin screens are included.
+
+## Contact and email
+
+The form validates on client and server, focuses invalid fields, preserves drafts on errors, and clears fields only after Gmail accepts a message. The API checks origin, limits the body to 16 KiB, rejects the honeypot, verifies invisible reCAPTCHA v2, and sends a plain-text email to the owner with the visitor’s address as `replyTo`.
+
+| Variable                    | Purpose                                           |
+| --------------------------- | ------------------------------------------------- |
+| `EMAIL`                     | Gmail sender and recipient                        |
+| `EMAIL_PASS`                | Gmail app password; server-only                   |
+| `NEXT_PUBLIC_RECAPTCHA_KEY` | Invisible reCAPTCHA v2 public site key            |
+| `RECAPTCHA_SECRET`          | reCAPTCHA secret; server-only                     |
+| `RECAPTCHA_KEY`             | Existing deployment alias for `RECAPTCHA_SECRET`  |
+| `SITE_URL`                  | Production URL for canonical metadata and sitemap |
+
+Set secrets in `.env.local` or the hosting dashboard. Never commit values. Existing Vercel names remain compatible. Register production and preview hostnames in reCAPTCHA. If configuration or delivery is unavailable, the form reports an error and points visitors to LinkedIn.
+
+See [architecture and source notes](docs/architecture.md) for provenance and phase 2 considerations.
