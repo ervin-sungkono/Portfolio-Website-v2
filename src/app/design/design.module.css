@@ -1,0 +1,190 @@
+.designIntro {
+  max-width: 58rem;
+  padding-bottom: var(--space-8);
+}
+
+.designIntro > :global(.editorial-label) {
+  margin: 0 0 var(--space-5);
+}
+
+.designIntro h1 {
+  max-width: 16ch;
+}
+
+.designIntro h1 span {
+  color: var(--muted);
+}
+
+.profileLink {
+  margin-top: var(--space-2);
+}
+
+.collectionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding-block: 0 var(--space-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.collectionBar :global(.design-filters) {
+  margin: 0;
+}
+
+.designCount {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.designCount span {
+  color: var(--text);
+  font-size: var(--text-title);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.designGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-10) var(--layout-gap);
+  margin-block: var(--space-8) var(--space-20);
+}
+
+.designReveal {
+  display: flex;
+  min-width: 0;
+}
+
+.designTile {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: var(--radius);
+}
+
+.artworkFrame {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, var(--surface-high), transparent 65%), var(--surface);
+}
+
+.artworkMat {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--surface-high);
+}
+
+.artworkImage {
+  object-fit: cover;
+  transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.designTile:hover .artworkImage {
+  transform: scale(1.012);
+}
+
+.designCaption {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-1) 0;
+  transition: color 0.2s;
+}
+
+.designCaption > div {
+  min-width: 0;
+}
+
+.designCaption :global(.editorial-label) {
+  margin: 0 0 var(--space-2);
+}
+
+.designCaption h2 {
+  margin: 0;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+}
+
+.designCaption > svg {
+  margin-top: var(--space-2);
+  color: var(--muted);
+}
+
+.designTile:hover .designCaption,
+.designTile:hover .designCaption > svg {
+  color: var(--accent);
+}
+
+@media (min-width: 48rem) {
+  .designGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .designGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .designGrid > * {
+    grid-column: span 2;
+  }
+
+  /* Close partial rows without leaving a lone card or changing reading order. */
+  .designGrid:has(> :last-child:nth-child(3n + 2)) > :nth-last-child(-n + 2),
+  .designGrid:has(> :last-child:nth-child(3n + 1)) > :nth-last-child(-n + 4) {
+    grid-column: span 3;
+  }
+
+  .designGrid > :only-child {
+    grid-column: 1 / -1;
+    max-width: 38rem;
+    justify-self: center;
+  }
+}
+
+@media (width < 40rem) {
+  .collectionBar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .collectionBar :global(.design-filters) {
+    margin-bottom: 0;
+  }
+
+  .designCount {
+    padding-left: var(--space-5);
+  }
+
+  .artworkFrame {
+    padding: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artworkImage,
+  .designCaption {
+    transition: none;
+  }
+
+  .designTile:hover .artworkImage {
+    transform: none;
+  }
+}

@@ -1,0 +1,189 @@
+[
+  {
+    "id": "744526407",
+    "slug": "wetrack-app",
+    "name": "WeTrack App",
+    "description": "Development of project management app for thesis using NextJS v13 and Firebase",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/WeTrack-App.png",
+    "topics": ["Next.js", "Tailwind", "Node.js", "Firebase", "HTML", "CSS", "JS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/WeTrack-App",
+    "demo": "https://wetrack-app.vercel.app"
+  },
+  {
+    "id": "647812745",
+    "slug": "chatgpt-clone",
+    "name": "ChatGPT Clone",
+    "description": "A clone of ChatGPT website, made using the ChatGPT API. Additional features like .txt or .pdf upload and speech recognition are also included.",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/ChatGPT-Clone.png",
+    "topics": ["Next.js", "Tailwind", "ChatGPT", "Speech Recognition", "Server Sent Events"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/ChatGPT-Clone",
+    "demo": "https://chatgpt-clone-ervin-sungkono.vercel.app"
+  },
+  {
+    "id": "583715585",
+    "slug": "next-pokedex",
+    "name": "Next Pokedex",
+    "description": "Pokedex using PokeAPI, built in Next.js using SSG and SSR",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Next-Pokedex.png",
+    "topics": ["Next.js", "React", "SASS", "Poke API"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Next-Pokedex",
+    "demo": "https://next-pokedex-ervin-sungkono.vercel.app/"
+  },
+  {
+    "id": "626356347",
+    "slug": "frontendmentor-io",
+    "name": "Frontend Mentor",
+    "description": "a collection of solutions for frontendmentor.io challenges",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Frontend-Mentor.png",
+    "topics": ["Next.js", "Tailwind", "Component", "HTML", "CSS", "JS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/FrontendMentor.io",
+    "demo": "https://ervin-sungkono-frontend-mentor.vercel.app/"
+  },
+  {
+    "id": "548464131",
+    "slug": "easy-trip",
+    "name": "Easy Trip",
+    "description": "Website for checking tourist destination and buying tickets, built with Laravel 8 and Bootstrap. Group assignment for Final Project purposes",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Easy-Trip.png",
+    "topics": ["Laravel", "PHP", "Bootstrap", "DomPDF", "CKEditor"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Easy-Trip",
+    "demo": null
+  },
+  {
+    "id": "526852146",
+    "slug": "kita-peduli",
+    "name": "Kita Peduli",
+    "description": "Team Project for Invention 2022 Udayana Web Design Competition, created using React and SASS.",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Kita-Peduli.png",
+    "topics": ["React", "SASS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Kita-Peduli",
+    "demo": "https://ervin-sungkono.github.io/Kita-Peduli"
+  },
+  {
+    "id": "592381448",
+    "slug": "discord-music-bot",
+    "name": "Discord Music Bot",
+    "description": "Music bot for Discord servers using discord-player and discord.js",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Discord-Music-Bot.png",
+    "topics": ["Node.js", "Music Bot", "Discord Player", "Discord.js", "Discord Bot"],
+    "category": "Others",
+    "source": "https://github.com/ervin-sungkono/Discord-Music-Bot",
+    "demo": null
+  },
+  {
+    "id": "566667418",
+    "slug": "inventory-management-app",
+    "name": "Inventory Management App",
+    "description": "Inventory Management App for group final project. Made in Android Studio using Java, SQLite, and Firebase Auth. ",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Inventory-Management-App.png",
+    "topics": ["Android Studio", "Java", "SQLite", "Firebase Auth"],
+    "category": "Mobile App",
+    "source": "https://github.com/ervin-sungkono/Inventory-Management-App",
+    "demo": null
+  },
+  {
+    "id": "858016238",
+    "slug": "qr-code-gen",
+    "name": "QR Code Gen",
+    "description": "Simple QR Code Generator",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/qr-code-gen.png",
+    "topics": ["Next.js", "Tailwind", "QR Code", "HTML", "CSS", "JS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/QR-Code-Gen",
+    "demo": "https://qr-code-gen-nu.vercel.app"
+  },
+  {
+    "id": "518750261",
+    "slug": "css-box-shadow-generator",
+    "name": "CSS Box Shadow Generator",
+    "description": "Generate and modify CSS for cards using box-shadow attribute",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/CSS-Box-Shadow-Generator.png",
+    "topics": ["HTML", "CSS", "JS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/CSS-Box-Shadow-Generator",
+    "demo": "https://ervin-sungkono.github.io/CSS-Box-Shadow-Generator"
+  },
+  {
+    "id": "541891916",
+    "slug": "todo-app",
+    "name": "Todo App",
+    "description": "Todo App created using React and SASS, connected with Todo App API from backend side.",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Todo-App.png",
+    "topics": ["React", "SASS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Todo-App",
+    "demo": "https://ervin-sungkono.github.io/Todo-App/"
+  },
+  {
+    "id": "517544061",
+    "slug": "clock-app",
+    "name": "Clock App",
+    "description": "Clock App built using Javascript, features a timer, stopwatch, and a clock visualization.",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Clock-App.png",
+    "topics": ["HTML", "CSS", "JS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Clock-App",
+    "demo": "https://ervin-sungkono.github.io/Clock-App"
+  },
+  {
+    "id": "518089178",
+    "slug": "weather-forecast-app",
+    "name": "Weather Forecast App",
+    "description": "Weather Forecast App showing weather data on a selected city for the next 24 hours.",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Weather-Forecast-App.png",
+    "topics": ["HTML", "CSS", "JS", "Fetch API"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Weather-Forecast-App",
+    "demo": "https://ervin-sungkono.github.io/Weather-Forecast-App/"
+  },
+  {
+    "id": "519540760",
+    "slug": "dnd-multiplication-game",
+    "name": "DnD Multiplication Game",
+    "description": "Multiplication Game using Drag and Drop, built with HTML, CSS and Javascript.",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/DnD-Multiplication-Game.png",
+    "topics": ["HTML", "CSS", "JS", "Drag and Drop"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/DnD-Multiplication-Game",
+    "demo": "https://ervin-sungkono.github.io/DnD-Multiplication-Game"
+  },
+  {
+    "id": "620749427",
+    "slug": "simple-youtube-clone",
+    "name": "Simple Youtube Clone",
+    "description": "Youtube Clone without any database using youtube-sr and yt-channel-info package, using Material UI for the design",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Simple-Youtube-Clone.png",
+    "topics": ["Next.js", "SSR", "React", "Material UI", "Youtube API"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Simple-Youtube-Clone",
+    "demo": "https://simple-yt-clone.vercel.app/"
+  },
+  {
+    "id": "522490482",
+    "slug": "javascript-2d-chess",
+    "name": "Javascript 2D Chess",
+    "description": "2D Chess Game made in Javascript.",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Javascript-2D-Chess.png",
+    "topics": ["HTML", "CSS", "JS"],
+    "category": "Website",
+    "source": "https://github.com/ervin-sungkono/Javascript-2D-Chess",
+    "demo": "https://ervin-sungkono.github.io/Javascript-2D-Chess"
+  },
+  {
+    "id": "558204741",
+    "slug": "android-calculator-app",
+    "name": "Android Calculator App",
+    "description": "Calculator App built in Android Studio using Java",
+    "image": "https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/images/Android-Calculator-App.png",
+    "topics": ["Android Studio", "Java"],
+    "category": "Mobile App",
+    "source": "https://github.com/ervin-sungkono/Android-Calculator-App",
+    "demo": null
+  }
+]
