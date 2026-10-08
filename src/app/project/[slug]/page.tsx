@@ -42,7 +42,7 @@ export default async function ProjectPage({ params }: Props) {
   const study = projectStudies[project.slug];
   const related = relatedProjects(project);
   return (
-    <div className="container snap-sections">
+    <div className="container">
       <section className="page-heading project-detail-heading">
         <Link href="/project" className="text-link back-link">
           <ArrowLeftIcon size={17} aria-hidden="true" /> All Projects

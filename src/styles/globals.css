@@ -61,10 +61,6 @@
 html {
   scroll-padding-top: var(--anchor-offset);
 }
-/* Native proximity snapping preserves free scrolling within long sections. */
-html:has(.snap-sections) {
-  scroll-snap-type: y proximity;
-}
 body {
   margin: 0;
   background: var(--background);
@@ -126,11 +122,6 @@ h2,
 h3,
 section[id] {
   scroll-margin-top: var(--anchor-offset);
-}
-.snap-sections > section,
-html:has(.snap-sections) .footer {
-  scroll-snap-align: start;
-  scroll-margin-top: 0;
 }
 h1,
 h2 {
@@ -863,9 +854,6 @@ textarea::placeholder {
   min-height: 0;
 }
 @media (prefers-reduced-motion: reduce) {
-  html:has(.snap-sections) {
-    scroll-snap-type: none;
-  }
   *,
   *::before,
   *::after {
@@ -878,6 +866,14 @@ textarea::placeholder {
   .button:active,
   .design-tile:hover .design-image img {
     transform: none;
+  }
+}
+
+@media (min-width: 64rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
+  .experience-intro {
+    position: sticky;
+    top: var(--anchor-offset);
+    align-self: start;
   }
 }
 

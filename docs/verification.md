@@ -1,5 +1,15 @@
 # Phase 1 verification
 
+## Sticky hero and scroll-linked parallax — 9 October 2026 (Asia/Jakarta)
+
+- Section snap rules and page markers were removed. Production build, strict TypeScript, formatting, and Git whitespace passed; no new dependencies or backend changes were needed.
+- Chromium checked 8 routes at 320, 390, 820, 1024, and 1440 px without horizontal overflow or runtime/hydration errors. All routes retained native scrolling with no snap type.
+- At 1440×1000, the hero's stage stayed at the same 76px position while scrolling from 180px to 380px. The visual translated from about -12px to -34px and scaled from 1.010 to 1.029 while copy moved separately. Scrolling back restored the earlier transform, and further scrolling released the stage. Project image transforms changed with their viewport progress.
+- Checked sticky experience introductions, keyboard footer access/focus, walkthrough anchor visibility, phone navigation, arbitrary mobile scroll positions, and tablet/short-height fallbacks. At 200% root-font enlargement the hero declined to pin, keeping tall content accessible. This simulates text enlargement, not browser zoom.
+- Reduced-motion changes removed pinning and parallax transforms. With JavaScript disabled, content stayed visible in normal flow and no extra scroll travel was reserved. Cursor behaviour was not modified.
+- Reviewed desktop hero frames at two scroll positions and the phone layout. Local project image responses used the original files from the owner's `web-assets` repository. Dribbble image requests were blocked; these checks do not establish remote asset availability. No fresh axe audit was run for this focused change; previous accessibility results remain dated below.
+- React quality review: small client wrappers receive server-rendered content, continuous scroll updates use Motion values, resize/media observers clean up, and the browser retains control of scrolling. Fit measurement protects oversized hero content; the existing layout thresholds and rem spacing scale govern eligibility and travel.
+
 ## Section snapping and immediate cursor update — 8 October 2026
 
 - Production build, strict TypeScript, formatting, and Git whitespace passed. No dependencies or backend changes were needed.

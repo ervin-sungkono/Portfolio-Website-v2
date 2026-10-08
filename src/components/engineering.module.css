@@ -10,6 +10,13 @@
   font-size: var(--text-body);
   margin-block: var(--space-6);
 }
+@media (min-width: 64rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
+  .intro {
+    position: sticky;
+    top: var(--anchor-offset);
+    align-self: start;
+  }
+}
 .evidenceLink {
   display: flex;
   align-items: center;

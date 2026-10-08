@@ -6,6 +6,7 @@ import { ExternalLink } from './external-link';
 import styles from './project-card.module.css';
 import { Reveal } from './motion/reveal';
 import { PointerSurface } from './motion/pointer-surface';
+import { ParallaxImage } from './motion/parallax-image';
 
 export function ProjectCard({
   project,
@@ -27,14 +28,18 @@ export function ProjectCard({
           data-cursor="project"
         >
           <div className={styles.imageFrame}>
-            <Image
-              src={project.image}
-              alt={`${project.name} application screenshot`}
-              width={1600}
-              height={1000}
-              sizes={featured ? '(max-width: 1023px) 92vw, 58vw' : '(max-width: 767px) 92vw, 46vw'}
-              className={styles.image}
-            />
+            <ParallaxImage>
+              <Image
+                src={project.image}
+                alt={`${project.name} application screenshot`}
+                width={1600}
+                height={1000}
+                sizes={
+                  featured ? '(max-width: 1023px) 92vw, 58vw' : '(max-width: 767px) 92vw, 46vw'
+                }
+                className={styles.image}
+              />
+            </ParallaxImage>
           </div>
         </Link>
       </PointerSurface>

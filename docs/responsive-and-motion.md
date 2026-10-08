@@ -6,7 +6,7 @@
 - [web.dev: typography](https://web.dev/learn/design/typography) and [macro layouts](https://web.dev/learn/design/macro-layouts).
 - [WCAG 2.2: reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) and [minimum target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html).
 - [Motion: scroll animations](https://motion.dev/docs/react-scroll-animations), [springs](https://motion.dev/docs/react-use-spring), and [accessibility](https://motion.dev/docs/react-accessibility).
-- [MDN: scroll snap type](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-snap-type) and [scroll padding](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-top).
+- [Motion: element scroll progress](https://motion.dev/docs/react-use-scroll) and [MDN: sticky positioning](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position).
 
 These sources establish principles, not one mandatory set of breakpoints or font sizes. The following scale is this portfolio's content-fit decision.
 
@@ -45,8 +45,14 @@ Motion 14 supplies small Client Components in `src/components/motion`. Pages con
 
 Touch input and reduced-motion preferences disable cursor and tilt effects. No looping decorative animation or scroll hijacking is used. See verification notes for responsive and interaction checks.
 
-## Section snapping
+## Scroll scenes and parallax
 
-Home, About, engineering, and project detail pages opt in with `snap-sections`. The root scroll container uses native `scroll-snap-type: y proximity`. Direct section children and the footer are snap targets; nested walkthrough content remains freely scrollable. There are no wheel/touch interception handlers, mandatory stops, full-screen section heights, or additional scroll containers.
+Section snapping has been removed. Scrolling remains native, with no wheel interception, artificial smoothing, or nearest-section settling.
 
-The existing `--anchor-offset` sets root scroll padding so targets settle below the sticky header. Section targets reset their scroll margin to avoid counting that offset twice; nested heading/hash destinations keep their existing margins. Project/design collections and the contact form do not opt in. Reduced-motion preferences turn snapping off. Native browser snapping remains available without JavaScript.
+`ScrollHero` holds the desktop hero below the header while its text rises by up to 1rem and its visual rises by up to 3rem with a 4% scale increase. Motion's element scroll progress drives those transforms directly; scrolling backwards reverses them. The scene reserves one viewport for reading plus half a viewport of scroll travel, then the hero releases into the page. Content stays fully opaque and all links remain interactive.
+
+`ParallaxImage` moves project screenshots from 1rem below to 1rem above their natural position while they pass through the viewport. Existing frame padding accommodates that travel. Hover tilt and scroll translation belong to separate nested elements so their transforms compose. Experience and engineering introductions use native sticky positioning alongside their scrolling content.
+
+A shared media hook enables scroll motion only at the existing 64rem desktop width, at least 48rem viewport height, and with no reduced-motion preference. The height threshold leaves room for the existing type and spacing; the hero also measures whether its actual content fits below the header. Oversized content, including enlarged text, disables hero pinning. Resize and media observers clean up. Motion values handle scroll updates without React state on each frame.
+
+Phone/tablet layouts, short viewports, reduced-motion mode, and no-JavaScript rendering use the ordinary stacked layout with no reserved scroll scene. Server-rendered content stays visible. The direct reticle cursor continues to track pointer movement without spring lag.
