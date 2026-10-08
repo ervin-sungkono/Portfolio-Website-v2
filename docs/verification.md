@@ -1,5 +1,15 @@
 # Phase 1 verification
 
+## Responsive layout and motion update — 8 October 2026
+
+- Production build, strict TypeScript, all 5 contact tests, formatting, and Git whitespace passed.
+- Chromium checked 8 routes (home, About, projects, designs, engineering, contact, WeTrack, and ChatGPT Clone) at 320, 360, 390, 430, 600, 767, 768, 820, 1023, 1024, 1280, and 1440 px. No horizontal overflow. Each route also passed a 200% root-font enlargement check at 390 px; this is a text-enlargement simulation, not a browser zoom test.
+- Axe-core found zero WCAG 2 A/AA, WCAG 2.1 AA, or WCAG 2.2 AA violations on those routes in both themes. Automated checks do not establish full conformance.
+- Checked the mobile square logo and clearance from controls, primary action followed by a CV/GitHub row, tablet stacked hero, desktop columns, minimum 44px primary action height, mobile Escape/focus return, and touch navigation with menu closing.
+- Desktop spring cursor displays its contextual project label and imagery responds to pointer tilt. Entry reveals complete after scrolling. Reduced-motion changes remove the cursor, and touch input never mounts it. Server-rendered content remains visible with JavaScript disabled. No browser runtime or hydration errors remained in the production build.
+- Visually reviewed phone, tablet, desktop, and cursor/tilt screenshots. Project artwork used the original local asset files as a network workaround; Dribbble requests were blocked. These checks establish layout and interaction behaviour, not remote artwork availability.
+- React and Web Interface Guidelines review: focused Client Components receive server-rendered children, continuous pointer movement updates Motion values, desktop cursor code loads on demand, media/event listeners clean up, native links and cursor remain usable, and reduced-motion preferences disable decorative effects. Shared tokens and content-fit media queries govern layout; see [responsive layout and motion](responsive-and-motion.md) for source guidance and calculations.
+
 ## Engineering showcase update — 8 October 2026
 
 - Production build, strict TypeScript, all 5 existing contact tests, formatting, and Git whitespace passed.

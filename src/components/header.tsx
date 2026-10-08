@@ -65,17 +65,17 @@ export function Header() {
         >
           <Image
             className="light-logo"
-            src="/images/navbar-logo.png"
+            src="/images/favicon-light.png"
             alt=""
-            width={44}
-            height={28}
+            width={48}
+            height={48}
           />
           <Image
             className="dark-logo"
-            src="/images/navbar-logo-white.png"
+            src="/images/favicon-dark.png"
             alt=""
-            width={44}
-            height={28}
+            width={48}
+            height={48}
           />
           <span>
             Ervin Sungkono<span className={styles.brandDot}>.</span>

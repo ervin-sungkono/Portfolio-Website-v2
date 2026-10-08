@@ -4,6 +4,7 @@ import '@/styles/globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { profile } from '@/content/profile';
+import { MotionEnhancements } from '@/components/motion/enhancements';
 
 const origin = process.env.SITE_URL || 'https://ervin-sungkono.vercel.app';
 const manrope = localFont({
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to Content
         </a>
         <Header />
+        <MotionEnhancements />
         <main id="main" tabIndex={-1}>
           {children}
         </main>

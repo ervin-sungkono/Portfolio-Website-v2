@@ -25,6 +25,12 @@ Added on 8 October 2026. Typed showcase content lives in `src/content/engineerin
 
 `/engineering` documents this portfolio's actual boundaries and decisions. Its source links target the feature branch while the preview is under review; change `portfolioSourceRef` to `main` after merge. Related-project selection is a small pure function prioritising common technologies and then category, with no search service or similarity library. Project detail metadata uses each project's title and screenshot when shared. No dependencies or client-side state were added.
 
+## Responsive layout and motion
+
+Added on 8 October 2026 after the engineering showcase. Motion 14 adds focused browser islands for entry reveals, desktop image tilt, scroll progress, and a spring cursor. Content remains server-rendered and visible without JavaScript. Pointer position uses Motion values rather than application state. The cursor loads only for desktop fine-pointer/hover capability with motion enabled; reduced-motion CSS disables decorative transforms and progress. The native cursor remains available.
+
+Shared relative typography and spacing tokens replace page-specific pixel sizing. The fluid values interpolate between documented endpoints; 48rem and 64rem breakpoints respond to available content width. See [responsive layout and motion](responsive-and-motion.md) for sources, sizing calculations, and component responsibilities.
+
 ## Deployment
 
 Build the feature branch as a Vercel preview with Node.js 24. The production project’s legacy Node.js 18 setting needs updating before merging this migration. Confirm Gmail credentials remain valid and reCAPTCHA permits the final hostname. Keep `SITE_URL` set to production so preview URLs do not enter canonical metadata.

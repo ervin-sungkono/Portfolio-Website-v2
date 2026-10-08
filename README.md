@@ -28,7 +28,7 @@ npm start
 - `src/lib/contact`: shared validation and server-only Gmail/reCAPTCHA services.
 - `src/styles`: design tokens and responsive page styles. Small component styles use CSS Modules.
 
-Pages are Server Components. Only the header and contact form require browser JavaScript. Project detail pages are generated at build time; search and category filters use shareable query parameters and server rendering. There is no database, CMS SDK, global state library, or background synchronisation in phase 1.
+Pages are Server Components. The header, contact form, and small motion islands use browser JavaScript. Project detail pages are generated at build time; search and category filters use shareable query parameters and server rendering. There is no database, CMS SDK, global state library, or background synchronisation in phase 1.
 
 ## Updating content
 
@@ -38,7 +38,7 @@ Edit `src/content/profile.ts`, `projects.json`, and `designs.json`. Put featured
 
 The homepage and About page link capabilities to specific projects. WeTrack, ChatGPT Clone, and Next Pokedex have walkthroughs with context, documented implementation, tradeoff analysis, source references, and explicitly proposed next validation steps. Team attribution stays visible; no individual ownership or measured outcomes are inferred.
 
-`/engineering` explains this site's architecture with links to the relevant source files and verification notes. Related projects use shared technologies and category to help visitors continue browsing. All showcase content renders on the server; no new dependencies or Client Components are needed.
+`/engineering` explains this site's architecture with links to the relevant source files and verification notes. Related projects use shared technologies and category to help visitors continue browsing. Showcase content renders on the server and passes into small Motion wrappers for selected entry and pointer effects. See [responsive layout and motion](docs/responsive-and-motion.md) for the shared sizing rules and animation boundaries.
 
 `portfolioSourceRef` in `src/content/engineering.ts` points source links to the rework branch while the preview is under review. Switch it to `main` once the rework is merged.
 

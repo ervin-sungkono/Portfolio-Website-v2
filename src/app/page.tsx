@@ -7,6 +7,8 @@ import { ExternalLink } from '@/components/external-link';
 import { ProjectCard } from '@/components/project-card';
 import { Experience } from '@/components/experience';
 import { EngineeringHighlights } from '@/components/engineering-highlights';
+import { Reveal } from '@/components/motion/reveal';
+import { PointerSurface } from '@/components/motion/pointer-surface';
 
 export const metadata = { alternates: { canonical: '/' } };
 
@@ -15,7 +17,7 @@ export default function HomePage() {
   return (
     <div className="container">
       <section className="hero">
-        <div className="hero-copy">
+        <Reveal className="hero-copy">
           <p className="eyebrow">Software Engineering & Interface Design</p>
           <h1>
             Frontend Engineering.
@@ -37,36 +39,39 @@ export default function HomePage() {
               GitHub <ArrowUpRightIcon size={17} aria-hidden="true" />
             </ExternalLink>
           </div>
-        </div>
-        <Link
-          href={`/project/${mainProject.slug}`}
-          className="hero-visual"
-          aria-label="Explore WeTrack, a project management application"
-        >
-          <div className="hero-image">
-            <Image
-              src={mainProject.image}
-              alt="WeTrack Kanban board with tasks organised into sprints"
-              width={1600}
-              height={990}
-              sizes="(max-width: 767px) 90vw, 48vw"
-              preload
-            />
-          </div>
-          <div className="hero-image-caption">
-            <div>
-              <strong>WeTrack</strong>
-              <span>A workspace for getting things done.</span>
+        </Reveal>
+        <PointerSurface>
+          <Link
+            href={`/project/${mainProject.slug}`}
+            className="hero-visual"
+            data-cursor="project"
+            aria-label="Explore WeTrack, a project management application"
+          >
+            <div className="hero-image">
+              <Image
+                src={mainProject.image}
+                alt="WeTrack Kanban board with tasks organised into sprints"
+                width={1600}
+                height={990}
+                sizes="(max-width: 1023px) 90vw, 48vw"
+                preload
+              />
             </div>
-            <ArrowUpRightIcon size={24} aria-hidden="true" />
-          </div>
-        </Link>
+            <div className="hero-image-caption">
+              <div>
+                <strong>WeTrack</strong>
+                <span>A workspace for getting things done.</span>
+              </div>
+              <ArrowUpRightIcon size={24} aria-hidden="true" />
+            </div>
+          </Link>
+        </PointerSurface>
       </section>
       <section className="selected section" id="projects">
-        <div className="section-heading">
+        <Reveal className="section-heading">
           <h2>Selected Projects.</h2>
           <p>Interfaces, integrations, and the engineering behind them.</p>
-        </div>
+        </Reveal>
         <div className="selected-grid">
           {featuredProjects.map((project, i) => (
             <ProjectCard key={project.id} project={project} featured={i === 0} />
@@ -79,30 +84,32 @@ export default function HomePage() {
       <EngineeringHighlights />
       <Experience />
       <section className="design-preview section">
-        <div className="section-heading">
+        <Reveal className="section-heading">
           <h2>A Feel for the Interface.</h2>
           <p>
             Exploring visual hierarchy, interaction, and the details that make an interface feel
             considered.
           </p>
-        </div>
+        </Reveal>
         <div className="design-preview-grid">
           {[designs[3], designs[1]].map((design) => (
-            <ExternalLink key={design.id} href={design.url} className="design-tile">
-              <div className="design-image">
-                <Image
-                  src={design.image}
-                  alt={design.title}
-                  width={1200}
-                  height={900}
-                  sizes="(max-width: 767px) 90vw, 46vw"
-                />
-              </div>
-              <div className="design-caption">
-                <h3>{design.title.replace(' - ', ': ')}</h3>
-                <ArrowUpRightIcon size={19} aria-hidden="true" />
-              </div>
-            </ExternalLink>
+            <Reveal key={design.id}>
+              <ExternalLink href={design.url} className="design-tile" data-cursor="project">
+                <div className="design-image">
+                  <Image
+                    src={design.image}
+                    alt={design.title}
+                    width={1200}
+                    height={900}
+                    sizes="(max-width: 767px) 90vw, 46vw"
+                  />
+                </div>
+                <div className="design-caption">
+                  <h3>{design.title.replace(' - ', ': ')}</h3>
+                  <ArrowUpRightIcon size={19} aria-hidden="true" />
+                </div>
+              </ExternalLink>
+            </Reveal>
           ))}
         </div>
         <Link href="/design" className="text-link section-link">

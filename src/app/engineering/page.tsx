@@ -9,6 +9,7 @@ import {
 } from '@/lib/content';
 import { ExternalLink } from '@/components/external-link';
 import styles from '@/components/engineering.module.css';
+import { Reveal } from '@/components/motion/reveal';
 
 export const metadata: Metadata = {
   title: 'Engineering This Portfolio',
@@ -42,8 +43,8 @@ export default function EngineeringPage() {
           <h2 id="boundaries-heading">Small Pieces. Clear Responsibilities.</h2>
           <p>
             Next.js App Router and TypeScript provide the foundation. Shared UI uses focused
-            components, native CSS, and common design tokens. Most pages need no custom client
-            component.
+            components, native CSS, and common design tokens. Content renders on the server; small
+            Client Components handle navigation, forms, and motion.
           </p>
         </div>
         <dl className={styles.boundaries}>
@@ -53,7 +54,9 @@ export default function EngineeringPage() {
           </div>
           <div>
             <dt>Browser Interactions</dt>
-            <dd>Navigation, themes, and contact feedback stay in small Client Components.</dd>
+            <dd>
+              Navigation, themes, contact feedback, and motion stay in small Client Components.
+            </dd>
           </div>
           <div>
             <dt>Email Delivery</dt>
@@ -62,25 +65,27 @@ export default function EngineeringPage() {
         </dl>
       </section>
       <section className="section" id="decisions" aria-labelledby="decisions-heading">
-        <div className="section-heading">
+        <Reveal className="section-heading">
           <h2 id="decisions-heading">Choices & Tradeoffs.</h2>
           <p>Each choice solves a current need and leaves a clear place for future changes.</p>
-        </div>
+        </Reveal>
         <div className={styles.decisionGrid}>
           {portfolioDecisions.map((decision) => (
             <article key={decision.title} className={styles.decision}>
-              <h3>{decision.title}</h3>
-              <p>{decision.implementation}</p>
-              <p>
-                <strong>Tradeoff.</strong> {decision.tradeoff}
-              </p>
-              <ExternalLink
-                href={portfolioFileUrl(decision.file)}
-                className={`text-link ${styles.sourceLink}`}
-              >
-                <code translate="no">{decision.file}</code>
-                <ArrowUpRightIcon size={16} aria-hidden="true" />
-              </ExternalLink>
+              <Reveal>
+                <h3>{decision.title}</h3>
+                <p>{decision.implementation}</p>
+                <p>
+                  <strong>Tradeoff.</strong> {decision.tradeoff}
+                </p>
+                <ExternalLink
+                  href={portfolioFileUrl(decision.file)}
+                  className={`text-link ${styles.sourceLink}`}
+                >
+                  <code translate="no">{decision.file}</code>
+                  <ArrowUpRightIcon size={16} aria-hidden="true" />
+                </ExternalLink>
+              </Reveal>
             </article>
           ))}
         </div>

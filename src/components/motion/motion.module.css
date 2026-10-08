@@ -1,0 +1,53 @@
+.surface {
+  min-width: 0;
+  transform-origin: center;
+}
+.progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: left;
+  z-index: 40;
+  pointer-events: none;
+}
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+.cursorRing {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: -1.25rem;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  background: transparent;
+}
+.cursorRing[data-mode='project'] {
+  background: var(--surface-high);
+}
+.cursorRing span {
+  font-size: 0.5rem;
+  font-weight: 750;
+}
+@media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse), (width < 64rem) {
+  .cursor {
+    display: none;
+  }
+  .surface {
+    transform: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress {
+    display: none;
+  }
+}

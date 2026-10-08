@@ -5,6 +5,7 @@ import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { designs } from '@/lib/content';
 import { profile } from '@/content/profile';
 import { ExternalLink } from '@/components/external-link';
+import { Reveal } from '@/components/motion/reveal';
 
 export const metadata: Metadata = {
   title: 'Design',
@@ -57,25 +58,27 @@ export default async function DesignPage({
       {filtered.length ? (
         <div className="design-grid">
           {filtered.map((design) => (
-            <ExternalLink key={design.id} href={design.url} className="design-tile">
-              <div className="design-image">
-                <Image
-                  src={design.image}
-                  alt={design.title}
-                  width={1200}
-                  height={900}
-                  sizes="(max-width: 767px) 90vw, 46vw"
-                  unoptimized={design.image.includes('.gif')}
-                />
-              </div>
-              <div className="design-caption">
-                <div>
-                  <p className="meta">{design.category} Design</p>
-                  <h2>{design.title.replace(' - ', ': ')}</h2>
+            <Reveal key={design.id}>
+              <ExternalLink href={design.url} className="design-tile" data-cursor="project">
+                <div className="design-image">
+                  <Image
+                    src={design.image}
+                    alt={design.title}
+                    width={1200}
+                    height={900}
+                    sizes="(max-width: 767px) 90vw, 46vw"
+                    unoptimized={design.image.includes('.gif')}
+                  />
                 </div>
-                <ArrowUpRightIcon size={20} aria-hidden="true" />
-              </div>
-            </ExternalLink>
+                <div className="design-caption">
+                  <div>
+                    <p className="meta">{design.category} Design</p>
+                    <h2>{design.title.replace(' - ', ': ')}</h2>
+                  </div>
+                  <ArrowUpRightIcon size={20} aria-hidden="true" />
+                </div>
+              </ExternalLink>
+            </Reveal>
           ))}
         </div>
       ) : (

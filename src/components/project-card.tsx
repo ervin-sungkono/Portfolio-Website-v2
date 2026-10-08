@@ -4,6 +4,8 @@ import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { projectStudies, type Project } from '@/lib/content';
 import { ExternalLink } from './external-link';
 import styles from './project-card.module.css';
+import { Reveal } from './motion/reveal';
+import { PointerSurface } from './motion/pointer-surface';
 
 export function ProjectCard({
   project,
@@ -17,23 +19,26 @@ export function ProjectCard({
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <article className={`${styles.card} ${featured ? styles.featured : ''}`}>
-      <Link
-        className={styles.imageLink}
-        href={`/project/${project.slug}`}
-        aria-label={`Explore ${project.name}`}
-      >
-        <div className={styles.imageFrame}>
-          <Image
-            src={project.image}
-            alt={`${project.name} application screenshot`}
-            width={1600}
-            height={1000}
-            sizes={featured ? '(max-width: 767px) 92vw, 65vw' : '(max-width: 767px) 92vw, 46vw'}
-            className={styles.image}
-          />
-        </div>
-      </Link>
-      <div className={styles.content}>
+      <PointerSurface>
+        <Link
+          className={styles.imageLink}
+          href={`/project/${project.slug}`}
+          aria-label={`Explore ${project.name}`}
+          data-cursor="project"
+        >
+          <div className={styles.imageFrame}>
+            <Image
+              src={project.image}
+              alt={`${project.name} application screenshot`}
+              width={1600}
+              height={1000}
+              sizes={featured ? '(max-width: 1023px) 92vw, 58vw' : '(max-width: 767px) 92vw, 46vw'}
+              className={styles.image}
+            />
+          </div>
+        </Link>
+      </PointerSurface>
+      <Reveal className={styles.content}>
         <div className={styles.heading}>
           <div>
             <p className="meta">{project.category}</p>
@@ -64,7 +69,7 @@ export function ProjectCard({
             Source <ArrowUpRightIcon size={16} aria-hidden="true" />
           </ExternalLink>
         </div>
-      </div>
+      </Reveal>
     </article>
   );
 }

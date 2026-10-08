@@ -1,24 +1,24 @@
 .highlights {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
-  gap: 80px;
+  gap: var(--layout-gap);
   border-top: 1px solid var(--line);
 }
 .intro > p:not(.eyebrow) {
   max-width: 36ch;
   color: var(--muted);
-  font-size: 15px;
-  margin-block: 22px;
+  font-size: var(--text-body);
+  margin-block: var(--space-6);
 }
 .evidenceLink {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding-block: 24px;
+  gap: var(--space-6);
+  padding-block: var(--space-6);
   border-bottom: 1px solid var(--line);
 }
-.evidenceLink:first-child {
+.evidenceList > div:first-child .evidenceLink {
   padding-top: 0;
 }
 .evidenceLink h3 {
@@ -26,8 +26,8 @@
 }
 .evidenceLink p {
   color: var(--muted);
-  font-size: 14px;
-  margin-block: 10px;
+  font-size: var(--text-body);
+  margin-block: var(--space-3);
   max-width: 48ch;
 }
 .evidenceLink:hover h3,
@@ -39,7 +39,7 @@
 }
 .projectLabel {
   color: var(--accent);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 .feature {
@@ -48,47 +48,47 @@
   border-radius: var(--radius);
   display: grid;
   grid-template-columns: 1.25fr 1fr;
-  gap: 48px;
-  padding: 40px;
+  gap: var(--space-12);
+  padding: var(--space-10);
 }
 .feature h2 {
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: var(--text-heading-small);
 }
 .feature p:not(.eyebrow) {
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--text-body);
 }
 .boundaries {
   display: grid;
   align-content: center;
-  gap: 18px;
+  gap: var(--space-5);
   margin: 0;
 }
 .boundaries dt {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-2);
 }
 .boundaries dd {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: 1.7;
   margin: 0;
 }
 .decisions {
   display: grid;
-  gap: 32px;
+  gap: var(--space-8);
 }
 .decision {
-  padding-top: 28px;
+  padding-top: var(--space-8);
   border-top: 1px solid var(--line);
 }
 .decision h3 {
-  margin: 0 0 14px;
+  margin: 0 0 var(--space-4);
 }
 .decision p {
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--text-body);
   line-height: 1.85;
 }
 .decision p strong {
@@ -96,34 +96,37 @@
   font-weight: 650;
 }
 .sourceLink {
+  max-width: 100%;
   overflow-wrap: anywhere;
 }
 .sourceLink code {
-  font-size: 12px;
+  min-width: 0;
+  font-size: var(--text-xs);
 }
 .nextStep {
-  margin-top: 32px;
-  padding: 24px;
+  margin-top: var(--space-8);
+  padding: var(--space-6);
   border-left: 3px solid var(--accent);
   background: var(--surface);
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 .nextStep h3 {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
 }
 .nextStep p {
   margin: 0;
 }
 .contents {
-  margin-top: 32px;
+  margin-top: var(--space-8);
   display: grid;
-  gap: 6px;
+  gap: var(--space-2);
   justify-items: start;
 }
 .contents a {
-  font-size: 13px;
+  min-height: 2.75rem;
+  font-size: var(--text-sm);
   color: var(--muted);
-  padding-block: 8px;
+  padding-block: var(--space-2);
 }
 .contents a:hover {
   color: var(--accent);
@@ -131,27 +134,27 @@
 .decisionGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 32px 48px;
+  gap: var(--space-8) var(--space-12);
 }
 .checks {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
+  gap: var(--space-12);
   border-top: 1px solid var(--line);
 }
 .checks p {
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--text-body);
   max-width: 58ch;
 }
 .checks ul {
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--text-body);
   line-height: 1.85;
-  padding-left: 20px;
+  padding-left: var(--space-5);
 }
 .checks li {
-  margin-block: 12px;
+  margin-block: var(--space-3);
 }
 .highlights > *,
 .feature > *,
@@ -159,30 +162,30 @@
 .checks > * {
   min-width: 0;
 }
-@media (max-width: 1023px) {
+@media (width < 64rem) {
   .highlights {
-    gap: 40px;
+    gap: var(--layout-gap);
   }
   .feature {
-    gap: 32px;
-    padding: 28px;
+    gap: var(--space-8);
+    padding: var(--space-8);
   }
 }
-@media (max-width: 767px) {
+@media (width < 48rem) {
   .highlights,
   .feature,
   .decisionGrid,
   .checks {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: var(--space-8);
   }
   .feature {
-    padding: 24px;
+    padding: var(--space-6);
   }
   .feature .eyebrow {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
   }
   .nextStep {
-    padding: 20px;
+    padding: var(--space-5);
   }
 }
