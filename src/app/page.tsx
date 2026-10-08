@@ -6,6 +6,7 @@ import { featuredProjects, designs } from '@/lib/content';
 import { ExternalLink } from '@/components/external-link';
 import { ProjectCard } from '@/components/project-card';
 import { Experience } from '@/components/experience';
+import { EngineeringHighlights } from '@/components/engineering-highlights';
 
 export const metadata = { alternates: { canonical: '/' } };
 
@@ -17,9 +18,9 @@ export default function HomePage() {
         <div className="hero-copy">
           <p className="eyebrow">Software Engineering & Interface Design</p>
           <h1>
-            Thoughtful Design.
+            Frontend Engineering.
             <br />
-            <span>Reliable Code.</span>
+            <span>From UI to Integration.</span>
           </h1>
           <p className="hero-description">
             I’m Ervin Sungkono, a software engineer at Samsung R&D Institute Indonesia with a focus
@@ -31,6 +32,9 @@ export default function HomePage() {
             </Link>
             <ExternalLink href={profile.cv} className="text-link">
               View CV <ArrowUpRightIcon size={17} aria-hidden="true" />
+            </ExternalLink>
+            <ExternalLink href={profile.github} className="text-link">
+              GitHub <ArrowUpRightIcon size={17} aria-hidden="true" />
             </ExternalLink>
           </div>
         </div>
@@ -72,6 +76,7 @@ export default function HomePage() {
           Explore Projects <ArrowRightIcon size={18} aria-hidden="true" />
         </Link>
       </section>
+      <EngineeringHighlights />
       <Experience />
       <section className="design-preview section">
         <div className="section-heading">

@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
-import type { Project } from '@/lib/content';
+import { projectStudies, type Project } from '@/lib/content';
+import { ExternalLink } from './external-link';
 import styles from './project-card.module.css';
 
 export function ProjectCard({
@@ -53,6 +54,15 @@ export function ProjectCard({
           {project.topics.slice(0, 4).map((topic) => (
             <span key={topic}>{topic}</span>
           ))}
+        </div>
+        <div className={styles.links}>
+          <Link href={`/project/${project.slug}`} className="text-link">
+            {projectStudies[project.slug] ? 'Read Walkthrough' : 'Project Details'}
+            <ArrowUpRightIcon size={16} aria-hidden="true" />
+          </Link>
+          <ExternalLink href={project.source} className="text-link">
+            Source <ArrowUpRightIcon size={16} aria-hidden="true" />
+          </ExternalLink>
         </div>
       </div>
     </article>

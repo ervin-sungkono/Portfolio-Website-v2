@@ -1,5 +1,18 @@
 # Phase 1 verification
 
+## Engineering showcase update — 8 October 2026
+
+- Production build, strict TypeScript, all 5 existing contact tests, formatting, and Git whitespace passed.
+- Chromium checked home, About, projects, engineering, all 3 featured walkthroughs, and an unannotated mobile project at widths 320, 390, 768, 1024, and 1440 px. No horizontal overflow or runtime errors.
+- Axe-core reported no WCAG 2 A/AA or WCAG 2.1 AA violations on those 8 routes in light and dark themes, after theme transitions settled.
+- Checked capability-to-walkthrough navigation, hash anchors clearing the sticky header, mobile Engineering navigation and menu closing, related project cards, project-specific Open Graph metadata, search and empty-state recovery, the engineering sitemap entry, and unknown-project 404 responses.
+- Visually reviewed the desktop homepage and mobile engineering page. Local project screenshots used the original asset files as a network workaround. Local Dribbble image requests were blocked during layout review; this update does not independently verify those remote assets. Hosted remote loading needs a separate check.
+- React and Web Interface Guidelines review: new content remains server-rendered, hooks remain in existing interactive components, links use native navigation semantics, headings and icons have accessible markup, CSS uses shared theme tokens and responsive grids, and no dependencies were added.
+- Walkthrough features were checked against the public WeTrack and ChatGPT Clone READMEs and Next Pokedex repository description. Tradeoffs and proposed next validation steps are labelled as analysis; no measured performance improvements or individual team contributions are asserted.
+- The contact integration was not changed. Real Gmail receipt remains unverified; the preview hostname must be authorised in reCAPTCHA before a real-message test.
+
+## Initial rework — 7 October 2026
+
 Checked on 7 October 2026 with Node.js 24 and Next.js 16.4.0.
 
 - Production build: passed; 17 generated project pages plus all original public routes.

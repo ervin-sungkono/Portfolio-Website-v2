@@ -32,7 +32,15 @@ Pages are Server Components. Only the header and contact form require browser Ja
 
 ## Updating content
 
-Edit `src/content/profile.ts`, `projects.json`, and `designs.json`. Put featured projects first in `projects.json`; the homepage selects the first three. Keep existing slugs stable because they are public URLs. Additional verified detail-page notes live in `src/lib/content.ts`.
+Edit `src/content/profile.ts`, `projects.json`, and `designs.json`. Put featured projects first in `projects.json`; the homepage selects the first three. Keep existing slugs stable because they are public URLs. Typed walkthroughs, capability links, and portfolio architecture decisions live in `src/content/engineering.ts`.
+
+## Engineering showcase
+
+The homepage and About page link capabilities to specific projects. WeTrack, ChatGPT Clone, and Next Pokedex have walkthroughs with context, documented implementation, tradeoff analysis, source references, and explicitly proposed next validation steps. Team attribution stays visible; no individual ownership or measured outcomes are inferred.
+
+`/engineering` explains this site's architecture with links to the relevant source files and verification notes. Related projects use shared technologies and category to help visitors continue browsing. All showcase content renders on the server; no new dependencies or Client Components are needed.
+
+`portfolioSourceRef` in `src/content/engineering.ts` points source links to the rework branch while the preview is under review. Switch it to `main` once the rework is merged.
 
 Images point to the owner’s existing `web-assets` repository and original Dribbble CDN. Add local images to `public/images`; configure new remote hosts in `next.config.ts`.
 

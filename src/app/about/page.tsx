@@ -4,6 +4,7 @@ import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { profile, skills } from '@/content/profile';
 import { Experience } from '@/components/experience';
 import { ExternalLink } from '@/components/external-link';
+import { EngineeringHighlights } from '@/components/engineering-highlights';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -42,6 +43,7 @@ export default function AboutPage() {
         </div>
       </section>
       <Experience detailed />
+      <EngineeringHighlights />
       <section className="skills-section section">
         <div className="section-heading">
           <h2>Tools I Work With.</h2>

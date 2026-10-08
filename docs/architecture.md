@@ -19,6 +19,12 @@ Content reviewed on 7 October 2026.
 - Experience and education: public indexed version of https://www.linkedin.com/in/ervin-cahyadinata-sungkono. Samsung since December 2024; Pharma Metric Labs March to September 2024; Kalbe February 2023 to February 2024; BINUS Computer Science 2020 to 2024. LinkedIn is not polled at runtime. No unverified Samsung duties or outcomes are claimed.
 - Original CV preserved; its currency has not been independently verified.
 
+## Engineering showcase
+
+Added on 8 October 2026. Typed showcase content lives in `src/content/engineering.ts` and is exported through the existing content module. A shared Server Component links engineering capabilities to the relevant project walkthroughs. Project pages render documented features, clearly labelled tradeoff analysis, proposed next validation steps, and original source references. WeTrack retains its team credits. Next Pokedex's rendering summary uses the repository description rather than inferring route-level behaviour from its generic README.
+
+`/engineering` documents this portfolio's actual boundaries and decisions. Its source links target the feature branch while the preview is under review; change `portfolioSourceRef` to `main` after merge. Related-project selection is a small pure function prioritising common technologies and then category, with no search service or similarity library. Project detail metadata uses each project's title and screenshot when shared. No dependencies or client-side state were added.
+
 ## Deployment
 
 Build the feature branch as a Vercel preview with Node.js 24. The production project’s legacy Node.js 18 setting needs updating before merging this migration. Confirm Gmail credentials remain valid and reCAPTCHA permits the final hostname. Keep `SITE_URL` set to production so preview URLs do not enter canonical metadata.

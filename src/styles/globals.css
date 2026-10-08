@@ -684,6 +684,29 @@ p {
 .detail-body h3 {
   margin-top: 32px;
 }
+.walkthrough {
+  margin-top: 48px;
+}
+.walkthrough h2 {
+  margin-bottom: 16px;
+}
+.walkthrough .walkthrough-note {
+  font-size: 12px;
+  margin-bottom: 28px;
+}
+.walkthrough article h3,
+.walkthrough #next-step h3 {
+  margin-top: 0;
+}
+#next-step {
+  scroll-margin-top: 94px;
+}
+.related-projects {
+  border-top: 1px solid var(--line);
+}
+.related-projects .project-grid {
+  margin-bottom: 0;
+}
 .feature-list {
   padding-left: 20px;
 }

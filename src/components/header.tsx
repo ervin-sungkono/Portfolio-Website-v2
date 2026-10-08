@@ -10,8 +10,9 @@ import styles from './header.module.css';
 const navigation = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
+  { label: 'Projects', href: '/project' },
+  { label: 'Engineering', href: '/engineering' },
   { label: 'Design', href: '/design' },
-  { label: 'Project', href: '/project' },
 ];
 
 function syncThemeColor(theme: string) {

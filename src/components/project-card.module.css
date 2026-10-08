@@ -63,6 +63,12 @@
   line-height: 1.75;
   margin: 16px 0;
 }
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 16px;
+}
 .featured .imageFrame {
   aspect-ratio: 1.75;
   padding: 40px;

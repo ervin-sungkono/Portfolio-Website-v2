@@ -32,7 +32,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 22px;
   margin-left: auto;
 }
 .nav a {
@@ -64,7 +64,7 @@
 .menu {
   display: none;
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .inner {
     min-height: 68px;
     gap: 8px;
