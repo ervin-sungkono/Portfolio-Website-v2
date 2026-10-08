@@ -1,5 +1,15 @@
 # Phase 1 verification
 
+## Section snapping and immediate cursor update — 8 October 2026
+
+- Production build, strict TypeScript, formatting, and Git whitespace passed. No dependencies or backend changes were needed.
+- Chromium checked 8 routes at 320, 390, 820, and 1440 px with no horizontal overflow or browser runtime errors. Native wheel scrolling settled at a section target below the sticky header; the target offset is counted once.
+- Keyboard Home/End reached the beginning and footer. A mobile touch-capable context snapped near the next section and retained arbitrary scroll positions within its long project section. Walkthrough hash links stayed visible below the header. Navigation from Home to the project collection disabled snapping; collections and contact keep normal scrolling.
+- The four-corner cursor matched exact pointer coordinates on the next animation frame at several positions, including viewport edges, without introducing horizontal overflow. Checked link diamond, project label, immediate press feedback, and hiding over inputs. The native cursor is preserved.
+- Reduced-motion changes disabled snapping and unmounted the custom cursor; touch did not mount it. Snapping and visible content remained available with JavaScript disabled.
+- Visually reviewed desktop project and link cursor states. Remote project and Dribbble image requests were blocked for these interaction checks because the previous local asset checkout was unavailable; this update does not verify remote artwork loading. Earlier accessibility results are historical; a fresh axe audit was not run for this focused change.
+- React quality review retained focused client boundaries, direct Motion values for pointer updates, passive pointer listeners with cleanup, and CSS-only snapping without wheel interception.
+
 ## Responsive layout and motion update — 8 October 2026
 
 - Production build, strict TypeScript, all 5 contact tests, formatting, and Git whitespace passed.

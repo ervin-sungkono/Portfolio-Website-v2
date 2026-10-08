@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useMotionValue, useSpring } from 'motion/react';
+import { motion, useMotionValue } from 'motion/react';
 import styles from './motion.module.css';
 
 export default function DesktopCursor() {
   const [mode, setMode] = useState<'idle' | 'link' | 'project'>('idle');
-  const positioned = useRef(false);
   const hoverScale = useRef(1);
-  const x = useSpring(0, { stiffness: 450, damping: 35, mass: 0.4 });
-  const y = useSpring(0, { stiffness: 450, damping: 35, mass: 0.4 });
-  const scale = useSpring(1, { stiffness: 300, damping: 25 });
+  // Direct values keep the reticle at the pointer without spring lag.
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const scale = useMotionValue(1);
   const opacity = useMotionValue(0);
 
   useEffect(() => {
@@ -24,14 +24,8 @@ export default function DesktopCursor() {
         opacity.set(0);
         return;
       }
-      if (!positioned.current) {
-        x.jump(event.clientX);
-        y.jump(event.clientY);
-        positioned.current = true;
-      } else {
-        x.set(event.clientX);
-        y.set(event.clientY);
-      }
+      x.set(event.clientX);
+      y.set(event.clientY);
       opacity.set(1);
     }
     function over(event: PointerEvent) {
@@ -43,12 +37,12 @@ export default function DesktopCursor() {
           ? 'link'
           : 'idle';
       setMode(next);
-      hoverScale.current = next === 'project' ? 1.5 : next === 'link' ? 1.2 : 1;
+      hoverScale.current = next === 'link' ? 1.2 : 1;
       scale.set(hoverScale.current);
     }
     function hide() {
       opacity.set(0);
-      positioned.current = false;
+      scale.set(hoverScale.current);
     }
     function down() {
       scale.set(hoverScale.current * 0.8);
@@ -76,8 +70,13 @@ export default function DesktopCursor() {
 
   return (
     <motion.div aria-hidden="true" className={styles.cursor} style={{ x, y, opacity }}>
-      <motion.div className={styles.cursorRing} data-mode={mode} style={{ scale }}>
-        {mode === 'project' && <span>View</span>}
+      <motion.div className={styles.cursorFeedback} style={{ scale }}>
+        <div className={styles.cursorReticle} data-mode={mode}>
+          {[0, 1, 2, 3].map((corner) => (
+            <span key={corner} className={styles.cursorCorner} />
+          ))}
+          {mode === 'project' && <span className={styles.cursorLabel}>View ↗</span>}
+        </div>
       </motion.div>
     </motion.div>
   );

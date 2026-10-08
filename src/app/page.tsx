@@ -15,7 +15,7 @@ export const metadata = { alternates: { canonical: '/' } };
 export default function HomePage() {
   const mainProject = featuredProjects[0];
   return (
-    <div className="container">
+    <div className="container snap-sections">
       <section className="hero">
         <Reveal className="hero-copy">
           <p className="eyebrow">Software Engineering & Interface Design</p>

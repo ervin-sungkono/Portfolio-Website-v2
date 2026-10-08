@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function EngineeringPage() {
   return (
-    <div className="container">
+    <div className="container snap-sections">
       <section className="page-heading">
         <p className="eyebrow">A Working Example</p>
         <h1>Inside This Portfolio.</h1>

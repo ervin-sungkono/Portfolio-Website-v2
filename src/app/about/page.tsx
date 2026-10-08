@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="container">
+    <div className="container snap-sections">
       <section className="about-hero page-heading">
         <div>
           <p className="eyebrow">About Ervin</p>

@@ -6,6 +6,7 @@
 - [web.dev: typography](https://web.dev/learn/design/typography) and [macro layouts](https://web.dev/learn/design/macro-layouts).
 - [WCAG 2.2: reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) and [minimum target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html).
 - [Motion: scroll animations](https://motion.dev/docs/react-scroll-animations), [springs](https://motion.dev/docs/react-use-spring), and [accessibility](https://motion.dev/docs/react-accessibility).
+- [MDN: scroll snap type](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-snap-type) and [scroll padding](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-top).
 
 These sources establish principles, not one mandatory set of breakpoints or font sizes. The following scale is this portfolio's content-fit decision.
 
@@ -40,6 +41,12 @@ Motion 14 supplies small Client Components in `src/components/motion`. Pages con
 - `Reveal` runs a short transform/opacity animation once when content enters the viewport. Server HTML stays visible without JavaScript. Keyboard focus completes running reveals; reduced-motion mode skips them.
 - `PointerSurface` applies bounded spring tilt to imagery for a mouse with fine pointer/hover capability at desktop width. Coordinates update springs rather than React state, and pointer exit returns the image to neutral.
 - `MotionEnhancements` provides scroll progress and loads the cursor component only when pointer and motion preferences allow it.
-- `DesktopCursor` adds a spring-following ring, contextual project label, and press feedback. It preserves the native cursor, ignores hit testing, hides over text inputs or outside the document, and cleans up event listeners. React state changes only for hover mode; continuous positions use Motion values.
+- `DesktopCursor` adds a four-corner reticle, diamond-shaped link feedback, contextual project label, and press feedback. Pointer coordinates update plain Motion values directly, without springs, interpolation, or movement delays. It preserves the native cursor, ignores hit testing, hides over text inputs or outside the document, and cleans up event listeners. React state changes only for hover mode.
 
 Touch input and reduced-motion preferences disable cursor and tilt effects. No looping decorative animation or scroll hijacking is used. See verification notes for responsive and interaction checks.
+
+## Section snapping
+
+Home, About, engineering, and project detail pages opt in with `snap-sections`. The root scroll container uses native `scroll-snap-type: y proximity`. Direct section children and the footer are snap targets; nested walkthrough content remains freely scrollable. There are no wheel/touch interception handlers, mandatory stops, full-screen section heights, or additional scroll containers.
+
+The existing `--anchor-offset` sets root scroll padding so targets settle below the sticky header. Section targets reset their scroll margin to avoid counting that offset twice; nested heading/hash destinations keep their existing margins. Project/design collections and the contact form do not opt in. Reduced-motion preferences turn snapping off. Native browser snapping remains available without JavaScript.

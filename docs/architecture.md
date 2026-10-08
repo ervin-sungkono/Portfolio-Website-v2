@@ -27,7 +27,7 @@ Added on 8 October 2026. Typed showcase content lives in `src/content/engineerin
 
 ## Responsive layout and motion
 
-Added on 8 October 2026 after the engineering showcase. Motion 14 adds focused browser islands for entry reveals, desktop image tilt, scroll progress, and a spring cursor. Content remains server-rendered and visible without JavaScript. Pointer position uses Motion values rather than application state. The cursor loads only for desktop fine-pointer/hover capability with motion enabled; reduced-motion CSS disables decorative transforms and progress. The native cursor remains available.
+Added on 8 October 2026 after the engineering showcase. Motion 14 adds focused browser islands for entry reveals, desktop image tilt, scroll progress, and a reticle cursor. Content remains server-rendered and visible without JavaScript. Pointer position uses direct Motion values rather than application state or spring interpolation. The cursor loads only for desktop fine-pointer/hover capability with motion enabled; reduced-motion CSS disables decorative transforms, progress, and section snapping. The native cursor remains available. Showcase pages opt in to native proximity snapping without intercepting scrolling.
 
 Shared relative typography and spacing tokens replace page-specific pixel sizing. The fluid values interpolate between documented endpoints; 48rem and 64rem breakpoints respond to available content width. See [responsive layout and motion](responsive-and-motion.md) for sources, sizing calculations, and component responsibilities.
 
