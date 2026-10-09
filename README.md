@@ -1,4 +1,4 @@
-# Ervin Sungkono’s Portfolio
+# Ervin Cahyadinata Sungkono’s Portfolio
 
 Phase 1 rework of the original portfolio, built with Next.js 16.4 App Router, React, and strict TypeScript. The original logo, avatar, screenshots, Dribbble artwork, CV, social links, and five public routes are preserved.
 

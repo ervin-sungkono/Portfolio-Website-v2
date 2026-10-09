@@ -3,11 +3,11 @@ import { MagnifyingGlassIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/
 import { projects, filterProjects } from '@/lib/content';
 import { ProjectCard } from '@/components/project-card';
 import { pageMetadata } from '@/lib/metadata';
+import { profile } from '@/content/profile';
 
 export const metadata = pageMetadata({
   title: 'Software Engineering Projects',
-  description:
-    'Explore Ervin Sungkono’s React and Next.js projects, including WeTrack, a streaming chat interface, and an API-driven catalogue, with case studies and source code.',
+  description: `Explore ${profile.name}’s React and Next.js projects, including WeTrack, a streaming chat interface, and an API-driven catalogue, with case studies and source code.`,
   path: '/project',
 });
 

@@ -10,11 +10,11 @@ import { ExternalLink } from '@/components/external-link';
 import styles from '@/components/engineering.module.css';
 import { Reveal } from '@/components/motion/reveal';
 import { pageMetadata } from '@/lib/metadata';
+import { profile } from '@/content/profile';
 
 export const metadata = pageMetadata({
   title: 'Next.js Portfolio Architecture & Engineering',
-  description:
-    'Explore the Next.js and TypeScript architecture behind Ervin Sungkono’s portfolio: Server Components, accessible UI, contact validation, and engineering tradeoffs.',
+  description: `Explore the Next.js and TypeScript architecture behind ${profile.name}’s portfolio: Server Components, accessible UI, contact validation, and engineering tradeoffs.`,
   path: '/engineering',
 });
 

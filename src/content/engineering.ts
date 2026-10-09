@@ -1,3 +1,5 @@
+import { profile } from './profile';
+
 export type ProjectStudy = {
   focus: string;
   context: string;
@@ -13,8 +15,7 @@ export type ProjectStudy = {
 export const projectStudies: Readonly<Partial<Record<string, ProjectStudy>>> = {
   'wetrack-app': {
     focus: 'Product workflows & integrations',
-    context:
-      'A Computer Science thesis project created by Ervin Sungkono, Christopher Vinantius, and Kenneth Nathanael. The application brings task tracking, scheduling, and collaboration into one workspace.',
+    context: `A Computer Science thesis project created by ${profile.name}, Christopher Vinantius, and Kenneth Nathanael. The application brings task tracking, scheduling, and collaboration into one workspace.`,
     challenge:
       'A task is more than a title: it has a schedule, attachments, collaborators, and a history. The interface needs to make that information usable across boards, calendars, and dashboards.',
     highlights: [

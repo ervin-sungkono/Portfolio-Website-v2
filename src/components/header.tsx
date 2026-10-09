@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ListIcon, XIcon, SunIcon, MoonIcon } from '@phosphor-icons/react';
 import styles from './header.module.css';
+import { profile } from '@/content/profile';
 
 const navigation = [
   { label: 'Home', href: '/' },
@@ -25,10 +26,13 @@ function syncThemeColor(theme: string) {
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    syncThemeColor(document.documentElement.dataset.theme || 'light');
+    const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    setTheme(currentTheme);
+    syncThemeColor(currentTheme);
   }, [pathname]);
 
   useEffect(() => {
@@ -46,6 +50,7 @@ export function Header() {
   function toggleTheme() {
     const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = theme;
+    setTheme(theme);
     syncThemeColor(theme);
     try {
       localStorage.setItem('portfolio-theme', theme);
@@ -55,12 +60,17 @@ export function Header() {
   }
 
   return (
-    <header className={styles.header}>
+    <header
+      className={styles.header}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <div className={`container ${styles.inner}`}>
         <Link
           className={styles.brand}
           href="/"
-          aria-label="Ervin Sungkono, home"
+          aria-label={`${profile.name}, home`}
           onClick={() => setOpen(false)}
         >
           <Image
@@ -78,9 +88,40 @@ export function Header() {
             height={48}
           />
           <span>
-            Ervin Sungkono<span className={styles.brandDot}>.</span>
+            {profile.name}
+            <span className={styles.brandDot}>.</span>
           </span>
         </Link>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={
+              theme
+                ? `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`
+                : 'Switch color theme'
+            }
+            onClick={toggleTheme}
+          >
+            <MoonIcon className="light-logo" size={20} aria-hidden="true" />
+            <SunIcon className="dark-logo" size={20} aria-hidden="true" />
+          </button>
+          <button
+            ref={menuButton}
+            type="button"
+            className={`icon-button ${styles.menu}`}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-controls="primary-navigation"
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? (
+              <XIcon size={24} aria-hidden="true" />
+            ) : (
+              <ListIcon size={24} aria-hidden="true" />
+            )}
+          </button>
+        </div>
         <nav
           id="primary-navigation"
           aria-label="Primary"
@@ -109,32 +150,6 @@ export function Header() {
             Contact
           </Link>
         </nav>
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Switch color theme"
-            onClick={toggleTheme}
-          >
-            <MoonIcon className="light-logo" size={20} aria-hidden="true" />
-            <SunIcon className="dark-logo" size={20} aria-hidden="true" />
-          </button>
-          <button
-            ref={menuButton}
-            type="button"
-            className={`icon-button ${styles.menu}`}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-controls="primary-navigation"
-            aria-expanded={open}
-            onClick={() => setOpen(!open)}
-          >
-            {open ? (
-              <XIcon size={24} aria-hidden="true" />
-            ) : (
-              <ListIcon size={24} aria-hidden="true" />
-            )}
-          </button>
-        </div>
       </div>
     </header>
   );

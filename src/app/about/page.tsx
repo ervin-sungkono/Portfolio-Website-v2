@@ -8,8 +8,7 @@ import { pageMetadata, site } from '@/lib/metadata';
 
 export const metadata = pageMetadata({
   title: 'About — Software Engineering Experience',
-  description:
-    'Meet Ervin Cahyadinata Sungkono, a software engineer at Samsung R&D Institute Indonesia with experience in frontend development, React, Next.js, and UI design.',
+  description: `Meet ${profile.name}, a software engineer at Samsung R&D Institute Indonesia with experience in frontend development, React, Next.js, and UI design.`,
   path: '/about',
 });
 
@@ -22,7 +21,6 @@ const profileSchema = {
     '@type': 'Person',
     '@id': `${site.url}/#person`,
     name: profile.name,
-    alternateName: profile.shortName,
     url: site.url,
     jobTitle: profile.title,
     sameAs: [profile.linkedin, profile.github, profile.dribbble],
@@ -38,7 +36,7 @@ export default function AboutPage() {
       />
       <section className="about-hero page-heading">
         <div>
-          <p className="eyebrow">About Ervin</p>
+          <p className="eyebrow">About {profile.name}</p>
           <h1>
             Engineering, With
             <br />
@@ -55,7 +53,7 @@ export default function AboutPage() {
         <div className="avatar-frame">
           <Image
             src="/images/hero-image.png"
-            alt="Ervin’s original illustrated portfolio avatar"
+            alt={`${profile.name}’s original illustrated portfolio avatar`}
             width={684}
             height={722}
             sizes="(max-width: 767px) 280px, 360px"

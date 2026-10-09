@@ -6,8 +6,7 @@ import { pageMetadata } from '@/lib/metadata';
 
 export const metadata = pageMetadata({
   title: 'Contact — Software Engineering Opportunities',
-  description:
-    'Contact Ervin Sungkono about software engineering opportunities, React and Next.js projects, frontend development, or interface design collaborations.',
+  description: `Contact ${profile.name} about software engineering opportunities, React and Next.js projects, frontend development, or interface design collaborations.`,
   path: '/contact',
 });
 export default function ContactPage() {

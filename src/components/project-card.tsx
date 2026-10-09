@@ -47,17 +47,8 @@ export function ProjectCard({
         <div className={styles.heading}>
           <div>
             <p className="meta">{project.category}</p>
-            <Heading>
-              <Link href={`/project/${project.slug}`}>{project.name}</Link>
-            </Heading>
+            <Heading>{project.name}</Heading>
           </div>
-          <Link
-            href={`/project/${project.slug}`}
-            className={styles.arrow}
-            aria-label={`View ${project.name}`}
-          >
-            <ArrowUpRightIcon size={23} aria-hidden="true" />
-          </Link>
         </div>
         <p className={styles.description}>{project.description}</p>
         <div className="tags">
@@ -68,10 +59,12 @@ export function ProjectCard({
         <div className={styles.links}>
           <Link href={`/project/${project.slug}`} className="text-link">
             {projectStudies[project.slug] ? 'Read Walkthrough' : 'Project Details'}
+            <span className="sr-only"> for {project.name}</span>
             <ArrowUpRightIcon size={16} aria-hidden="true" />
           </Link>
           <ExternalLink href={project.source} className="text-link">
-            Source <ArrowUpRightIcon size={16} aria-hidden="true" />
+            Source <span className="sr-only"> for {project.name}</span>
+            <ArrowUpRightIcon size={16} aria-hidden="true" />
           </ExternalLink>
         </div>
       </Reveal>

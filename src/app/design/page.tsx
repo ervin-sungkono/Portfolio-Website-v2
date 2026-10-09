@@ -9,8 +9,7 @@ import { pageMetadata } from '@/lib/metadata';
 
 export const metadata = pageMetadata({
   title: 'Web & Mobile Interface Design',
-  description:
-    'Browse web and mobile interface designs by Ervin Sungkono, including dashboards, healthcare websites, and application UI explorations.',
+  description: `Browse web and mobile interface designs by ${profile.name}, including dashboards, healthcare websites, and application UI explorations.`,
   path: '/design',
 });
 export default async function DesignPage({

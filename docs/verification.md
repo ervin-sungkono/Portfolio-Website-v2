@@ -1,5 +1,15 @@
 # Phase 1 verification
 
+## Accessibility remediation and full-name correction — 9 October 2026
+
+- The mobile menu toggle precedes its navigation links in DOM and visual order. Forward Tab enters Home through Contact, then closes the menu on leaving the header; reverse Tab and Escape focus return pass. A short 390×320 viewport scrolls the menu links into view without obscuring focus. No modal trap is used for this disclosure navigation.
+- The hero link now derives its name from its visible caption. Contact/search borders use a separate control token; contact borders measure about 4.09:1 light and 4.58:1 dark against the surrounding form. Theme action labels update after switching and persist across reloads.
+- Cards remove redundant title/arrow links and add the project name to walkthrough and source actions. Image links still open the project, with three links per card instead of five.
+- Axe-core 4.14.0 WCAG 2/2.1 A/AA and 2.2 AA tagged checks found zero automated violations on eight routes in both themes. Reflow, 200% root-font enlargement, and text-spacing checks had no horizontal document overflow. This does not replace screen-reader or real-browser zoom testing.
+- Ervin Cahyadinata Sungkono is the authoritative name in profile content. Header, introduction, footer, credits, titles, descriptions, social metadata, image alternatives, and JSON-LD use the full name; the shortened alias is removed. All 23 public-page titles include the full name and existing public account URLs are preserved.
+- Browser checks at 320, 390, 768, 820, 1024, 1200, and 1440 px verified full-name header layout without overflow. Existing scroll-linked hero, project parallax, reduced-motion behavior, keyboard access, and no-JavaScript content checks passed. No browser runtime errors occurred.
+- Production build, TypeScript, formatting, and Git whitespace passed. React review retained small client boundaries, native navigation semantics, and cleaned-up key listeners; metadata and identity content remain server-rendered. No dependencies or professional-content features were added.
+
 ## Accessibility audit and ervincs.com metadata — 9 October 2026
 
 - See [the detailed accessibility, SEO, and professional review](portfolio-audit-2026-10-09.md) for evidence, remaining defects, and scope limits. Fresh axe-core 4.14.0 testing found a homepage label-in-name violation in both themes; keyboard review found focus obscured by the open mobile navigation. These results supersede earlier clean automated reports for the affected behavior.

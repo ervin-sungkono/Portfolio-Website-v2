@@ -32,7 +32,7 @@ export default function HomePage() {
               <span>From UI to Integration.</span>
             </h1>
             <p className="hero-description">
-              I’m Ervin Sungkono, a software engineer at Samsung R&D Institute Indonesia with a
+              I’m {profile.name}, a software engineer at Samsung R&D Institute Indonesia with a
               focus on frontend development and interface design.
             </p>
             <div className="hero-actions">
@@ -54,7 +54,6 @@ export default function HomePage() {
               href={`/project/${mainProject.slug}`}
               className="hero-visual"
               data-cursor="project"
-              aria-label="Explore WeTrack, a project management application"
             >
               <div className="hero-image">
                 <Image

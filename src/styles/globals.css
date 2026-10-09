@@ -32,6 +32,7 @@
   --text: #20252c;
   --muted: #636a75;
   --line: #dce1e8;
+  --control-border: #737d8c;
   --accent: #2f64c8;
   --accent-text: #f7f8fa;
   --accent-soft: #e5edfa;
@@ -48,6 +49,7 @@
   --text: #edeff3;
   --muted: #a7afbc;
   --line: #303640;
+  --control-border: #7b8798;
   --accent: #8baefe;
   --accent-text: #141619;
   --accent-soft: #202c42;
@@ -603,7 +605,7 @@ p {
 .search-form {
   display: flex;
   align-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius);
   background: var(--surface-high);
   min-width: 0;
@@ -782,7 +784,7 @@ p {
 .form-field input,
 .form-field textarea {
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-border);
   border-radius: 7px;
   background: var(--background);
   color: var(--text);

@@ -1,7 +1,6 @@
 // Facts sourced from the owner's LinkedIn profile on 2026-10-07.
 export const profile = {
   name: 'Ervin Cahyadinata Sungkono',
-  shortName: 'Ervin Sungkono',
   title: 'Software Engineer',
   linkedin: 'https://www.linkedin.com/in/ervin-cahyadinata-sungkono',
   github: 'https://github.com/ervin-sungkono',

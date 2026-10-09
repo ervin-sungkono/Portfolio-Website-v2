@@ -2,6 +2,14 @@
 
 Reviewed 9 October 2026, Asia/Jakarta. The accessibility baseline is rework commit `5c13aeb`, with the SEO changes in this PR reviewed separately. The public site at `https://ervincs.com` still serves the legacy production application; it is not the rework preview.
 
+## Remediation following this audit
+
+The findings below describe the original audit. The rework now corrects the mobile navigation order and closes the disclosure when focus leaves the header. The hero link uses its visible caption as its accessible name. Contact and search inputs use a dedicated contrasting border token. Theme controls describe the destination theme, and project cards remove the redundant title/arrow links and give walkthrough/source actions project-specific names.
+
+Fresh axe-core checks found zero automated violations on the same eight routes in both themes. Keyboard checks passed forward and reverse navigation, closing on focus exit, and Escape focus return at 390×600 and 390×320. Contact border contrast measures approximately 4.09:1 in light mode and 4.58:1 in dark mode against the form background. These checks do not establish complete WCAG conformance; the manual screen-reader and real-provider checks below remain outstanding.
+
+The owner's full name is **Ervin Cahyadinata Sungkono**. Header, introduction, footer, profile schema, project credits, and metadata use that name. Shared application identity comes from `src/content/profile.ts`; the previous shortened-name alias has been removed. Existing account URLs remain valid. Responsive checks cover widths from 320 to 1440 px, including the mobile name wrapping. Professional-content recommendations have been deferred at the owner's request.
+
 ## Assessment
 
 The rework presents a credible frontend software engineering portfolio: consistent typography and spacing, a clear specialism, project screenshots, readable source links, work history, and an engineering explanation. Its main weakness compared with established senior engineers' sites is the evidence behind the work. Visitors can see applications and technologies, but cannot yet reliably tell which parts Ervin personally owned, what constraints he solved, or what results he achieved.
@@ -45,11 +53,11 @@ Still needed: NVDA and VoiceOver testing; real browser zoom and device checks; f
 
 Homepage search title:
 
-> Ervin Sungkono | Frontend Software Engineer
+> Ervin Cahyadinata Sungkono | Frontend Software Engineer
 
 Homepage description:
 
-> Ervin Sungkono, software engineer at Samsung R&D Institute Indonesia. Explore React and Next.js projects, frontend case studies, and interface design.
+> Ervin Cahyadinata Sungkono, software engineer at Samsung R&D Institute Indonesia. Explore React and Next.js projects, frontend case studies, and interface design.
 
 Local verification passed for 23 public routes and two filtered URLs: correct canonical host and social URL, unique public-page titles/descriptions, matching social metadata, server-visible content, parsed profile schema, a complete sitemap, and correct unknown-project handling. Production build, strict TypeScript, formatting, and Git whitespace checks passed. SEO changes add no client-side dependencies.
 

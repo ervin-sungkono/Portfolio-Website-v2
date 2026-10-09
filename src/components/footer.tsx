@@ -29,7 +29,7 @@ export function Footer() {
       </div>
       <div className="footer-bottom">
         <span>
-          © {new Date().getUTCFullYear()} {profile.shortName}
+          © {new Date().getUTCFullYear()} {profile.name}
         </span>
         <div className="social-links">
           {socials.map(({ name, href, Icon }) => (

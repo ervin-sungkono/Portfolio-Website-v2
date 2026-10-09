@@ -39,27 +39,6 @@
   font-size: var(--text-heading-small);
   letter-spacing: -0.04em;
 }
-.heading :is(h2, h3) a:hover {
-  color: var(--accent);
-}
-.arrow {
-  width: 2.75rem;
-  height: 2.75rem;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  transition:
-    background 0.2s,
-    color 0.2s,
-    transform 0.2s;
-}
-.arrow:hover {
-  background: var(--button);
-  color: var(--button-text);
-  transform: translateY(-2px);
-}
 .description {
   color: var(--muted);
   max-width: 60ch;
@@ -89,12 +68,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .image,
-  .arrow {
+  .image {
     transition: none;
   }
-  .imageLink:hover .image,
-  .arrow:hover {
+  .imageLink:hover .image {
     transform: none;
   }
 }
