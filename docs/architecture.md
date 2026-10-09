@@ -33,7 +33,7 @@ Shared relative typography and spacing tokens replace page-specific pixel sizing
 
 ## Deployment
 
-Build the feature branch as a Vercel preview with Node.js 24. The production project’s legacy Node.js 18 setting needs updating before merging this migration. Confirm Gmail credentials remain valid and reCAPTCHA permits the final hostname. Keep `SITE_URL` set to production so preview URLs do not enter canonical metadata.
+Build the feature branch as a Vercel preview with Node.js 24. The production project’s legacy Node.js 18 setting needs updating before merging this migration. Confirm Gmail credentials remain valid and reCAPTCHA permits the final hostname. The public origin in `src/lib/metadata.ts` is `https://ervincs.com`; preview URLs never enter canonical metadata and a stale `SITE_URL` variable has no effect.
 
 ## Verification boundaries
 

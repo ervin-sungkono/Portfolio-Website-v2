@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowUpRightIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 import {
@@ -10,13 +9,14 @@ import {
 import { ExternalLink } from '@/components/external-link';
 import styles from '@/components/engineering.module.css';
 import { Reveal } from '@/components/motion/reveal';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-  title: 'Engineering This Portfolio',
+export const metadata = pageMetadata({
+  title: 'Next.js Portfolio Architecture & Engineering',
   description:
-    'The architecture, implementation choices, and tradeoffs behind this Next.js portfolio.',
-  alternates: { canonical: '/engineering' },
-};
+    'Explore the Next.js and TypeScript architecture behind Ervin Sungkono’s portfolio: Server Components, accessible UI, contact validation, and engineering tradeoffs.',
+  path: '/engineering',
+});
 
 export default function EngineeringPage() {
   return (

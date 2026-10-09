@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next';
+import { site } from '@/lib/metadata';
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: '*', allow: '/' },
-    sitemap: `${process.env.SITE_URL || 'https://ervin-sungkono.vercel.app'}/sitemap.xml`,
+    sitemap: `${site.url}/sitemap.xml`,
   };
 }

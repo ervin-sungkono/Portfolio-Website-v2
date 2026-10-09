@@ -50,15 +50,20 @@ CMS integration is deferred to phase 2. Replace the exports and lookup functions
 
 The form validates on client and server, focuses invalid fields, preserves drafts on errors, and clears fields only after Gmail accepts a message. The API checks origin, limits the body to 16 KiB, rejects the honeypot, verifies invisible reCAPTCHA v2, and sends a plain-text email to the owner with the visitor’s address as `replyTo`.
 
-| Variable                    | Purpose                                           |
-| --------------------------- | ------------------------------------------------- |
-| `EMAIL`                     | Gmail sender and recipient                        |
-| `EMAIL_PASS`                | Gmail app password; server-only                   |
-| `NEXT_PUBLIC_RECAPTCHA_KEY` | Invisible reCAPTCHA v2 public site key            |
-| `RECAPTCHA_SECRET`          | reCAPTCHA secret; server-only                     |
-| `RECAPTCHA_KEY`             | Existing deployment alias for `RECAPTCHA_SECRET`  |
-| `SITE_URL`                  | Production URL for canonical metadata and sitemap |
+| Variable                    | Purpose                                          |
+| --------------------------- | ------------------------------------------------ |
+| `EMAIL`                     | Gmail sender and recipient                       |
+| `EMAIL_PASS`                | Gmail app password; server-only                  |
+| `NEXT_PUBLIC_RECAPTCHA_KEY` | Invisible reCAPTCHA v2 public site key           |
+| `RECAPTCHA_SECRET`          | reCAPTCHA secret; server-only                    |
+| `RECAPTCHA_KEY`             | Existing deployment alias for `RECAPTCHA_SECRET` |
 
 Set secrets in `.env.local` or the hosting dashboard. Never commit values. Existing Vercel names remain compatible. Register production and preview hostnames in reCAPTCHA. If configuration or delivery is unavailable, the form reports an error and points visitors to LinkedIn.
+
+## Search metadata
+
+The public origin is `https://ervincs.com`, defined once in `src/lib/metadata.ts`. Canonical links, social metadata, robots.txt, and the sitemap use that origin, including in previews. `SITE_URL` is no longer used, so a stale deployment variable cannot override the canonical domain. Each route has a descriptive title and summary; the About page includes ProfilePage/Person structured data using the same public profile facts as the page.
+
+After promoting this rework, submit `https://ervincs.com/sitemap.xml` in Google Search Console and inspect the production URLs. Vercel preview deployments retain their `X-Robots-Tag: noindex` header. Metadata improves page identification and search snippets; it does not guarantee indexing or rankings.
 
 See [architecture and source notes](docs/architecture.md) for provenance and phase 2 considerations.

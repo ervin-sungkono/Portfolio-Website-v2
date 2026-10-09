@@ -7,6 +7,7 @@ import { projects, findProject, projectStudies, relatedProjects } from '@/lib/co
 import { ExternalLink } from '@/components/external-link';
 import { ProjectCard } from '@/components/project-card';
 import styles from '@/components/engineering.module.css';
+import { pageMetadata } from '@/lib/metadata';
 
 type Props = { params: Promise<{ slug: string }> };
 export function generateStaticParams() {
@@ -16,24 +17,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const project = findProject(slug);
   if (!project) return { title: 'Project Not Found' };
-  return {
+  return pageMetadata({
     title: project.name,
     description: project.description,
-    alternates: { canonical: `/project/${slug}` },
-    openGraph: {
-      title: `${project.name} | Ervin Sungkono`,
-      description: project.description,
-      url: `/project/${slug}`,
-      type: 'website',
-      images: [{ url: project.image, alt: `${project.name} application interface` }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${project.name} | Ervin Sungkono`,
-      description: project.description,
-      images: [project.image],
-    },
-  };
+    path: `/project/${slug}`,
+    image: project.image,
+    imageAlt: `${project.name} application interface`,
+  });
 }
 
 export default async function ProjectPage({ params }: Props) {

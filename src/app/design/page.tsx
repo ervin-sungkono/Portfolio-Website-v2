@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
@@ -6,13 +5,14 @@ import { designs } from '@/lib/content';
 import { profile } from '@/content/profile';
 import { ExternalLink } from '@/components/external-link';
 import { Reveal } from '@/components/motion/reveal';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-  title: 'Design',
+export const metadata = pageMetadata({
+  title: 'Web & Mobile Interface Design',
   description:
-    'Interface design explorations by Ervin Sungkono, from websites to mobile applications.',
-  alternates: { canonical: '/design' },
-};
+    'Browse web and mobile interface designs by Ervin Sungkono, including dashboards, healthcare websites, and application UI explorations.',
+  path: '/design',
+});
 export default async function DesignPage({
   searchParams,
 }: {

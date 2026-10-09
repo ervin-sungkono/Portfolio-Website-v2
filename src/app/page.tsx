@@ -10,8 +10,13 @@ import { EngineeringHighlights } from '@/components/engineering-highlights';
 import { Reveal } from '@/components/motion/reveal';
 import { PointerSurface } from '@/components/motion/pointer-surface';
 import { ScrollHero } from '@/components/motion/scroll-hero';
+import { pageMetadata, site } from '@/lib/metadata';
 
-export const metadata = { alternates: { canonical: '/' } };
+export const metadata = pageMetadata({
+  title: site.title,
+  description: site.description,
+  path: '/',
+});
 
 export default function HomePage() {
   const mainProject = featuredProjects[0];

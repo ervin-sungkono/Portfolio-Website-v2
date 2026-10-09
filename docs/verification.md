@@ -1,5 +1,13 @@
 # Phase 1 verification
 
+## Accessibility audit and ervincs.com metadata — 9 October 2026
+
+- See [the detailed accessibility, SEO, and professional review](portfolio-audit-2026-10-09.md) for evidence, remaining defects, and scope limits. Fresh axe-core 4.14.0 testing found a homepage label-in-name violation in both themes; keyboard review found focus obscured by the open mobile navigation. These results supersede earlier clean automated reports for the affected behavior.
+- The public origin is now defined once as `https://ervincs.com`. All 23 public routes have distinct titles/descriptions, matching Open Graph/Twitter metadata, and canonical URLs on that domain. About contains ProfilePage/Person JSON-LD using existing public profile facts.
+- Production build, strict TypeScript, formatting, and Git whitespace checks passed. A JavaScript-disabled browser verified metadata and visible content on all 23 public routes, two filtered collection URLs, sitemap and robots consistency, and unknown-project 404/noindex behavior.
+- React review: metadata remains in Server Components and one typed shared function; no new client dependencies or effects were added. JSON-LD serialization escapes `<`, and structured data contains existing public facts rather than inferred achievements.
+- The SEO code is in the rework branch. Production at `ervincs.com` still serves legacy metadata until a production release. Preview `noindex` headers are expected. Search Console indexing, real screen-reader use, field Core Web Vitals, and email receipt were not verified.
+
 ## Sticky hero and scroll-linked parallax — 9 October 2026 (Asia/Jakarta)
 
 - Section snap rules and page markers were removed. Production build, strict TypeScript, formatting, and Git whitespace passed; no new dependencies or backend changes were needed.

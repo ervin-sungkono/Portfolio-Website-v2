@@ -1,20 +1,41 @@
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { profile, skills } from '@/content/profile';
 import { Experience } from '@/components/experience';
 import { ExternalLink } from '@/components/external-link';
 import { EngineeringHighlights } from '@/components/engineering-highlights';
+import { pageMetadata, site } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-  title: 'About',
-  description: profile.intro,
-  alternates: { canonical: '/about' },
+export const metadata = pageMetadata({
+  title: 'About — Software Engineering Experience',
+  description:
+    'Meet Ervin Cahyadinata Sungkono, a software engineer at Samsung R&D Institute Indonesia with experience in frontend development, React, Next.js, and UI design.',
+  path: '/about',
+});
+
+const profileSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  '@id': `${site.url}/about#profile`,
+  url: `${site.url}/about`,
+  mainEntity: {
+    '@type': 'Person',
+    '@id': `${site.url}/#person`,
+    name: profile.name,
+    alternateName: profile.shortName,
+    url: site.url,
+    jobTitle: profile.title,
+    sameAs: [profile.linkedin, profile.github, profile.dribbble],
+  },
 };
 
 export default function AboutPage() {
   return (
     <div className="container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileSchema).replace(/</g, '\\u003c') }}
+      />
       <section className="about-hero page-heading">
         <div>
           <p className="eyebrow">About Ervin</p>

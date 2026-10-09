@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { projects } from '@/lib/content';
+import { site } from '@/lib/metadata';
 export default function sitemap(): MetadataRoute.Sitemap {
-  const origin = process.env.SITE_URL || 'https://ervin-sungkono.vercel.app';
   return [
     '/',
     '/about',
@@ -10,5 +10,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/contact',
     '/engineering',
     ...projects.map((project) => `/project/${project.slug}`),
-  ].map((path) => ({ url: `${origin}${path}` }));
+  ].map((path) => ({ url: `${site.url}${path}` }));
 }

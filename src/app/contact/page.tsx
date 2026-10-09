@@ -1,14 +1,15 @@
-import type { Metadata } from 'next';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { ContactForm } from '@/components/contact-form';
 import { ExternalLink } from '@/components/external-link';
 import { profile } from '@/content/profile';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-  title: 'Contact',
-  description: 'Get in touch with Ervin Sungkono about opportunities, projects, or collaborations.',
-  alternates: { canonical: '/contact' },
-};
+export const metadata = pageMetadata({
+  title: 'Contact — Software Engineering Opportunities',
+  description:
+    'Contact Ervin Sungkono about software engineering opportunities, React and Next.js projects, frontend development, or interface design collaborations.',
+  path: '/contact',
+});
 export default function ContactPage() {
   return (
     <div className="container">

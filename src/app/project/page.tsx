@@ -1,14 +1,15 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MagnifyingGlassIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { projects, filterProjects } from '@/lib/content';
 import { ProjectCard } from '@/components/project-card';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = {
-  title: 'Projects',
-  description: 'Explore Ervin’s web applications, mobile projects, and development experiments.',
-  alternates: { canonical: '/project' },
-};
+export const metadata = pageMetadata({
+  title: 'Software Engineering Projects',
+  description:
+    'Explore Ervin Sungkono’s React and Next.js projects, including WeTrack, a streaming chat interface, and an API-driven catalogue, with case studies and source code.',
+  path: '/project',
+});
 
 export default async function ProjectsPage({
   searchParams,

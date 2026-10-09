@@ -3,10 +3,9 @@ import localFont from 'next/font/local';
 import '@/styles/globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { profile } from '@/content/profile';
+import { site } from '@/lib/metadata';
 import { MotionEnhancements } from '@/components/motion/enhancements';
 
-const origin = process.env.SITE_URL || 'https://ervin-sungkono.vercel.app';
 const manrope = localFont({
   src: '../../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2',
   variable: '--font-manrope',
@@ -14,19 +13,19 @@ const manrope = localFont({
   display: 'swap',
 });
 export const metadata: Metadata = {
-  metadataBase: new URL(origin),
-  title: { default: 'Ervin Sungkono | Software Engineer', template: '%s | Ervin Sungkono' },
-  description: profile.intro,
+  metadataBase: new URL(site.url),
+  title: { default: site.title, template: `%s | ${site.name}` },
+  description: site.description,
   openGraph: {
-    title: 'Ervin Sungkono | Software Engineer',
-    description: profile.intro,
+    title: site.title,
+    description: site.description,
     type: 'website',
     images: ['/images/preview-img.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ervin Sungkono | Software Engineer',
-    description: profile.intro,
+    title: site.title,
+    description: site.description,
     images: ['/images/preview-img.png'],
   },
   icons: { icon: '/images/favicon-light.png' },
