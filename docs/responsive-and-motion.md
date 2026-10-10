@@ -28,7 +28,7 @@ For example, a display heading grows 44px over a 960px viewport interval. The sl
 
 ## Layout thresholds
 
-The default stacks content. At 48rem, project/design galleries have room for two usable columns, roughly 20rem each after gutters and a gap. At 64rem, the hero, contact form, and full navigation have enough room for their content. Tablet portrait keeps the hero stacked. The container caps at 75rem. These choices respond to content width rather than detecting a particular device.
+The default stacks content. At 48rem, project/design galleries have room for two usable columns, roughly 20rem each after gutters and a gap. At 64rem, the hero, contact form, and full navigation have enough room for their content. Tablet portrait keeps the hero stacked. Project featured work, archives/results, and the Design gallery use three columns at 64rem. Tablet featured work places a full-width lead card above its supporting pair. Design closes partial desktop rows with balanced pairs: a remainder of two fills one row; a remainder of one redistributes the last four into two pair rows. This keeps DOM order and 4:3 cover frames without dense packing or fixed caption heights. The container caps at 75rem. These choices respond to content width rather than detecting a particular device.
 
 Long headings and project names wrap when necessary; flex/grid children can shrink. Header and anchor offsets share a nominal height token, with the actual header height measured by a cleaned-up ResizeObserver when JavaScript is available. This keeps wrapped controls, the menu viewport, and sticky/anchor offsets aligned during text enlargement. Mobile navigation scrolls within the dynamic viewport height. The header uses the original square favicon artwork instead of shrinking a logo containing a second name. Mobile hero actions use a full-width primary action followed by a CV/GitHub row.
 
@@ -43,7 +43,7 @@ Motion 14 supplies small Client Components in `src/components/motion`. Pages con
 - `MotionEnhancements` provides scroll progress and loads the cursor component only when pointer and motion preferences allow it.
 - `DesktopCursor` adds a four-corner reticle, diamond-shaped link feedback, contextual project label, and press feedback. Pointer coordinates update plain Motion values directly, without springs, interpolation, or movement delays. It preserves the native cursor, ignores hit testing, hides over text inputs or outside the document, and cleans up event listeners. React state changes only for hover mode.
 
-Touch input and reduced-motion preferences disable cursor and tilt effects. No looping decorative animation or scroll hijacking is used. See verification notes for responsive and interaction checks.
+Touch input and reduced-motion preferences disable cursor and tilt effects. Main-page motion avoids looping decorative animation and scroll hijacking. The standalone particle 404 has an explicit pause/resume control. See verification notes for responsive and interaction checks.
 
 ## Scroll scenes and parallax
 
@@ -56,3 +56,11 @@ Section snapping has been removed. Scrolling remains native, with no wheel inter
 A shared media hook enables scroll motion only at the existing 64rem desktop width, at least 48rem viewport height, with fine-pointer/hover capability, and with no reduced-motion preference. The height threshold leaves room for the existing type and spacing; the hero also measures whether its actual content fits below the header. Oversized content, including enlarged text, disables hero pinning. Resize and media observers clean up. Motion values handle scroll updates without React state on each frame.
 
 Phone/tablet layouts, short viewports, reduced-motion mode, and no-JavaScript rendering use the ordinary stacked layout with no reserved scroll scene. Server-rendered content stays visible. The direct reticle cursor continues to track pointer movement without spring lag.
+
+## Particle accents
+
+`ParticleAccent` dynamically imports the tsParticles 4.4 engine, basic circle/movement features, interactivity, and repulse plugin. It does not load the full library or a React adapter. Reduced motion and data saver skip engine loading; changing reduced motion destroys an active field. Canvas content is decorative and hidden from assistive technology, and pointer detection never captures clicks or obscures links.
+
+The homepage uses 12 small, low-opacity particles in a 6rem × 20rem side-margin region. It requires at least 90rem width, 48rem height, a fine hover pointer, and measured side space. The region is outside the headline and project image, with a fading mask. A 20fps cap and 4.5-second settle timer prevent a continuous distraction; theme changes retain the settled state and render a static frame in the new palette. Resize/theme/media observers and the timer clean up.
+
+The 404 restores the original standalone composition without header/footer chrome. Its section uses a dynamic-viewport minimum height and can grow for short screens/enlarged content. It uses up to 56 particles on larger fine-pointer screens and 24 elsewhere, capped at 30fps with retina scaling disabled. Gentle hover repulsion is enabled only for the former. There are no connection lines, click spawning, or unbounded particle counts. Pause/resume is keyboard accessible, hidden tabs pause, and navigation destroys the engine instance.

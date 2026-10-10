@@ -15,7 +15,7 @@ Soft white, deep charcoal, cobalt, pale blue, and cool gray establish the light 
 - **Project details:** larger screenshot framing precedes separate overview, implementation/tradeoff, and supporting information areas. Existing case-study text and attribution are retained.
 - **Engineering:** numbered evidence panels and grouped architecture boundaries provide a modular presentation. Native sticky introductions remain alongside scrolling content.
 - **About:** introduction, experience, and existing skills have clear visual groups. Skill categories reorganize existing tools without adding capability claims.
-- **Design:** an asymmetric gallery fills each modular image region with proportional cover cropping. Original artwork files remain unchanged. Categories retain server-rendered navigation.
+- **Design:** three-column desktop browsing uses equal-width 4:3 cover frames and natural caption heights. Balanced two-card closing rows fill incomplete desktop compositions without changing reading order. Tablet uses two columns and phone uses one; artwork and category navigation remain unchanged.
 - **Contact:** a restrained editorial introduction and the existing labelled form retain validation, focus management, and submission feedback.
 
 ## Interaction and responsive behavior
@@ -27,3 +27,5 @@ Entry reveals use a smaller 10px movement and a shorter 0.35-second duration. Co
 Phone layouts follow a single-column reading order. Tablet galleries use balanced columns, and wider screens establish asymmetric compositions. The existing 48rem and 64rem content-fit thresholds remain; the homepage's five-part composition needs 70rem to maintain usable compact panels. Text enlargement, short viewports, coarse pointers, reduced motion, and no-JavaScript rendering preserve ordinary reading flow. The header can wrap its identity and controls into separate rows; a cleaned-up ResizeObserver shares its measured height with navigation limits and anchor/hero offsets. Evidence indexes stack above their text on phones, skill lists collapse when their labels need room, and long words can wrap without widening the page. Short-screen menu padding preserves space for focused links.
 
 See [verification](verification.md) for the actual checks and their limits. Changes stay in `feat/portfolio-rework-phase-1` and draft PR #2; this pass does not release production.
+
+The follow-up adds a sparse tsParticles accent exclusively in the homepage side margin, where ample desktop space keeps it outside the reading path. It settles after a short introduction rather than looping. The standalone viewport-height 404 restores the original particles with a quieter palette, bounded counts, optional gentle pointer repulsion, and an accessible pause control. See [responsive and motion](responsive-and-motion.md) for eligibility and performance limits.

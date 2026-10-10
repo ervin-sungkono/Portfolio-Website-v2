@@ -12,6 +12,7 @@ import { PointerSurface } from '@/components/motion/pointer-surface';
 import { ScrollHero } from '@/components/motion/scroll-hero';
 import { pageMetadata, site } from '@/lib/metadata';
 import styles from './home.module.css';
+import { ParticleAccent } from '@/components/particle-accent';
 
 export const metadata = pageMetadata({
   title: site.title,
@@ -24,6 +25,7 @@ export default function HomePage() {
 
   return (
     <div className={`container ${styles.home}`}>
+      <ParticleAccent variant="hero" />
       <ScrollHero
         copy={
           <Reveal className={`hero-copy ${styles.heroCopy}`}>

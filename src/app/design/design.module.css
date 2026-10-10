@@ -57,11 +57,14 @@
 }
 
 .designReveal {
+  display: flex;
   min-width: 0;
 }
 
 .designTile {
-  display: block;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   min-width: 0;
   border-radius: var(--radius);
 }
@@ -94,6 +97,7 @@
 
 .designCaption {
   display: flex;
+  flex: 1;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-5);
@@ -134,34 +138,23 @@
 
 @media (min-width: 64rem) {
   .designGrid {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    align-items: start;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
-  .designGrid > :nth-child(8n + 1),
-  .designGrid > :nth-child(8n + 4) {
-    grid-column: span 7;
+  .designGrid > * {
+    grid-column: span 2;
   }
 
-  .designGrid > :nth-child(8n + 2),
-  .designGrid > :nth-child(8n + 3) {
-    grid-column: span 5;
+  /* Close partial rows without leaving a lone card or changing reading order. */
+  .designGrid:has(> :last-child:nth-child(3n + 2)) > :nth-last-child(-n + 2),
+  .designGrid:has(> :last-child:nth-child(3n + 1)) > :nth-last-child(-n + 4) {
+    grid-column: span 3;
   }
 
-  .designGrid > :nth-child(8n + 5) {
-    grid-column: span 8;
-  }
-
-  .designGrid > :nth-child(8n + 6) {
-    grid-column: span 4;
-  }
-
-  .designGrid > :nth-child(8n + 7) {
-    grid-column: span 4;
-  }
-
-  .designGrid > :nth-child(8n + 8) {
-    grid-column: span 8;
+  .designGrid > :only-child {
+    grid-column: 1 / -1;
+    max-width: 38rem;
+    justify-self: center;
   }
 }
 

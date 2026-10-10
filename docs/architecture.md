@@ -35,6 +35,12 @@ Shared relative typography and spacing tokens replace page-specific pixel sizing
 
 The October 2026 visual pass keeps the same rendering and content boundaries. Page-local CSS Modules define asymmetric work and artwork galleries, editorial detail layouts, grouped skills, and contact presentation; the shared experience component renders a vertical timeline. Collection filtering remains server-rendered GET navigation, and the unfiltered project collection separates featured work from the archive without duplicates. Shared tokens govern typography, colors, spacing, and image treatments. See [visual design](visual-design-2026.md). No content store, provider integration, or application dependency was added.
 
+## Particle accents and collection density
+
+The follow-up restores the original standalone, viewport-height 404 using tsParticles 4.4. Its Server Component keeps recovery text and links usable without JavaScript; a shared client island loads only the basic engine features and pointer repulsion. The same island adds a sparse homepage side-margin accent on roomy desktop screens. It never covers content, settles after 4.5 seconds, and skips reduced motion, touch, data saver, and insufficient side space. The 404 provides a pause/resume control and reduces its particle count on smaller/coarse-pointer layouts. Engine instances, timers, observers, and listeners are destroyed on cleanup. No full-screen particle background is added to normal pages.
+
+Project featured work and archives/results use three desktop columns. Archives/results use two tablet columns and one phone column; tablet featured work keeps a full-width lead card followed by a pair. Design uses the same base density with balanced closing rows based on the filtered item count; natural caption sizing and equal image proportions avoid internal row holes without visual reordering.
+
 ## Deployment
 
 Build the feature branch as a Vercel preview with Node.js 24. The production project’s legacy Node.js 18 setting needs updating before merging this migration. Confirm Gmail credentials remain valid and reCAPTCHA permits the final hostname. The public origin in `src/lib/metadata.ts` is `https://ervincs.com`; preview URLs never enter canonical metadata and a stale `SITE_URL` variable has no effect.

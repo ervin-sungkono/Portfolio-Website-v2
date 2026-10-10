@@ -28,7 +28,7 @@ npm start
 - `src/lib/contact`: shared validation and server-only Gmail/reCAPTCHA services.
 - `src/styles`: design tokens and responsive page styles. Small component styles use CSS Modules.
 
-Pages are Server Components. The header, contact form, and small motion islands use browser JavaScript. Project detail pages are generated at build time; search and category filters use shareable query parameters and server rendering. There is no database, CMS SDK, global state library, or background synchronisation in phase 1.
+Pages are Server Components. The header, contact form, small motion islands, and selectively loaded particle accents use browser JavaScript. Project detail pages are generated at build time; search and category filters use shareable query parameters and server rendering. There is no database, CMS SDK, global state library, or background synchronisation in phase 1.
 
 ## Updating content
 
