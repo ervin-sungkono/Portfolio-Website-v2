@@ -31,33 +31,44 @@ function loadEngine() {
   return engineReady;
 }
 
-export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found' | 'hero' }) {
+export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found' | 'portfolio' }) {
   const element = useRef<HTMLDivElement>(null);
   const container = useRef<Container | undefined>(undefined);
   const pausedRef = useRef(false);
   const inViewport = useRef(true);
   const [paused, setPaused] = useState(false);
   const [ready, setReady] = useState(false);
-  const [settings, setSettings] = useState({ enabled: false, interactive: false, dark: false });
+  const [settings, setSettings] = useState({
+    enabled: false,
+    interactive: false,
+    compact: false,
+    dark: false,
+  });
 
   useEffect(() => {
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const pointer = matchMedia('(min-width: 48rem) and (hover: hover) and (pointer: fine)');
-    const sideSpace = matchMedia('(min-width: 90rem) and (min-height: 48rem)');
+    const spacious = matchMedia('(min-width: 48rem)');
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } })
       .connection;
     const sync = () => {
-      const bounds = element.current?.getBoundingClientRect();
-      const sideFits =
-        !!bounds && bounds.width > 0 && bounds.left >= 0 && bounds.right <= innerWidth;
-      setSettings({
+      const next = {
         enabled:
           !motion.matches &&
           !connection?.saveData &&
-          (variant === 'not-found' || (sideSpace.matches && pointer.matches && sideFits)),
+          (variant === 'not-found' || !document.querySelector('[data-not-found]')),
         interactive: variant === 'not-found' && pointer.matches,
+        compact: !spacious.matches,
         dark: document.documentElement.dataset.theme === 'dark',
-      });
+      };
+      setSettings((previous) =>
+        previous.enabled === next.enabled &&
+        previous.interactive === next.interactive &&
+        previous.compact === next.compact &&
+        previous.dark === next.dark
+          ? previous
+          : next,
+      );
     };
     const observer = new MutationObserver(sync);
     observer.observe(document.documentElement, {
@@ -66,16 +77,18 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
     });
     motion.addEventListener('change', sync);
     pointer.addEventListener('change', sync);
-    sideSpace.addEventListener('change', sync);
-    const resize = variant === 'hero' ? new ResizeObserver(sync) : undefined;
-    if (element.current) resize?.observe(element.current);
+    spacious.addEventListener('change', sync);
+    // Layout persists between routes; suppress its field while the standalone 404 is present.
+    const routes = variant === 'portfolio' ? new MutationObserver(sync) : undefined;
+    const main = document.getElementById('main');
+    if (main) routes?.observe(main, { childList: true, subtree: true });
     sync();
     return () => {
       observer.disconnect();
-      resize?.disconnect();
+      routes?.disconnect();
       motion.removeEventListener('change', sync);
       pointer.removeEventListener('change', sync);
-      sideSpace.removeEventListener('change', sync);
+      spacious.removeEventListener('change', sync);
     };
   }, [variant]);
 
@@ -90,10 +103,11 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
       else instance?.play();
     };
     const host = element.current;
-    const count = variant === 'hero' ? 12 : settings.interactive ? 56 : 24;
+    const count =
+      variant === 'portfolio' ? (settings.compact ? 18 : 44) : settings.interactive ? 56 : 24;
     const options: ISourceOptions = {
       fullScreen: { enable: false },
-      fpsLimit: variant === 'hero' ? 20 : 30,
+      fpsLimit: variant === 'portfolio' ? 20 : 30,
       detectRetina: false,
       pauseOnBlur: true,
       pauseOnOutsideViewport: true,
@@ -103,19 +117,19 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
         paint: {
           color: { value: settings.dark ? ['#91b4ff', '#a9b0ba'] : ['#2459d3', '#737d8c'] },
         },
-        opacity: { value: { min: 0.18, max: variant === 'hero' ? 0.3 : 0.45 } },
-        size: { value: { min: 1, max: variant === 'hero' ? 2 : 3 } },
+        opacity: { value: { min: 0.18, max: variant === 'portfolio' ? 0.3 : 0.45 } },
+        size: { value: { min: 1, max: variant === 'portfolio' ? 2 : 3 } },
         shape: { type: 'circle' },
         links: {
-          enable: variant === 'hero',
-          distance: 75,
+          enable: variant === 'portfolio',
+          distance: settings.compact ? 110 : 160,
           color: settings.dark ? '#91b4ff' : '#2459d3',
           opacity: 0.18,
           width: 0.75,
         },
         move: {
           enable: true,
-          speed: variant === 'hero' ? 0.25 : 0.6,
+          speed: variant === 'portfolio' ? 0.25 : 0.6,
           outModes: { default: 'out' },
         },
       },
@@ -161,7 +175,7 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
       instance?.destroy();
       container.current = undefined;
     };
-  }, [settings.enabled, settings.interactive, settings.dark, variant]);
+  }, [settings.enabled, settings.interactive, settings.compact, settings.dark, variant]);
 
   function toggle() {
     const next = !paused;
@@ -175,7 +189,8 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
     <>
       <div
         ref={element}
-        className={variant === 'hero' ? styles.sideCanvas : styles.canvas}
+        className={variant === 'portfolio' ? styles.pageCanvas : styles.canvas}
+        data-particle-field={variant}
         aria-hidden="true"
       />
       {ready && variant === 'not-found' && (

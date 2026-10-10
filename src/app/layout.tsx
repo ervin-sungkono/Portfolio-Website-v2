@@ -5,6 +5,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { site } from '@/lib/metadata';
 import { MotionEnhancements } from '@/components/motion/enhancements';
+import { ParticleAccent } from '@/components/particle-accent';
 
 const manrope = localFont({
   src: '../../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2',
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="preconnect" href="https://cdn.dribbble.com" />
       </head>
       <body>
+        <ParticleAccent variant="portfolio" />
         <a href="#main" className="skip-link">
           Skip to Content
         </a>

@@ -5,28 +5,24 @@
   pointer-events: none;
 }
 
-.canvas canvas {
+.canvas canvas,
+.pageCanvas canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.sideCanvas {
-  display: none;
-  position: absolute;
-  top: var(--section-space);
-  right: calc(100% + var(--space-5));
-  width: 6rem;
-  height: 20rem;
+.pageCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   pointer-events: none;
   opacity: 0.65;
-  mask-image: linear-gradient(transparent, black 20%, black 80%, transparent);
 }
 
-@media (min-width: 90rem) and (min-height: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .sideCanvas {
-    display: block;
-  }
+/* Prevent a duplicate field during the route transition to the standalone 404. */
+:global(body:has([data-not-found])) .pageCanvas {
+  display: none;
 }
 
 .control {
