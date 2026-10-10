@@ -12,6 +12,7 @@ import { PointerSurface } from '@/components/motion/pointer-surface';
 import { ScrollHero } from '@/components/motion/scroll-hero';
 import { pageMetadata, site } from '@/lib/metadata';
 import styles from './home.module.css';
+import { imageSizes } from '@/lib/image-sizes';
 
 export const metadata = pageMetadata({
   title: site.title,
@@ -63,7 +64,7 @@ export default function HomePage() {
                   alt="WeTrack Kanban board with tasks organised into sprints"
                   width={1600}
                   height={990}
-                  sizes="(max-width: 1023px) 90vw, 48vw"
+                  sizes={imageSizes.hero}
                   preload
                 />
               </div>
@@ -92,10 +93,10 @@ export default function HomePage() {
 
         <div className={styles.bentoGrid}>
           <div className={styles.primaryProject}>
-            <ProjectCard project={mainProject} featured index={1} />
+            <ProjectCard project={mainProject} featured index={1} sizes={imageSizes.homePrimary} />
           </div>
           <div className={styles.secondaryProject}>
-            <ProjectCard project={secondaryProject} index={2} />
+            <ProjectCard project={secondaryProject} index={2} sizes={imageSizes.homeSecondary} />
           </div>
           <Link href="/engineering" className={styles.engineeringTeaser} data-cursor="link">
             <span className={styles.teaserKicker}>Architecture / Small pieces</span>
@@ -106,7 +107,7 @@ export default function HomePage() {
             </span>
           </Link>
           <div className={styles.additionalProject}>
-            <ProjectCard project={additionalProject} index={3} />
+            <ProjectCard project={additionalProject} index={3} sizes={imageSizes.homeAdditional} />
           </div>
           <Link href="/design" className={styles.designTeaser} data-cursor="link">
             <span className={styles.teaserKicker}>Interface studies</span>
@@ -116,7 +117,7 @@ export default function HomePage() {
                 alt={designs[0].title}
                 width={1200}
                 height={900}
-                sizes="(max-width: 767px) 90vw, 22vw"
+                sizes={imageSizes.homeTeaser}
               />
             </div>
             <h3>Visual explorations.</h3>
@@ -149,7 +150,7 @@ export default function HomePage() {
           </p>
         </Reveal>
         <div className={`design-preview-grid ${styles.designGallery}`}>
-          {[designs[3], designs[1]].map((design) => (
+          {[designs[3], designs[1]].map((design, index) => (
             <Reveal key={design.id}>
               <ExternalLink href={design.url} className="design-tile" data-cursor="project">
                 <div className="design-image">
@@ -158,7 +159,9 @@ export default function HomePage() {
                     alt={design.title}
                     width={1200}
                     height={900}
-                    sizes="(max-width: 767px) 90vw, 46vw"
+                    sizes={
+                      index === 0 ? imageSizes.homeArtworkPrimary : imageSizes.homeArtworkSecondary
+                    }
                   />
                 </div>
                 <div className="design-caption">

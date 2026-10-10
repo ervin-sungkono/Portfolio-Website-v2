@@ -7,6 +7,7 @@ import { ExternalLink } from '@/components/external-link';
 import { Reveal } from '@/components/motion/reveal';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './design.module.css';
+import { imageSizes } from '@/lib/image-sizes';
 
 export const metadata = pageMetadata({
   title: 'Web & Mobile Interface Design',
@@ -25,6 +26,8 @@ export default async function DesignPage({
     (design) => !activeCategory || design.category === activeCategory,
   );
   const categories = [...new Set(designs.map((design) => design.category))];
+  const remainder = filtered.length % 3;
+  const closingStart = filtered.length - (remainder === 1 ? 4 : remainder === 2 ? 2 : 0);
 
   return (
     <div className="container">
@@ -76,7 +79,9 @@ export default async function DesignPage({
                       src={design.image}
                       alt=""
                       fill
-                      sizes="(max-width: 767px) 90vw, (max-width: 1023px) 44vw, 56vw"
+                      sizes={
+                        index >= closingStart ? imageSizes.twoColumns : imageSizes.threeColumns
+                      }
                       className={styles.artworkImage}
                       unoptimized={design.image.includes('.gif')}
                     />

@@ -7,17 +7,20 @@ import styles from './project-card.module.css';
 import { Reveal } from './motion/reveal';
 import { PointerSurface } from './motion/pointer-surface';
 import { ParallaxImage } from './motion/parallax-image';
+import { imageSizes } from '@/lib/image-sizes';
 
 export function ProjectCard({
   project,
   featured = false,
   headingLevel = 3,
   index,
+  sizes = imageSizes.twoColumns,
 }: {
   project: Project;
   featured?: boolean;
   headingLevel?: 2 | 3;
   index?: number;
+  sizes?: string;
 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const study = projectStudies[project.slug];
@@ -44,9 +47,7 @@ export function ProjectCard({
                 alt={`${project.name} application screenshot`}
                 width={1600}
                 height={1000}
-                sizes={
-                  featured ? '(max-width: 1023px) 92vw, 58vw' : '(max-width: 767px) 92vw, 46vw'
-                }
+                sizes={sizes}
                 className={styles.image}
               />
             </ParallaxImage>

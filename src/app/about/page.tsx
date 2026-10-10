@@ -6,6 +6,9 @@ import { ExternalLink } from '@/components/external-link';
 import { EngineeringHighlights } from '@/components/engineering-highlights';
 import { pageMetadata, site } from '@/lib/metadata';
 import styles from './about.module.css';
+import avatar from '../../../public/images/hero-image.png';
+import bnccLogo from '../../../public/images/bncc-logo-default.png';
+import faveLogo from '../../../public/images/fave-logo-default.png';
 
 const skillGroups = [
   {
@@ -68,11 +71,11 @@ export default function AboutPage() {
         </div>
         <div className={styles.avatarFrame}>
           <Image
-            src="/images/hero-image.png"
+            src={avatar}
             alt={`${profile.name}’s original illustrated portfolio avatar`}
             width={684}
             height={722}
-            sizes="(max-width: 767px) 280px, 360px"
+            sizes="(min-width: 48rem) 24rem, min(20rem, calc(93.3333vw - 3.6667rem))"
             preload
           />
         </div>
@@ -129,19 +132,15 @@ export default function AboutPage() {
           <div className="organisation-links">
             <ExternalLink href="https://bncc.net">
               <Image
-                src="/images/bncc-logo-default.png"
+                src={bnccLogo}
                 alt="Bina Nusantara Computer Club"
                 width={180}
                 height={90}
+                sizes="8.25rem"
               />
             </ExternalLink>
             <ExternalLink href="https://favesolution.com">
-              <Image
-                src="/images/fave-logo-default.png"
-                alt="FAVE Solution"
-                width={140}
-                height={90}
-              />
+              <Image src={faveLogo} alt="FAVE Solution" width={140} height={90} sizes="8.25rem" />
             </ExternalLink>
           </div>
         </div>

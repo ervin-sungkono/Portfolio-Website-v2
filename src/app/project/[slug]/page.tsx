@@ -9,6 +9,7 @@ import { ProjectCard } from '@/components/project-card';
 import engineeringStyles from '@/components/engineering.module.css';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './project-detail.module.css';
+import { imageSizes } from '@/lib/image-sizes';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -64,7 +65,7 @@ export default async function ProjectPage({ params }: Props) {
             alt={`${project.name} application interface`}
             width={1600}
             height={1000}
-            sizes="(max-width: 1200px) 92vw, 1200px"
+            sizes={imageSizes.full}
             preload
             className={styles.mediaImage}
           />

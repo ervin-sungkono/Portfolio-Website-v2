@@ -42,7 +42,7 @@ The homepage and About page link capabilities to specific projects. WeTrack, Cha
 
 `portfolioSourceRef` in `src/content/engineering.ts` points source links to the rework branch while the preview is under review. Switch it to `main` once the rework is merged.
 
-Images point to the owner’s existing `web-assets` repository and original Dribbble CDN. Add local images to `public/images`; configure new remote hosts in `next.config.ts`.
+Images point to the owner’s existing `web-assets` repository and original Dribbble CDN. The optimizer accepts the exact image URLs in the project/design snapshots, including their queries. Add local images to `public/images` and import them statically in components for content-hashed delivery. Remote images have a 31-day minimum cache lifetime: publish changed artwork under a new filename/URL and update its content entry instead of overwriting a cached URL. See [image delivery](docs/image-delivery.md) for sizing and cache rules.
 
 CMS integration is deferred to phase 2. Replace the exports and lookup functions in `src/lib/content.ts` when a CMS is selected. No speculative CMS adapters or admin screens are included.
 

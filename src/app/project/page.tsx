@@ -5,6 +5,7 @@ import { ProjectCard } from '@/components/project-card';
 import { pageMetadata } from '@/lib/metadata';
 import { profile } from '@/content/profile';
 import styles from './projects.module.css';
+import { imageSizes } from '@/lib/image-sizes';
 
 export const metadata = pageMetadata({
   title: 'Software Engineering Projects',
@@ -107,6 +108,7 @@ export default async function ProjectsPage({
                 project={project}
                 index={projectIndex(project.slug)}
                 featured={index === 0}
+                sizes={index === 0 ? imageSizes.featuredCollection : imageSizes.threeColumns}
                 headingLevel={3}
               />
             ))}
@@ -134,6 +136,7 @@ export default async function ProjectsPage({
                 project={project}
                 index={projectIndex(project.slug)}
                 headingLevel={3}
+                sizes={imageSizes.threeColumns}
               />
             ))}
           </div>

@@ -41,6 +41,10 @@ The standalone, viewport-height 404 uses tsParticles 4.4. Its Server Component k
 
 Project featured work and archives/results use three desktop columns. Archives/results use two tablet columns and one phone column; tablet featured work keeps a full-width lead card followed by a pair. Design uses the same base density with balanced closing rows based on the filtered item count; natural caption sizing and equal image proportions avoid internal row holes without visual reordering.
 
+## Image delivery
+
+Next Image accepts the exact remote image URLs from the existing project/design snapshots, including Dribbble's resize query. Local optimized sources use static imports and content-hashed build paths. Header logos, technology SVGs, and animated GIFs bypass transformation. Ten allowed widths, a single quality (75), and WebP output bound optimizer variants; layout-specific `sizes` hints follow the existing container, breakpoints, bento proportions, and gallery closing pairs. Remote derivatives have a 31-day minimum cache lifetime, with longer upstream lifetimes taking precedence. Changed remote artwork must receive a new source URL. See [image delivery](image-delivery.md) for the maintenance rules and verification limits.
+
 ## Deployment
 
 Build the feature branch as a Vercel preview with Node.js 24. The production project’s legacy Node.js 18 setting needs updating before merging this migration. Confirm Gmail credentials remain valid and reCAPTCHA permits the final hostname. The public origin in `src/lib/metadata.ts` is `https://ervincs.com`; preview URLs never enter canonical metadata and a stale `SITE_URL` variable has no effect.

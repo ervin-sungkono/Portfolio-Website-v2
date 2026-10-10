@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ListIcon, XIcon, SunIcon, MoonIcon } from '@phosphor-icons/react';
 import styles from './header.module.css';
 import { profile } from '@/content/profile';
+import lightLogo from '../../public/images/favicon-light.png';
+import darkLogo from '../../public/images/favicon-dark.png';
 
 const navigation = [
   { label: 'Home', href: '/' },
@@ -93,20 +95,8 @@ export function Header() {
           aria-label={`${profile.name}, home`}
           onClick={() => setOpen(false)}
         >
-          <Image
-            className="light-logo"
-            src="/images/favicon-light.png"
-            alt=""
-            width={48}
-            height={48}
-          />
-          <Image
-            className="dark-logo"
-            src="/images/favicon-dark.png"
-            alt=""
-            width={48}
-            height={48}
-          />
+          <Image className="light-logo" src={lightLogo} alt="" width={48} height={48} unoptimized />
+          <Image className="dark-logo" src={darkLogo} alt="" width={48} height={48} unoptimized />
           <span>
             {profile.name}
             <span className={styles.brandDot}>.</span>
