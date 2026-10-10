@@ -12,22 +12,32 @@ export function ProjectCard({
   project,
   featured = false,
   headingLevel = 3,
+  index,
 }: {
   project: Project;
   featured?: boolean;
   headingLevel?: 2 | 3;
+  index?: number;
 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
+  const study = projectStudies[project.slug];
+
   return (
     <article className={`${styles.card} ${featured ? styles.featured : ''}`}>
-      <PointerSurface>
+      <PointerSurface className={styles.pointerSurface}>
         <Link
           className={styles.imageLink}
           href={`/project/${project.slug}`}
-          aria-label={`Explore ${project.name}`}
+          aria-label={`View ${project.name} project details`}
           data-cursor="project"
         >
           <div className={styles.imageFrame}>
+            <span className={styles.frameLabel} aria-hidden="true">
+              PROJECT /{' '}
+              {index === undefined
+                ? project.category.toUpperCase()
+                : String(index).padStart(2, '0')}
+            </span>
             <ParallaxImage>
               <Image
                 src={project.image}
@@ -45,10 +55,8 @@ export function ProjectCard({
       </PointerSurface>
       <Reveal className={styles.content}>
         <div className={styles.heading}>
-          <div>
-            <p className="meta">{project.category}</p>
-            <Heading>{project.name}</Heading>
-          </div>
+          <p className="editorial-label">{project.category}</p>
+          <Heading>{project.name}</Heading>
         </div>
         <p className={styles.description}>{project.description}</p>
         <div className="tags">
@@ -58,7 +66,7 @@ export function ProjectCard({
         </div>
         <div className={styles.links}>
           <Link href={`/project/${project.slug}`} className="text-link">
-            {projectStudies[project.slug] ? 'Read Walkthrough' : 'Project Details'}
+            {study ? 'Read Walkthrough' : 'Project Details'}
             <span className="sr-only"> for {project.name}</span>
             <ArrowUpRightIcon size={16} aria-hidden="true" />
           </Link>

@@ -31,6 +31,10 @@ Added on 8 October 2026 after the engineering showcase. Motion 14 adds focused b
 
 Shared relative typography and spacing tokens replace page-specific pixel sizing. The fluid values interpolate between documented endpoints; 48rem and 64rem breakpoints respond to available content width. See [responsive layout and motion](responsive-and-motion.md) for sources, sizing calculations, and component responsibilities.
 
+## Engineering Editorial presentation
+
+The October 2026 visual pass keeps the same rendering and content boundaries. Page-local CSS Modules define asymmetric work and artwork galleries, editorial detail layouts, grouped skills, and contact presentation; the shared experience component renders a vertical timeline. Collection filtering remains server-rendered GET navigation, and the unfiltered project collection separates featured work from the archive without duplicates. Shared tokens govern typography, colors, spacing, and image treatments. See [visual design](visual-design-2026.md). No content store, provider integration, or application dependency was added.
+
 ## Deployment
 
 Build the feature branch as a Vercel preview with Node.js 24. The production project’s legacy Node.js 18 setting needs updating before merging this migration. Confirm Gmail credentials remain valid and reCAPTCHA permits the final hostname. The public origin in `src/lib/metadata.ts` is `https://ervincs.com`; preview URLs never enter canonical metadata and a stale `SITE_URL` variable has no effect.

@@ -5,20 +5,20 @@
 .heroScene {
   position: relative;
 }
-@media (min-width: 64rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 64rem) and (min-height: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   /* Keep the first screen's layout stable before the scene hydrates. */
   .heroStage {
-    min-height: calc(100svh - var(--header-height));
+    min-height: calc(100svh - var(--measured-header-height, var(--header-height)));
   }
 }
 .heroScene[data-pinned='true'] {
   /* One viewport to read the stage, plus half a viewport for its animation. */
-  min-height: calc(150svh - var(--header-height));
+  min-height: calc(150svh - var(--measured-header-height, var(--header-height)));
 }
 .heroScene[data-pinned='true'] .heroStage {
   position: sticky;
-  top: var(--header-height);
-  min-height: calc(100svh - var(--header-height));
+  top: var(--measured-header-height, var(--header-height));
+  min-height: calc(100svh - var(--measured-header-height, var(--header-height)));
 }
 .parallaxFrame,
 .parallaxPlane {
@@ -26,6 +26,15 @@
   width: 100%;
   height: 100%;
   min-width: 0;
+}
+.parallaxPlane {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.parallaxPlane[data-parallax-active='true'] {
+  top: -1rem;
+  height: calc(100% + 2rem);
 }
 .progress {
   position: fixed;

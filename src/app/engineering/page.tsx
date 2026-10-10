@@ -21,13 +21,15 @@ export const metadata = pageMetadata({
 export default function EngineeringPage() {
   return (
     <div className="container">
-      <section className="page-heading">
-        <p className="eyebrow">A Working Example</p>
-        <h1>Inside This Portfolio.</h1>
-        <p>
-          A small application with deliberate boundaries. Explore how the interface, content, and
-          contact service fit together, and follow each decision into the source.
-        </p>
+      <section className={`page-heading ${styles.pageHeader}`}>
+        <div className={styles.headerCopy}>
+          <p className="eyebrow">02 / Engineering · A Working Example</p>
+          <h1>Inside This Portfolio.</h1>
+          <p>
+            A small application with deliberate boundaries. Explore how the interface, content, and
+            contact service fit together, and follow each decision into the source.
+          </p>
+        </div>
         <div className="hero-actions">
           <ExternalLink href={`${portfolioSource}/tree/${portfolioSourceRef}`} className="button">
             Explore Source <ArrowUpRightIcon size={18} aria-hidden="true" />
@@ -38,7 +40,7 @@ export default function EngineeringPage() {
         </div>
       </section>
       <section className={styles.feature} aria-labelledby="boundaries-heading">
-        <div>
+        <div className={styles.featureIntro}>
           <p className="eyebrow">Architecture</p>
           <h2 id="boundaries-heading">Small Pieces. Clear Responsibilities.</h2>
           <p>
@@ -64,8 +66,12 @@ export default function EngineeringPage() {
           </div>
         </dl>
       </section>
-      <section className="section" id="decisions" aria-labelledby="decisions-heading">
-        <Reveal className="section-heading">
+      <section
+        className={`section ${styles.decisionSection}`}
+        id="decisions"
+        aria-labelledby="decisions-heading"
+      >
+        <Reveal className={`section-heading ${styles.sectionHeading}`}>
           <h2 id="decisions-heading">Choices & Tradeoffs.</h2>
           <p>Each choice solves a current need and leaves a clear place for future changes.</p>
         </Reveal>
@@ -91,7 +97,7 @@ export default function EngineeringPage() {
         </div>
       </section>
       <section className={`section ${styles.checks}`} aria-labelledby="quality-heading">
-        <div>
+        <div className={styles.checksIntro}>
           <p className="eyebrow">Quality in Practice</p>
           <h2 id="quality-heading">Check the Whole Experience.</h2>
           <p>

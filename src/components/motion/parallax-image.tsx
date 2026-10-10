@@ -9,13 +9,14 @@ export function ParallaxImage({ children }: { children: ReactNode }) {
   const frame = useRef<HTMLDivElement>(null);
   const enabled = useScrollMotion();
   const { scrollYProgress } = useScroll({ target: frame, offset: ['start end', 'end start'] });
-  // The frame padding contains the travel, preserving the screenshot's full view.
+  // An oversized image plane covers the frame throughout its bounded travel.
   const y = useTransform(scrollYProgress, [0, 1], ['1rem', '-1rem']);
   return (
     <div ref={frame} className={styles.parallaxFrame}>
       <motion.div
         className={styles.parallaxPlane}
         data-parallax="image"
+        data-parallax-active={enabled}
         style={{ y: enabled ? y : 0 }}
       >
         {children}

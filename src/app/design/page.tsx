@@ -6,22 +6,30 @@ import { profile } from '@/content/profile';
 import { ExternalLink } from '@/components/external-link';
 import { Reveal } from '@/components/motion/reveal';
 import { pageMetadata } from '@/lib/metadata';
+import styles from './design.module.css';
 
 export const metadata = pageMetadata({
   title: 'Web & Mobile Interface Design',
   description: `Browse web and mobile interface designs by ${profile.name}, including dashboards, healthcare websites, and application UI explorations.`,
   path: '/design',
 });
+
 export default async function DesignPage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const filtered = designs.filter((design) => !category || design.category === category);
+  const activeCategory = typeof category === 'string' ? category : '';
+  const filtered = designs.filter(
+    (design) => !activeCategory || design.category === activeCategory,
+  );
+  const categories = [...new Set(designs.map((design) => design.category))];
+
   return (
     <div className="container">
-      <section className="page-heading">
+      <section className={`page-heading ${styles.designIntro}`}>
+        <p className="editorial-label">Portfolio / Design</p>
         <h1>
           Interfaces With
           <br />
@@ -31,47 +39,55 @@ export default async function DesignPage({
           Visual explorations for websites and mobile applications, from layout and hierarchy to the
           smaller details.
         </p>
-        <ExternalLink href={profile.dribbble} className="text-link">
+        <ExternalLink href={profile.dribbble} className={`text-link ${styles.profileLink}`}>
           View Dribbble <ArrowUpRightIcon size={17} aria-hidden="true" />
         </ExternalLink>
       </section>
-      <nav className="filters design-filters" aria-label="Design categories">
-        {['All', 'Web', 'Mobile'].map((value) => (
-          <Link
-            key={value}
-            href={value === 'All' ? '/design' : `/design?category=${value}`}
-            aria-current={
-              value === 'All'
-                ? !category
-                  ? 'page'
-                  : undefined
-                : category === value
-                  ? 'page'
-                  : undefined
-            }
-          >
-            {value === 'All' ? 'All Designs' : `${value} Design`}
+
+      <div className={styles.collectionBar}>
+        <nav className="filters design-filters" aria-label="Design categories">
+          <Link href="/design" aria-current={!activeCategory ? 'page' : undefined}>
+            All Designs
           </Link>
-        ))}
-      </nav>
+          {categories.map((value) => (
+            <Link
+              key={value}
+              href={`/design?category=${encodeURIComponent(value)}`}
+              aria-current={activeCategory === value ? 'page' : undefined}
+            >
+              {value} Design
+            </Link>
+          ))}
+        </nav>
+        <p className={styles.designCount} aria-live="polite">
+          <span>{String(filtered.length).padStart(2, '0')}</span>
+          {filtered.length === 1 ? 'design' : 'designs'}
+        </p>
+      </div>
+
       {filtered.length ? (
-        <div className="design-grid">
-          {filtered.map((design) => (
-            <Reveal key={design.id}>
-              <ExternalLink href={design.url} className="design-tile" data-cursor="project">
-                <div className="design-image">
-                  <Image
-                    src={design.image}
-                    alt={design.title}
-                    width={1200}
-                    height={900}
-                    sizes="(max-width: 767px) 90vw, 46vw"
-                    unoptimized={design.image.includes('.gif')}
-                  />
+        <div className={styles.designGrid}>
+          {filtered.map((design, index) => (
+            <Reveal key={design.id} className={styles.designReveal}>
+              <ExternalLink href={design.url} className={styles.designTile} data-cursor="project">
+                <div className={styles.artworkFrame}>
+                  <div className={styles.artworkMat}>
+                    <Image
+                      src={design.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 767px) 90vw, (max-width: 1023px) 44vw, 56vw"
+                      className={styles.artworkImage}
+                      unoptimized={design.image.includes('.gif')}
+                    />
+                  </div>
                 </div>
-                <div className="design-caption">
+                <div className={styles.designCaption}>
                   <div>
-                    <p className="meta">{design.category} Design</p>
+                    <p className="editorial-label">
+                      <span aria-hidden="true">{String(index + 1).padStart(2, '0')} / </span>
+                      {design.category} Design
+                    </p>
                     <h2>{design.title.replace(' - ', ': ')}</h2>
                   </div>
                   <ArrowUpRightIcon size={20} aria-hidden="true" />

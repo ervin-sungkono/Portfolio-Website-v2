@@ -18,19 +18,19 @@ Fluid tokens interpolate between a 20rem and 80rem viewport, then stop at define
 
 | Token           | Narrow endpoint | Wide endpoint |
 | --------------- | --------------- | ------------- |
-| Display heading | 2rem / 32px     | 4rem / 64px   |
-| Section heading | 1.5rem / 24px   | 2.5rem / 40px |
+| Display heading | 2.75rem / 44px  | 5.5rem / 88px |
+| Section heading | 1.75rem / 28px  | 3rem / 48px   |
 | Page gutter     | 1rem / 16px     | 3rem / 48px   |
-| Section spacing | 3rem / 48px     | 5rem / 80px   |
+| Section spacing | 3.5rem / 56px   | 6rem / 96px   |
 | Layout gap      | 1.5rem / 24px   | 3rem / 48px   |
 
-For example, a display heading grows 32px over a 960px viewport interval. The slope `32 / 960` gives `3.3333vw`; the intercept is 21.333px or `1.3333rem`. The resulting rule is `clamp(2rem, 1.3333rem + 3.3333vw, 4rem)`. Other fluid tokens use the same endpoint calculation. Text never relies on viewport units alone.
+For example, a display heading grows 44px over a 960px viewport interval. The slope `44 / 960` gives `4.5833vw`; the intercept is 29.333px or `1.8333rem`. The resulting rule is `clamp(2.75rem, 1.8333rem + 4.5833vw, 5.5rem)`. The two-column homepage hero uses its own bounded 44–68px scale to preserve its composition. Other fluid tokens use the same endpoint calculation. Text never relies on viewport units alone.
 
 ## Layout thresholds
 
 The default stacks content. At 48rem, project/design galleries have room for two usable columns, roughly 20rem each after gutters and a gap. At 64rem, the hero, contact form, and full navigation have enough room for their content. Tablet portrait keeps the hero stacked. The container caps at 75rem. These choices respond to content width rather than detecting a particular device.
 
-Long headings and project names wrap when necessary; flex/grid children can shrink. Header and anchor offsets share a height token. Mobile navigation scrolls within the dynamic viewport height. The header uses the original square favicon artwork instead of shrinking a logo containing a second name. Mobile hero actions use a full-width primary action followed by a CV/GitHub row.
+Long headings and project names wrap when necessary; flex/grid children can shrink. Header and anchor offsets share a nominal height token, with the actual header height measured by a cleaned-up ResizeObserver when JavaScript is available. This keeps wrapped controls, the menu viewport, and sticky/anchor offsets aligned during text enlargement. Mobile navigation scrolls within the dynamic viewport height. The header uses the original square favicon artwork instead of shrinking a logo containing a second name. Mobile hero actions use a full-width primary action followed by a CV/GitHub row.
 
 Primary buttons, icon buttons, filters, and standalone text links have a minimum 2.75rem height (44px by default), exceeding WCAG's 24px minimum for these controls. Borders and visually hidden clipping retain pixel values; ordinary type and spacing use the shared relative scale.
 
@@ -38,7 +38,7 @@ Primary buttons, icon buttons, filters, and standalone text links have a minimum
 
 Motion 14 supplies small Client Components in `src/components/motion`. Pages continue to render content on the server and pass it into these islands.
 
-- `Reveal` runs a short transform/opacity animation once when content enters the viewport. Server HTML stays visible without JavaScript. Keyboard focus completes running reveals; reduced-motion mode skips them.
+- `Reveal` runs a 0.35-second transform/opacity animation with 10px travel once when content enters the viewport. Server HTML stays visible without JavaScript. Keyboard focus completes running reveals; reduced-motion mode skips them.
 - `PointerSurface` applies bounded spring tilt to imagery for a mouse with fine pointer/hover capability at desktop width. Coordinates update springs rather than React state, and pointer exit returns the image to neutral.
 - `MotionEnhancements` provides scroll progress and loads the cursor component only when pointer and motion preferences allow it.
 - `DesktopCursor` adds a four-corner reticle, diamond-shaped link feedback, contextual project label, and press feedback. Pointer coordinates update plain Motion values directly, without springs, interpolation, or movement delays. It preserves the native cursor, ignores hit testing, hides over text inputs or outside the document, and cleans up event listeners. React state changes only for hover mode.
@@ -51,8 +51,8 @@ Section snapping has been removed. Scrolling remains native, with no wheel inter
 
 `ScrollHero` holds the desktop hero below the header while its text rises by up to 1rem and its visual rises by up to 3rem with a 4% scale increase. Motion's element scroll progress drives those transforms directly; scrolling backwards reverses them. The scene reserves one viewport for reading plus half a viewport of scroll travel, then the hero releases into the page. Content stays fully opaque and all links remain interactive.
 
-`ParallaxImage` moves project screenshots from 1rem below to 1rem above their natural position while they pass through the viewport. Existing frame padding accommodates that travel. Hover tilt and scroll translation belong to separate nested elements so their transforms compose. Experience and engineering introductions use native sticky positioning alongside their scrolling content.
+`ParallaxImage` moves project screenshots from 1rem below to 1rem above their natural position while they pass through the viewport. The image plane extends 1rem above and below the frame while parallax is enabled, accommodating that travel without blank edges. Modular screenshots use cover cropping without inset padding; touch, reduced-motion, and no-JavaScript layouts use the ordinary full-frame plane. Hover tilt and scroll translation belong to separate nested elements so their transforms compose. Experience and engineering introductions use native sticky positioning alongside their scrolling content.
 
-A shared media hook enables scroll motion only at the existing 64rem desktop width, at least 48rem viewport height, and with no reduced-motion preference. The height threshold leaves room for the existing type and spacing; the hero also measures whether its actual content fits below the header. Oversized content, including enlarged text, disables hero pinning. Resize and media observers clean up. Motion values handle scroll updates without React state on each frame.
+A shared media hook enables scroll motion only at the existing 64rem desktop width, at least 48rem viewport height, with fine-pointer/hover capability, and with no reduced-motion preference. The height threshold leaves room for the existing type and spacing; the hero also measures whether its actual content fits below the header. Oversized content, including enlarged text, disables hero pinning. Resize and media observers clean up. Motion values handle scroll updates without React state on each frame.
 
 Phone/tablet layouts, short viewports, reduced-motion mode, and no-JavaScript rendering use the ordinary stacked layout with no reserved scroll scene. Server-rendered content stays visible. The direct reticle cursor continues to track pointer movement without spring lag.

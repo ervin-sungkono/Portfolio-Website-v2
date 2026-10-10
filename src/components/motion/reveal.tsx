@@ -22,9 +22,9 @@ export function Reveal({
     if (!inView || reduceMotion !== false) return;
     const animation = animate(
       scope.current,
-      { opacity: [0, 1], y: [16, 0] },
+      { opacity: [0, 1], y: [10, 0] },
       {
-        duration: 0.55,
+        duration: 0.35,
         delay,
         ease: [0.22, 1, 0.36, 1],
       },

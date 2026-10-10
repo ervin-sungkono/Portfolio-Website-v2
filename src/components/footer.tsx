@@ -20,6 +20,7 @@ export function Footer() {
     <footer className="footer container">
       <div className="footer-top">
         <div>
+          <p className="eyebrow">05 / Contact</p>
           <h2>Have Something in Mind?</h2>
           <p>For opportunities, collaborations, or a conversation about the work.</p>
         </div>

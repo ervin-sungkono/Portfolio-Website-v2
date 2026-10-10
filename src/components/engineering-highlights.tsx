@@ -8,7 +8,7 @@ export function EngineeringHighlights() {
   return (
     <section className={`section ${styles.highlights}`} aria-labelledby="engineering-heading">
       <Reveal className={styles.intro}>
-        <p className="eyebrow">Behind the Interface</p>
+        <p className="eyebrow">02 / Engineering · Behind the Interface</p>
         <h2 id="engineering-heading">The Engineering in the Work.</h2>
         <p>Explore the workflows, integrations, and technical choices behind selected projects.</p>
         <Link href="/engineering" className="text-link">
@@ -16,17 +16,16 @@ export function EngineeringHighlights() {
         </Link>
       </Reveal>
       <div className={styles.evidenceList}>
-        {engineeringCapabilities.map((capability) => {
+        {engineeringCapabilities.map((capability, index) => {
           const project = findProject(capability.projectSlug);
           if (!project) return null;
           return (
-            <Reveal key={capability.projectSlug}>
-              <Link
-                key={capability.projectSlug}
-                href={`/project/${project.slug}#engineering`}
-                className={styles.evidenceLink}
-              >
-                <div>
+            <Reveal key={capability.projectSlug} className={styles.evidenceReveal}>
+              <Link href={`/project/${project.slug}#engineering`} className={styles.evidenceLink}>
+                <span className={styles.evidenceIndex} aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div className={styles.evidenceCopy}>
                   <h3>{capability.title}</h3>
                   <p>{capability.description}</p>
                   <span className={styles.projectLabel}>{project.name} · Read Walkthrough</span>

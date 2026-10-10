@@ -19,7 +19,7 @@ const navigation = [
 function syncThemeColor(theme: string) {
   document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
     meta.removeAttribute('media');
-    meta.setAttribute('content', theme === 'dark' ? '#141619' : '#f7f8fa');
+    meta.setAttribute('content', theme === 'dark' ? '#141619' : '#f8f9fb');
   });
 }
 
@@ -28,6 +28,25 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const header = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const element = header.current;
+    if (!element) return;
+    const measure = () => {
+      document.documentElement.style.setProperty(
+        '--measured-header-height',
+        `${element.getBoundingClientRect().height}px`,
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--measured-header-height');
+    };
+  }, []);
 
   useEffect(() => {
     const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
@@ -61,6 +80,7 @@ export function Header() {
 
   return (
     <header
+      ref={header}
       className={styles.header}
       onBlurCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);

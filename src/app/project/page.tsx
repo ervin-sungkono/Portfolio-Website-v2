@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { MagnifyingGlassIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
-import { projects, filterProjects } from '@/lib/content';
+import { featuredProjects, projects, filterProjects } from '@/lib/content';
 import { ProjectCard } from '@/components/project-card';
 import { pageMetadata } from '@/lib/metadata';
 import { profile } from '@/content/profile';
+import styles from './projects.module.css';
 
 export const metadata = pageMetadata({
   title: 'Software Engineering Projects',
@@ -21,15 +22,27 @@ export default async function ProjectsPage({
   const category = typeof params.category === 'string' ? params.category : '';
   const filtered = filterProjects(query, category);
   const categories = [...new Set(projects.map((project) => project.category))];
+  const isUnfiltered = !query && !category;
+
   function categoryUrl(value: string) {
-    const p = new URLSearchParams();
-    if (query) p.set('q', query);
-    if (value) p.set('category', value);
-    return `/project${p.size ? '?' + p.toString() : ''}`;
+    const search = new URLSearchParams();
+    if (query) search.set('q', query);
+    if (value) search.set('category', value);
+    return `/project${search.size ? `?${search.toString()}` : ''}`;
   }
+
+  function projectIndex(slug: string) {
+    return projects.findIndex((project) => project.slug === slug) + 1;
+  }
+
+  const archive = isUnfiltered
+    ? filtered.filter((project) => !featuredProjects.includes(project))
+    : filtered;
+
   return (
     <div className="container">
-      <section className="page-heading">
+      <section className={`page-heading ${styles.collectionIntro}`}>
+        <p className="editorial-label">Portfolio / Projects</p>
         <h1>
           Projects Built
           <br />
@@ -40,7 +53,8 @@ export default async function ProjectsPage({
           the interface and the source behind it.
         </p>
       </section>
-      <div className="collection-toolbar">
+
+      <div className={`collection-toolbar ${styles.toolbar}`}>
         <nav className="filters" aria-label="Project categories">
           <Link href={categoryUrl('')} aria-current={!category ? 'page' : undefined}>
             All Projects
@@ -73,18 +87,58 @@ export default async function ProjectsPage({
           </button>
         </form>
       </div>
-      <p className="results-count">
+
+      <p className="results-count" aria-live="polite">
         {new Intl.NumberFormat('en').format(filtered.length)}{' '}
         {filtered.length === 1 ? 'project' : 'projects'}
         {query ? ` matching “${query}”` : ''}
       </p>
-      {filtered.length ? (
-        <div className="project-grid">
-          {filtered.map((project) => (
-            <ProjectCard key={project.id} project={project} headingLevel={2} />
-          ))}
-        </div>
-      ) : (
+
+      {isUnfiltered && featuredProjects.length > 0 && (
+        <section className={styles.featuredSection} aria-labelledby="featured-projects-heading">
+          <div className={styles.sectionHeading}>
+            <p className="editorial-label">Selected work</p>
+            <h2 id="featured-projects-heading">Featured projects</h2>
+          </div>
+          <div className={styles.featuredGrid}>
+            {featuredProjects.map((project, index) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                index={projectIndex(project.slug)}
+                featured={index === 0}
+                headingLevel={3}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {archive.length ? (
+        <section className={styles.archiveSection} aria-labelledby="project-archive-heading">
+          {isUnfiltered && (
+            <div className={styles.sectionHeading}>
+              <p className="editorial-label">The collection</p>
+              <h2 id="project-archive-heading">More projects</h2>
+            </div>
+          )}
+          {!isUnfiltered && (
+            <h2 className="sr-only" id="project-archive-heading">
+              Search results
+            </h2>
+          )}
+          <div className="project-grid">
+            {archive.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                index={projectIndex(project.slug)}
+                headingLevel={3}
+              />
+            ))}
+          </div>
+        </section>
+      ) : filtered.length === 0 ? (
         <div className="empty-state">
           <h2>No Projects Found.</h2>
           <p>Try another search or browse the full collection.</p>
@@ -92,7 +146,7 @@ export default async function ProjectsPage({
             Clear Filters <ArrowRightIcon size={17} aria-hidden="true" />
           </Link>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

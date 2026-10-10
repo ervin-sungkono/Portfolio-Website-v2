@@ -5,6 +5,22 @@ import { Experience } from '@/components/experience';
 import { ExternalLink } from '@/components/external-link';
 import { EngineeringHighlights } from '@/components/engineering-highlights';
 import { pageMetadata, site } from '@/lib/metadata';
+import styles from './about.module.css';
+
+const skillGroups = [
+  {
+    title: 'Web & Interface',
+    labels: ['React', 'Next.js', 'JavaScript', 'HTML', 'CSS', 'Tailwind', 'Sass', 'Bootstrap'],
+  },
+  {
+    title: 'Application Development',
+    labels: ['Node.js', 'Laravel', 'MySQL', 'Java', 'Android Studio'],
+  },
+  { title: 'Design & Tools', labels: ['Figma', 'Git'] },
+].map(({ title, labels }) => ({
+  title,
+  items: skills.filter((skill) => labels.includes(skill.label)),
+}));
 
 export const metadata = pageMetadata({
   title: 'About — Software Engineering Experience',
@@ -34,15 +50,15 @@ export default function AboutPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(profileSchema).replace(/</g, '\\u003c') }}
       />
-      <section className="about-hero page-heading">
-        <div>
+      <section className={`page-heading ${styles.hero}`}>
+        <div className={styles.heroCopy}>
           <p className="eyebrow">About {profile.name}</p>
           <h1>
             Engineering, With
             <br />
             an Eye for Design.
           </h1>
-          <p>
+          <p className={styles.intro}>
             {profile.intro} I enjoy exploring how technology and good interface design can work
             together.
           </p>
@@ -50,7 +66,7 @@ export default function AboutPage() {
             View CV <ArrowUpRightIcon size={19} aria-hidden="true" />
           </ExternalLink>
         </div>
-        <div className="avatar-frame">
+        <div className={styles.avatarFrame}>
           <Image
             src="/images/hero-image.png"
             alt={`${profile.name}’s original illustrated portfolio avatar`}
@@ -61,32 +77,41 @@ export default function AboutPage() {
           />
         </div>
       </section>
-      <Experience detailed />
       <EngineeringHighlights />
-      <section className="skills-section section">
-        <div className="section-heading">
+      <Experience detailed />
+      <section className={`section ${styles.skills}`}>
+        <div className={styles.skillsHeading}>
+          <p className="eyebrow">Skills & Tools</p>
           <h2>Tools I Work With.</h2>
           <p>
             A background across frontend development, application development, and interface design.
           </p>
         </div>
-        <div className="skills-grid">
-          {skills.map((skill) => (
-            <div className="skill-item" key={skill.icon}>
-              <Image
-                src={`https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/icons/${skill.icon}.svg`}
-                alt=""
-                width={28}
-                height={28}
-                unoptimized
-              />
-              <span>{skill.label}</span>
+        <div className={styles.skillGroups}>
+          {skillGroups.map((group) => (
+            <div key={group.title} className={styles.skillGroup}>
+              <h3>{group.title}</h3>
+              <ul>
+                {group.items.map((skill) => (
+                  <li key={skill.icon} className={styles.skillItem}>
+                    <Image
+                      src={`https://raw.githubusercontent.com/ervin-sungkono/web-assets/master/icons/${skill.icon}.svg`}
+                      alt=""
+                      width={28}
+                      height={28}
+                      unoptimized
+                    />
+                    <span>{skill.label}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
       </section>
-      <section className="background-section section">
-        <div>
+      <section className={`section ${styles.background}`}>
+        <div className={styles.education}>
+          <p className="eyebrow">Education</p>
           <h2>A Foundation in Computer Science.</h2>
           <p>
             {profile.education.degree}
@@ -94,7 +119,7 @@ export default function AboutPage() {
             {profile.education.school}, 2020-2024
           </p>
         </div>
-        <div className="background-story">
+        <div className={styles.backgroundStory}>
           <h3>Learning Through Collaboration</h3>
           <p>
             At Bina Nusantara Computer Club, I developed technical skills alongside teamwork, time
