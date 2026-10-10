@@ -12,16 +12,19 @@ function loadEngine() {
     import('@tsparticles/basic'),
     import('@tsparticles/plugin-interactivity'),
     import('@tsparticles/interaction-external-repulse'),
+    import('@tsparticles/interaction-particles-links'),
   ]).then(
     async ([
       { tsParticles },
       { loadBasic },
       { loadInteractivityPlugin },
       { loadExternalRepulseInteraction },
+      { loadParticlesLinksInteraction },
     ]) => {
       await loadBasic(tsParticles);
       await loadInteractivityPlugin(tsParticles);
       await loadExternalRepulseInteraction(tsParticles);
+      await loadParticlesLinksInteraction(tsParticles);
       return tsParticles;
     },
   );
@@ -32,7 +35,7 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
   const element = useRef<HTMLDivElement>(null);
   const container = useRef<Container | undefined>(undefined);
   const pausedRef = useRef(false);
-  const settledRef = useRef(false);
+  const inViewport = useRef(true);
   const [paused, setPaused] = useState(false);
   const [ready, setReady] = useState(false);
   const [settings, setSettings] = useState({ enabled: false, interactive: false, dark: false });
@@ -81,9 +84,10 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
     if (!settings.enabled || !element.current) return;
     let cancelled = false;
     let instance: Container | undefined;
-    let settle: ReturnType<typeof setTimeout> | undefined;
-    const preservePause = () => {
-      if (pausedRef.current || settledRef.current) instance?.pause();
+    let visibility: IntersectionObserver | undefined;
+    const syncPlayback = () => {
+      if (pausedRef.current || !inViewport.current || document.hidden) instance?.pause();
+      else instance?.play();
     };
     const host = element.current;
     const count = variant === 'hero' ? 12 : settings.interactive ? 56 : 24;
@@ -93,7 +97,7 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
       detectRetina: false,
       pauseOnBlur: true,
       pauseOnOutsideViewport: true,
-      autoPlay: !pausedRef.current && !settledRef.current,
+      autoPlay: !pausedRef.current,
       particles: {
         number: { value: count, density: { enable: false }, limit: { value: count } },
         paint: {
@@ -102,6 +106,13 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
         opacity: { value: { min: 0.18, max: variant === 'hero' ? 0.3 : 0.45 } },
         size: { value: { min: 1, max: variant === 'hero' ? 2 : 3 } },
         shape: { type: 'circle' },
+        links: {
+          enable: variant === 'hero',
+          distance: 75,
+          color: settings.dark ? '#91b4ff' : '#2459d3',
+          opacity: 0.18,
+          width: 0.75,
+        },
         move: {
           enable: true,
           speed: variant === 'hero' ? 0.25 : 0.6,
@@ -126,18 +137,17 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
           return;
         }
         container.current = instance;
-        document.addEventListener('visibilitychange', preservePause);
-        if (pausedRef.current || settledRef.current) {
+        document.addEventListener('visibilitychange', syncPlayback);
+        if (pausedRef.current) {
           instance?.pause();
           instance?.draw(true);
         }
-        // The homepage accent settles before five seconds; no looping distraction.
-        if (variant === 'hero' && !settledRef.current) {
-          settle = setTimeout(() => {
-            settledRef.current = true;
-            instance?.pause();
-          }, 4500);
-        }
+        // Keep automatic visibility pauses separate from the visitor's choice.
+        visibility = new IntersectionObserver(([entry]) => {
+          inViewport.current = entry.isIntersecting;
+          syncPlayback();
+        });
+        visibility.observe(host);
         setReady(!!instance);
       })
       .catch((error: unknown) => {
@@ -146,8 +156,8 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
       });
     return () => {
       cancelled = true;
-      clearTimeout(settle);
-      document.removeEventListener('visibilitychange', preservePause);
+      visibility?.disconnect();
+      document.removeEventListener('visibilitychange', syncPlayback);
       instance?.destroy();
       container.current = undefined;
     };
@@ -158,7 +168,7 @@ export function ParticleAccent({ variant = 'not-found' }: { variant?: 'not-found
     pausedRef.current = next;
     setPaused(next);
     if (next) container.current?.pause();
-    else container.current?.play();
+    else if (inViewport.current && !document.hidden) container.current?.play();
   }
 
   return (

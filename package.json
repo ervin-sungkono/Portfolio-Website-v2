@@ -17,6 +17,7 @@
     "@tsparticles/basic": "4.4.0",
     "@tsparticles/engine": "4.4.0",
     "@tsparticles/interaction-external-repulse": "4.4.0",
+    "@tsparticles/interaction-particles-links": "4.4.0",
     "@tsparticles/plugin-interactivity": "4.4.0",
     "motion": "14.0.0",
     "next": "16.4.0",
