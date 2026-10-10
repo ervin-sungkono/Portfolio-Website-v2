@@ -1,0 +1,256 @@
+.home {
+  position: relative;
+  min-width: 0;
+}
+
+.home > [data-scroll-scene] > section {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--layout-gap);
+  align-items: center;
+}
+
+.heroCopy {
+  min-width: 0;
+}
+
+.heroCopy h1 {
+  max-width: 11em;
+  font-size: clamp(2.75rem, 4.15vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.065em;
+}
+
+.heroCopy h1 span {
+  display: block;
+  max-width: 18em;
+  margin-top: 0.2em;
+  color: var(--muted);
+  font-size: 0.62em;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+
+.heroVisual {
+  position: relative;
+  min-width: 0;
+}
+
+.heroVisual::after {
+  position: absolute;
+  z-index: 1;
+  inset: var(--space-3);
+  border-radius: calc(var(--radius) - var(--space-2));
+  background:
+    linear-gradient(var(--accent), var(--accent)) left top / var(--space-5) 1px,
+    linear-gradient(var(--accent), var(--accent)) left top / 1px var(--space-5),
+    linear-gradient(var(--accent), var(--accent)) right top / var(--space-5) 1px,
+    linear-gradient(var(--accent), var(--accent)) right top / 1px var(--space-5),
+    linear-gradient(var(--accent), var(--accent)) left bottom / var(--space-5) 1px,
+    linear-gradient(var(--accent), var(--accent)) left bottom / 1px var(--space-5),
+    linear-gradient(var(--accent), var(--accent)) right bottom / var(--space-5) 1px,
+    linear-gradient(var(--accent), var(--accent)) right bottom / 1px var(--space-5);
+  background-repeat: no-repeat;
+  content: '';
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.selected,
+.designSection {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+}
+
+.sectionHeading {
+  margin-bottom: var(--space-10);
+}
+
+.sectionIndex {
+  margin: 0 0 var(--space-4);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bentoGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--layout-gap);
+  align-items: stretch;
+}
+
+.bentoGrid > * {
+  min-width: 0;
+}
+
+.primaryProject,
+.secondaryProject,
+.additionalProject {
+  min-width: 0;
+  align-self: start;
+}
+
+.engineeringTeaser,
+.designTeaser {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(var(--space-6), 3vw, var(--space-10));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+  align-self: start;
+}
+
+.engineeringTeaser:hover,
+.designTeaser:hover {
+  border-color: var(--accent);
+  background: var(--surface-high);
+}
+
+.teaserKicker {
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.engineeringTeaser h3,
+.designTeaser h3 {
+  margin: var(--space-6) 0 0;
+  font-size: clamp(1.35rem, 1.1rem + 0.8vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+}
+
+.engineeringTeaser p,
+.designTeaser p {
+  margin: var(--space-4) 0 0;
+  color: var(--muted);
+  font-size: var(--text-body);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.teaserAction {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.engineeringTeaser:hover .teaserAction,
+.designTeaser:hover .teaserAction {
+  color: var(--accent);
+}
+
+.teaserImage {
+  width: 100%;
+  margin-top: var(--space-4);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - var(--space-2));
+  background: var(--surface-high);
+  aspect-ratio: 4 / 3;
+}
+
+.teaserImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.designTeaser h3 {
+  margin-top: var(--space-4);
+}
+
+.collectionLink {
+  margin-top: var(--space-8);
+}
+
+.designGallery {
+  align-items: start;
+}
+
+@media (min-width: 48rem) {
+  .bentoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .primaryProject {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 64rem) {
+  .home > [data-scroll-scene] > section {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+    gap: var(--layout-gap);
+  }
+}
+
+@media (min-width: 70rem) {
+  .bentoGrid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--space-6);
+    row-gap: var(--layout-gap);
+  }
+
+  .primaryProject {
+    grid-column: 1 / span 8;
+    grid-row: 1;
+  }
+
+  .secondaryProject {
+    grid-column: 9 / -1;
+    grid-row: 1;
+  }
+
+  .engineeringTeaser {
+    grid-column: 1 / span 3;
+    grid-row: 2;
+  }
+
+  .additionalProject {
+    grid-column: 4 / span 6;
+    grid-row: 2;
+  }
+
+  .designTeaser {
+    grid-column: 10 / span 3;
+    grid-row: 2;
+  }
+
+  .designTeaser h3 {
+    font-size: clamp(1.125rem, 0.95rem + 0.5vw, 1.5rem);
+    line-height: 1.2;
+  }
+
+  .designGallery {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    align-items: start;
+  }
+
+  .designGallery > :nth-child(2) {
+    margin-top: clamp(var(--space-8), 5vw, var(--space-16));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engineeringTeaser,
+  .designTeaser {
+    transition: none;
+  }
+}
