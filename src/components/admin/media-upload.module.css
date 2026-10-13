@@ -1,0 +1,102 @@
+.root {
+  display: grid;
+  gap: 0.7rem;
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--surface-high) 76%, var(--surface));
+}
+
+.root legend {
+  padding: 0 0.35rem;
+  color: var(--foreground);
+  font-size: var(--text-xs);
+  font-weight: 760;
+}
+
+.preview {
+  display: block;
+  width: 100%;
+  max-height: 15rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+  object-fit: contain;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--foreground);
+  font-size: var(--text-xs);
+  font-weight: 720;
+}
+
+.field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line-strong, var(--line));
+  border-radius: 0.5rem;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.field input:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  outline-offset: 1px;
+}
+
+.submit {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.9rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--button);
+  color: var(--button-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.submit:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.root progress {
+  width: 100%;
+  min-height: 0.75rem;
+  accent-color: var(--accent);
+}
+
+.error {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid #c86464;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, #f7dada 25%, var(--surface));
+  color: var(--foreground);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}

@@ -1,7 +1,8 @@
-import type { Project } from '@/lib/content';
+import type { Project, ProjectStudy } from '@/lib/content';
 
 export type ProjectCardProps = {
   project: Project;
+  study?: ProjectStudy;
   featured?: boolean;
   headingLevel?: 2 | 3;
   index?: number;

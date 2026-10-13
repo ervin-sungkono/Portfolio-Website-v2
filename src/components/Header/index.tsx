@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ListIcon, XIcon, SunIcon, MoonIcon } from '@phosphor-icons/react';
-import { profile } from '@/content/profile';
+import type { ProfilePayload } from '@/lib/cms/model';
 import lightLogo from '@public/images/favicon-light.png';
 import darkLogo from '@public/images/favicon-dark.png';
 import type { NavigationItem } from './type';
@@ -26,7 +26,7 @@ function syncThemeColor(theme: string) {
   });
 }
 
-export function Header() {
+export function Header({ profile }: { profile: Pick<ProfilePayload, 'name'> }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark' | null>(null);

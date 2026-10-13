@@ -131,17 +131,17 @@ export const portfolioDecisions = [
   {
     title: 'Render Content on the Server',
     implementation:
-      'Pages and project walkthroughs use Server Components. The header and contact form own the browser interactions. Project detail pages are generated at build time.',
+      'Pages and project walkthroughs use Server Components. Browser interactions stay in focused components. Database-backed project pages can render newly published slugs without a rebuild.',
     tradeoff:
-      'Static content needs a new build when it changes. That is a reasonable constraint for phase 1; publishing and cache invalidation can be designed when a CMS is selected.',
-    file: 'src/app/project/[slug]/page.tsx',
+      'Published content is cached separately from drafts. Publishing invalidates the public cache; request-time rendering also depends on database availability.',
+    file: 'src/app/(portfolio)/project/[slug]/page.tsx',
   },
   {
     title: 'Keep Content Separate From UI',
     implementation:
-      'Project records, profile facts, and engineering walkthroughs live in content files. Pages access project data through a small shared module.',
+      'Pages access published projects, profile facts, and walkthroughs through one content boundary. The CMS keeps editable revisions separate from the public projection; checked-in content remains an explicit transitional source.',
     tradeoff:
-      'Content edits currently require a commit. A CMS is deferred to phase 2, so the application does not yet need provider adapters or an admin interface.',
+      'A custom editor adds authentication, migrations, and publication operations to maintain. Public database credentials can read published projections but cannot access draft revisions or owner sessions.',
     file: 'src/lib/content.ts',
   },
   {
@@ -150,7 +150,7 @@ export const portfolioDecisions = [
       'Project search and categories use query parameters and ordinary links. A filtered collection has a URL that can be copied, bookmarked, or opened without client-side filtering code.',
     tradeoff:
       'Submitting a search performs a navigation. For a small portfolio collection, explicit search is a simpler choice than a continuously updating client-side index.',
-    file: 'src/app/project/page.tsx',
+    file: 'src/app/(portfolio)/project/page.tsx',
   },
   {
     title: 'Treat Contact as a Complete Flow',
@@ -163,7 +163,7 @@ export const portfolioDecisions = [
 ] as const;
 
 export const portfolioSource = 'https://github.com/ervin-sungkono/Portfolio-Website-v2';
-export const portfolioSourceRef = 'feat/portfolio-rework-phase-1';
+export const portfolioSourceRef = 'feat/portfolio-cms-neon';
 
 export function portfolioFileUrl(file: string) {
   return `${portfolioSource}/blob/${portfolioSourceRef}/${file}`;

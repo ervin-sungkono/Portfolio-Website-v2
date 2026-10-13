@@ -4,6 +4,7 @@ const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
 
 export default defineConfig({
   testDir: './tests/browser',
+  testIgnore: 'cms-*.spec.ts',
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
@@ -31,6 +32,16 @@ export default defineConfig({
       EMAIL: '',
       EMAIL_PASS: '',
       RECAPTCHA_SECRET: '',
+      CMS_CONTENT_SOURCE: 'static',
+      DATABASE_URL_PUBLIC: '',
+      DATABASE_URL_CMS: '',
+      DATABASE_URL_AUTH: '',
+      DATABASE_URL_MIGRATIONS: '',
+      BETTER_AUTH_SECRET: '',
+      BETTER_AUTH_URL: '',
+      CMS_BOOTSTRAP_EMAIL: '',
+      CMS_BOOTSTRAP_PASSWORD: '',
+      BLOB_PRIVATE_READ_WRITE_TOKEN: '',
     },
   },
 });

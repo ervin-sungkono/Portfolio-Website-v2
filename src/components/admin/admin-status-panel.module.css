@@ -1,0 +1,39 @@
+.panel {
+  padding: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: var(--surface-high);
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: var(--text-heading-small);
+  letter-spacing: -0.04em;
+}
+
+.panel p:not(.eyebrow) {
+  max-width: 58ch;
+  margin: var(--space-3) 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: var(--space-4);
+  color: var(--accent);
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

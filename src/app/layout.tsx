@@ -1,11 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import '@/styles/globals.css';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { site } from '@/lib/metadata';
-import { MotionEnhancements } from '@/components/MotionEnhancements';
-import { ParticleAccent } from '@/components/ParticleAccent';
+import { themeScript } from '@/lib/theme-script';
 
 const manrope = localFont({
   src: '../../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2',
@@ -38,8 +35,6 @@ export const viewport: Viewport = {
   ],
 };
 
-const themeScript = `try{var t=localStorage.getItem('portfolio-theme');document.documentElement.dataset.theme=t==='dark'||t==='light'?t:matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'}catch{document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'}`;
-
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={manrope.variable} suppressHydrationWarning>
@@ -48,18 +43,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="preconnect" href="https://raw.githubusercontent.com" />
         <link rel="preconnect" href="https://cdn.dribbble.com" />
       </head>
-      <body>
-        <ParticleAccent variant="portfolio" />
-        <a href="#main" className="skip-link">
-          Skip to Content
-        </a>
-        <Header />
-        <MotionEnhancements />
-        <main id="main" tabIndex={-1}>
-          {children}
-        </main>
-        <Footer />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

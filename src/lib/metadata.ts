@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
-import { profile } from '@/content/profile';
 
 // One public origin keeps previews, canonical links, and discovery files consistent.
+export const publicName = 'Ervin Cahyadinata Sungkono';
+
 export const site = {
   url: 'https://ervincs.com',
-  name: profile.name,
-  title: `${profile.name} | Frontend Software Engineer`,
-  description: `${profile.name}, software engineer at Samsung R&D Institute Indonesia. Explore React and Next.js projects, frontend case studies, and interface design.`,
+  name: publicName,
+  title: `${publicName} | Frontend Software Engineer`,
+  description: `${publicName}, software engineer at Samsung R&D Institute Indonesia. Explore React and Next.js projects, frontend case studies, and interface design.`,
 };
 
 type PageMetadata = {
@@ -22,16 +23,21 @@ export function pageMetadata({
   description,
   path,
   image = '/images/preview-img.png',
-  imageAlt = `${profile.name} software engineering portfolio`,
+  imageAlt = `${publicName} software engineering portfolio`,
 }: PageMetadata): Metadata {
   const fullTitle = path === '/' ? title : `${title} | ${site.name}`;
+  const normalizedDescription = description.trim().replace(/\s+/g, ' ');
+  const summary =
+    normalizedDescription.length > 240
+      ? `${normalizedDescription.slice(0, 239).replace(/\s+\S*$/, '')}…`
+      : normalizedDescription;
   return {
     title: path === '/' ? { absolute: title } : title,
-    description,
+    description: summary,
     alternates: { canonical: path },
     openGraph: {
       title: fullTitle,
-      description,
+      description: summary,
       url: path,
       siteName: site.name,
       type: 'website',
@@ -40,7 +46,7 @@ export function pageMetadata({
     twitter: {
       card: 'summary_large_image',
       title: fullTitle,
-      description,
+      description: summary,
       images: [image],
     },
   };

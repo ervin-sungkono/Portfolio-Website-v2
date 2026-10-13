@@ -1,0 +1,45 @@
+.new-button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1rem;
+  border-radius: 0.55rem;
+  background: var(--button);
+  color: var(--button-text);
+  font-size: var(--text-sm);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.new-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.list-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: -0.45rem 0 1rem;
+}
+
+.list-summary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.list-summary strong {
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (width <= 38rem) {
+  .list-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+}

@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
-import { projectStudies } from '@/lib/content';
 import { ExternalLink } from '../ExternalLink';
 import { Reveal } from '../Reveal';
 import { PointerSurface } from '../PointerSurface';
@@ -12,6 +11,7 @@ import './style.css';
 
 export function ProjectCard({
   project,
+  study,
   featured = false,
   headingLevel = 3,
   index,
@@ -19,7 +19,6 @@ export function ProjectCard({
   parallaxTravel,
 }: ProjectCardProps) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
-  const study = projectStudies[project.slug];
   const Surface = parallaxTravel === undefined ? PointerSurface : 'div';
 
   return (

@@ -1,13 +1,13 @@
 # Portfolio agent handoff
 
-Updated **23 October 2026 (Asia/Jakarta)**. These instructions describe the rework and current documentation; inspect live repository state before continuing.
+Updated **24 October 2026 (Asia/Jakarta)**. Continue from `dev`, where rework PR #2 has been merged; CMS PR #3 targets `dev`. Check live repository and remote state before relying on these notes.
 
 ## Repository and branch
 
 - Repository: https://github.com/ervin-sungkono/Portfolio-Website-v2.
-- Continue from `feat/portfolio-rework-phase-1`. [PR #2](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2) was confirmed open, draft, and targeting `main` on 23 October. The dated commit/remote snapshot is in `docs/verification.md`.
-- Check Git status, active branch, and remote head before editing. Preserve unrelated or concurrent work. Components use the directory and nested CSS organization described in the architecture and responsive/motion references; don't mistake historical checks for validation of later edits.
-- Existing explicit user instructions take precedence over project defaults. A dated document is not fresh Git, CI, deployment, or provider evidence.
+- The CMS implementation is under review in [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3), targeting `dev`.
+- Start feature work from the selected branch, not the legacy `main` implementation. Check `git status`, the active branch, and remote head before editing; preserve unrelated work.
+- Dated verification is historical evidence, not a fresh result. New explicit user instructions take precedence over these project defaults.
 
 ## Read first and maintain documentation
 
@@ -23,7 +23,11 @@ Keep each topic in its owning document and link to it elsewhere. Update current 
 
 ## Setup and checks
 
-Use Node.js 24, npm, and the committed `package-lock.json`; the package requires Node.js 22 or later. Use `npm ci` for setup and maintenance, including hosted environments, then `npm run dev`.
+Use Node.js 24, npm, and the committed lockfile (`npm ci`). The package requires Node.js 22 or newer.
+
+The checked-in content snapshots remain the default local source. To provision or run the CMS, follow [docs/cms.md](docs/cms.md); do not put credentials in source control or expose server-only variables through `NEXT_PUBLIC_*` names.
+
+Available checks:
 
 ```sh
 npm run typecheck
@@ -40,23 +44,30 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 
 ## Architecture and maintenance
 
-- Stack: Next.js 16.4.0 App Router, React 19.2, strict TypeScript, native CSS/CSS Modules, and Motion 14.0.0. Read installed Next.js documentation before using its APIs. Avoid unrelated framework/dependency upgrades.
-- Follow KISS, DRY, and YAGNI. Prefer small functions and existing boundaries; add dependencies or abstractions only when the task needs them.
-- `src/app` owns routes/layouts/metadata/API handlers. Prefer Server Components for pages/content and focused client islands for browser interaction.
-- `src/components` owns reusable UI; `src/styles/globals.css` owns shared tokens/primitives. The current refactor colocates component `index.tsx`, `type.ts`, and prefixed/nested `style.css` in PascalCase directories; pages retain CSS Modules. Inspect and preserve this organization during related work.
-- Use PascalCase for standalone React `.tsx`/`.jsx` filenames and component directories. Preserve established `index.tsx` directory entry points and framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx`.
-- `src/content` owns profile/engineering facts and JSON snapshots. Access project/design collections through `src/lib/content.ts`; do not duplicate lookups. Shared motion helpers currently live in `src/lib/motion`.
-- `src/lib/metadata.ts` owns public metadata; `src/lib/contact` owns validation and server-only providers. Preserve routes, slugs, assets, CV/social/source links, team credits, GET filters, and unknown-project 404/noindex behavior.
-- Keep `portfolioSourceRef` in `src/content/engineering.ts` on the rework branch while under review. Update it to `main` only after merge.
-- `next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Describe image delivery accordingly. Re-enabling transformations needs fresh validation; historical cache/source-selection results do not apply to current rendering.
+- Stack: Next.js 16.4.3 App Router, React 19.2, strict TypeScript, native CSS/CSS modules, Motion 14.0.0, PostgreSQL, Drizzle ORM, Better Auth 1.7, and Vercel Blob private storage. Read installed Next.js documentation before using its APIs. Avoid unrelated framework or dependency upgrades.
+- Follow KISS, DRY, and YAGNI. Prefer small readable functions and existing boundaries; add dependencies or abstractions only when the task needs them.
+- `src/app` owns public/admin routes, layouts, metadata, and API handlers. Prefer Server Components for pages and content; keep browser interaction in focused client islands.
+- `src/components` owns reusable UI and motion. `src/styles/globals.css` owns shared theme, spacing, typography, and responsive tokens; CSS modules own local styles.
+- `src/content` owns typed profile/engineering content and project/design JSON. Access collections through `src/lib/content.ts`; do not scatter duplicate content lookups.
+- `src/lib/metadata.ts` owns the public origin and shared SEO helpers. `src/lib/contact` owns shared validation and server-only provider integration. `src/lib/cms` owns server-only CMS auth, storage, revisions, publishing, caching, and private media delivery.
+- PostgreSQL access uses separate `portfolio_public`, `portfolio_cms`, and `portfolio_auth` runtime roles; offline migrations and owner bootstrap use a separate migration principal. Keep direct migration URLs out of runtime configuration and preserve the migration SQL's least-privilege grants.
+- The public content boundary defaults to static snapshots. Database mode reads only the published projection and must fail closed when configured database access fails; do not add a snapshot fallback to database mode.
+- Project detail pages resolve on request in both source modes and use the published-projection cache in database mode. Keep `generateStaticParams` out of this route. `src/proxy.ts` checks slugs before rendering: static mode uses the snapshot slug set; database mode makes one fresh parameterized query with `portfolio_public` per detail navigation. Missing slugs rewrite to the dedicated request-time `/project-not-found` recovery page with HTTP 404, `noindex`, and `no-store`; this prevents a cached generated 404 from hiding a newly published project. A failed database query returns 503 without snapshot fallback. Do not replace this with a dynamic `notFound()` boundary alone, which leaves Flight-only recovery without JavaScript.
+- Preserve existing routes, project slugs, assets, CV/social/source links, and team credits. Collections use server-rendered GET filters. Unknown project slugs return 404/noindex.
+- Engineering source links use `portfolioSourceRef` in `src/content/engineering.ts`. Keep it pointed at `dev` while CMS PR #3 is under review; update it after that PR merges.
 
 ## Identity, SEO, and scope
 
-- The full name is **Ervin Cahyadinata Sungkono**; `profile.name` in `src/content/profile.ts` is authoritative. Use it in visible identity, accessible alternatives, metadata, and structured data.
-- The public origin is **https://ervincs.com** in `src/lib/metadata.ts`. Preview hosts must not enter canonicals, sitemap, robots, or structured data. `SITE_URL` does not control the origin.
-- Preserve distinct route descriptions and matching social metadata. Filtered URLs canonicalize to the unfiltered collection. Structured data must match visible verified facts and be serialized safely.
-- Write specific, natural descriptions without invented metrics, seniority, personal team contributions, or ranking promises. Professional content expansion remains deferred until requested.
-- CMS is deferred to phase 2. Do not add database/auth/admin UI, scheduled imports, or speculative CMS layers without a new request.
+- The owner's full name is **Ervin Cahyadinata Sungkono**. `profile.name` in `src/content/profile.ts` is authoritative. Use the full name in visible identity text, accessible alternatives, page titles/descriptions, social metadata, and structured data; do not reintroduce the shortened alias.
+- The public origin is **https://ervincs.com**, defined in `src/lib/metadata.ts`. Preview hostnames must not enter canonical URLs, sitemap, robots, or structured data. A `SITE_URL` variable does not control the current origin.
+- Preserve distinct route descriptions and matching social metadata. Filtered collection URLs canonicalize to the unfiltered collection. Structured data must match visible, verified facts; serialize it safely.
+- Write natural, specific descriptions of the owner's actual work. Do not promise search rankings, stuff keywords, invent metrics, or claim unverified seniority or personal team contributions.
+- Professional portfolio content improvements remain deferred. Do not invent or expand facts, achievements, metrics, or responsibilities as part of CMS work.
+- The CMS feature under review in PR #3 targets `dev`. Keep its scope to existing project, design, and profile records, the authenticated `/admin` editor, revision history, publication, and private media. Do not add public signup, OAuth, new content categories, imports, or unrelated CMS layers.
+- Authentication uses Better Auth password login plus verified TOTP and backup codes. Public signup is disabled; owner creation is an offline one-time bootstrap. Publishing and unpublishing require a password-and-factor session created within the previous 30 minutes.
+- Drafts and immutable revisions are separate from the public projection. Use optimistic revision checks; keep each publication's public projection, audit record, and cache outbox event in one database transaction.
+- CMS media must stay in one private Blob store under `BLOB_PRIVATE_READ_WRITE_TOKEN`. Accept only normalized PNG/JPEG/WebP up to 5 MiB and 16 megapixels. Public URLs go through `/media/published/{id}/{sha256}` and require a matching SQL published-media row; private preview images are `no-store` and unoptimized. Published registry rows are retained after content is unpublished; one-year immutable URLs and browser/CDN copies cannot be recalled. Never introduce a public Blob store/token.
+- Partition public-content cache scope by database host, port, name, runtime role, validated `options=endpoint=...` routing value, deployment/CMS environment, and preview branch. Keep preview and production data/cache scopes distinct; reject unexpected database URL parameters.
 
 ## Responsive behavior, motion, and accessibility
 
@@ -71,14 +82,14 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - For UI changes, exercise keyboard navigation and both themes at 320, 390, 820, 1024, and 1440px, enlarged text/reflow, reduced motion, and relevant input/fallback contexts. Add focused browser/axe checks when relevant and report actual coverage.
 - Historical automated results do not prove WCAG conformance. NVDA/VoiceOver, actual browser zoom, forced colors, and real-device checks remain outstanding; root-font enlargement is not browser zoom.
 
-## Contact and release boundaries
+## Contact integration and release boundaries
 
-- Production credentials are only needed for live integration. Use `.env.example` and the architecture reference. Never print or commit secrets, and keep provider code server-only.
-- Preserve request validation, the 64 KiB streamed-body cap, abuse checks, duplicate-submission prevention, read-only pending fields, draft retention, and graceful LinkedIn fallback.
-- Automated tests must not send real email. Live delivery requires an explicit user request and verified hostname/provider setup; Gmail receipt remains unverified.
-- Current release scope is the rework branch/draft PR and preview. Do not merge, promote production, change DNS/domains, or modify production secrets without authorization. Do not repeat requests for authorization already provided in the session.
-- Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy setting; inspect the current production runtime and ensure it supports this migration before release.
-- Report changes, checks, and material limits. A preview does not prove production indexing, field Core Web Vitals, hosted image availability/cost, or real email receipt.
+- Real provider configuration is only needed for integration testing. UI, unit tests, typechecking, and build can run without production credentials. Refer to `.env.example` for `EMAIL`, `EMAIL_PASS`, `NEXT_PUBLIC_RECAPTCHA_KEY`, and `RECAPTCHA_SECRET`; the legacy server alias `RECAPTCHA_KEY` is supported.
+- Never print or commit secrets. Keep provider code server-only and preserve validation/abuse checks and graceful failure with a LinkedIn fallback.
+- Do not send real email during automated tests. Live delivery testing requires an explicit user request and verified reCAPTCHA hostname/provider configuration. Gmail receipt remains unverified.
+- The current review scope is CMS PR #3 and preview. Neon and Blob are not provisioned for hosted release. Do not merge, promote production, change DNS/domain settings, or modify production secrets unless the user authorizes that action.
+- Before deployment work, verify the actual Vercel project/team, branch, commit, runtime, and target. The legacy production configuration was Node.js 18; verify/update the production runtime for this migration before a future release.
+- Report what changed, what was checked, and material limitations. Update relevant documentation when behavior or architecture changes. Never imply that a preview proves production indexing, field Core Web Vitals, remote asset availability, or email delivery.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -1,12 +1,28 @@
-# Portfolio architecture and operations
+# Architecture and implementation decisions
 
 Reviewed against the repository on **23 October 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
 
 ## Scope and stack
 
-Phase 1 preserves the owner's projects, artwork, public routes, CV, social links, and team credits while presenting engineering work through server-rendered pages. The stack is Next.js 16.4.0 App Router, React 19.2, strict TypeScript, native CSS, Motion 14.0.0, selectively loaded tsParticles 4.4.0 features, and Nodemailer 10.1. Install with the committed lockfile; Node.js 24 is recommended and CI uses it. The package requires Node.js 22 or newer.
+The stack is Next.js 16.4 App Router, React 19.2, strict TypeScript, native CSS/CSS Modules, Motion 14, PostgreSQL, Drizzle ORM, Better Auth, and private Vercel Blob storage. Routing and rendering belong to `src/app`. Repeated UI belongs to `src/components`. `src/lib/content.ts` is the public content boundary, and `src/lib/cms` contains server-only CMS storage, authentication, revision, publication, and cache code. Contact validation is shared between browser and API; provider access stays in a `server-only` module. The CMS uses focused boundaries without a generic repository layer or application-wide state provider.
 
-CMS integration remains phase 2. There is no database, authentication, editor/admin UI, CMS SDK, scheduled import, global state library, or background content synchronization. Professional content expansion also remains deferred. Do not infer new responsibilities, personal team contributions, seniority, or measured outcomes from the implementation.
+The CMS implementation is under review in PR #3 targeting `dev`. It manages the existing project, design, and profile record types. Professional content expansion remains deferred; CMS validation preserves the existing verified facts and does not supply new biography or achievement claims.
+
+## Public route rendering
+
+Project detail pages render on request in both snapshot and database modes. The guard in `src/proxy.ts` checks static slugs against the checked-in JSON list or, in database mode, runs a fresh parameterized existence query with the public role before rendering. A missing slug rewrites to the dedicated request-time `/project-not-found` recovery page with HTTP 404, `noindex`, and `no-store`; the page waits for the request before rendering so Next.js cannot attach the generated static 404's long CDN cache lifetime. This allows a newly published project slug to become reachable immediately after the fresh guard query succeeds. Direct requests to `/project-not-found` also receive HTTP 404, `noindex`, and `no-store`. A failed database check returns HTTP 503 and does not fall back to snapshots. Known database-backed details then read content through the published-projection cache. The guard adds one existence query per database-mode project detail navigation; it keeps unknown CMS slugs from reaching a dynamic `notFound()` boundary that only returns Flight recovery content without JavaScript. The route intentionally has no `generateStaticParams`: the former empty parameter list with ISR produced runtime 500 responses, and database entries must not require a build to become reachable.
+
+The proxy preserves the original request URL with `skipProxyUrlNormalize`. This keeps recovery rewrites internal when the server binds to IPv4 loopback; Next.js's default localhost normalization otherwise sends recovery through an external self-proxy.
+
+## CMS data and security boundaries
+
+The public content boundary resolves the configured source at request time in both modes. This prevents a build made before database setup from retaining prerendered snapshots after runtime configuration switches to database mode. The public content boundary defaults to the checked-in snapshots. `CMS_CONTENT_SOURCE=database` switches public reads to the PostgreSQL published projection; if that connection or projection fails, the request fails rather than falling back to snapshot content. This keeps a misconfigured database from silently presenting a different version of the portfolio.
+
+PostgreSQL access is split among three runtime roles and an offline migration principal. `portfolio_public` can read only the published content and media projections. `portfolio_cms` reads and changes drafts, revisions, publication records, audit events, outbox rows, and media metadata. `portfolio_auth` serves Better Auth and its owner-membership check. The migration principal owns schema changes and one-time owner bootstrap; its direct connection URL is kept outside runtime settings. Runtime URLs use the provider's pooled endpoint and enforce TLS with certificate verification for remote connections.
+
+Each edit appends an immutable revision and uses the editor's expected revision number to reject stale writes. Publication writes the public content projection, published media registry entries, audit event, and cache outbox event in one SQL transaction. Unpublishing removes the projection and records its audit/outbox event in one transaction. The outbox makes cache refresh retryable after a committed database change. Public cache identity includes a non-reversible namespace derived from database host, port, name, runtime role, validated endpoint-routing value (`options=endpoint=...`) when present, deployment/CMS environment, and preview branch. The URL parser permits only one each of `sslmode`, `channel_binding`, and a validated `options` endpoint value; credentials and unrecognized parameters do not enter the key.
+
+Better Auth provides password login, TOTP, and ten encrypted backup codes. Public signup and OAuth are disabled. Password reset revokes sessions, but no self-service email-reset flow is configured. The initial owner is created by an offline bootstrap command and must enroll a verified TOTP factor before editing. Publish and unpublish require a password-and-factor session established within the last 30 minutes. Private draft previews are excluded from indexing; their media endpoint is authenticated, `no-store`, and unoptimized. See [CMS setup and operations](cms.md) for configuration, bootstrap, migration, publishing, and recovery steps.
 
 ## Code boundaries
 
@@ -33,9 +49,9 @@ Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, `/engi
 
 - Project search/category filters and design categories use shareable GET URLs with server rendering.
 - The first three projects form featured work; unfiltered archives exclude those entries rather than duplicating them. Filtering searches the complete collection.
-- Project details use `generateStaticParams` and `dynamicParams = false`. Unknown slugs return the server-rendered 404 with `noindex` and recovery links, including without JavaScript.
+- Project details resolve on request in both content-source modes. Unknown slugs use the dedicated 404 recovery route described in [Public route rendering](#public-route-rendering).
 - Related projects prioritize shared technologies, then category, through a small pure function.
-- `/engineering` links to source and verification documents. `portfolioSourceRef` in `src/content/engineering.ts` targets `feat/portfolio-rework-phase-1` while under review; change it to `main` after merge.
+- `/engineering` links to source and verification documents. `portfolioSourceRef` in `src/content/engineering.ts` targets `dev` while CMS PR #3 is under review; update it after that PR merges.
 
 Preserve public slugs, destinations, assets, and attribution during maintenance. Framework route filenames retain their required names.
 
@@ -56,7 +72,7 @@ The inherited content was reviewed on **7 October 2026**; the documentation date
 | Experience and education                             | The owner's public [LinkedIn profile](https://www.linkedin.com/in/ervin-cahyadinata-sungkono), recorded in `profile.ts`; it is not polled at runtime.           |
 | CV                                                   | Original link retained; its currency has not been independently verified.                                                                                       |
 
-Future CMS work should replace the exports/lookups at the content boundary once its scope is requested. No speculative adapter is needed in phase 1.
+The content boundary resolves either the checked-in snapshots or the configured published database projection; drafts remain available only to the authenticated CMS.
 
 ## Identity and discovery
 
@@ -91,15 +107,15 @@ UI work, unit tests, typechecking, and builds do not require production credenti
 
 ## Image delivery
 
-### Active behavior on 23 October
+Existing project/design URLs use the exact remote allowlist; local assets use static imports where applicable. The optimizer configuration retains ten widths, quality 75, WebP, layout-specific `sizes`, and a 31-day minimum cache lifetime. These settings are currently inactive for normal image requests because `images.unoptimized: true` is enabled. Changed remote artwork should use a new source URL. CMS images use one private Blob store, with public delivery gated by the SQL publication registry and private previews authenticated, no-store, and unoptimized. See [CMS setup and operations](cms.md) for storage rules and limits.
 
 Commit `112dceb` sets **`images.unoptimized: true`** in `next.config.ts` as a temporary workaround. Next Image remains responsible for component markup and dimensions, but normal image rendering currently serves original sources without Next's image transformations or generated responsive variants. The existing `sizes` hints and optimizer settings must not be described as active transformation or cache savings.
 
-Project screenshots use the original GitHub asset URLs; design artwork retains its Dribbble URLs and queries. Local avatar, organization, and header images use static imports with content-hashed paths. Explicit SVG/GIF and small-header-image bypasses remain. Original files in `public/images` also support existing references and metadata.
+CMS changes are under review in PR #3 targeting `dev`. Hosted Neon and Blob resources have not been provisioned, and no production release has been made. For a future release, use Node.js 24, keep preview and production database/cache scopes separate, provision the private Blob token, and configure the role-separated URLs from the runbook. The public origin in `src/lib/metadata.ts` is `https://ervincs.com`; preview URLs never enter canonical metadata and a stale `SITE_URL` variable has no effect.
 
 With transformation bypassed, browser requests to remote originals are governed by those hosts. The configured optimizer allowlist does not restrict direct browser fetching. Current hosted image loading, transfer size, Vercel usage, and billing have not been measured in this review.
 
-### Retained optimizer configuration
+Contact fields are read-only during a submission, with a synchronous duplicate-submission guard. The request-body reader enforces a 64 KiB byte cap so permitted field lengths also fit when encoded as Unicode or JSON escapes; CAPTCHA tokens retain their 4096-character limit. Provider integration remains server-only.
 
 These settings remain for a future reactivation; the 10 October optimizer results in [verification](verification.md) are historical:
 
@@ -112,6 +128,6 @@ Re-enabling optimization needs a focused change and fresh checks of source selec
 
 ## Release boundaries
 
-Work remains on the rework branch and draft PR #2. Preview work does not authorize merging, production promotion, DNS/domain changes, or production-secret changes. Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy-production setting; the current production runtime has not been inspected in this pass and must be checked before release.
+The rework is merged to `dev`; CMS PR #3 targets `dev`. Preview work does not authorize production promotion, DNS/domain changes, or production-secret changes. Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy-production setting; verify the current production runtime before release.
 
 Production indexing, real Gmail receipt, field Core Web Vitals, external-link currency, and hosted image availability require their own evidence. See [remaining verification](verification.md#remaining-work) before making release claims.

@@ -1,12 +1,11 @@
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
-import { profile } from '@/content/profile';
 import { monthLabel } from '@/lib/dates';
 import { ExternalLink } from '../ExternalLink';
 import { Reveal } from '../Reveal';
 import type { ExperienceProps } from './type';
 import './style.css';
 
-export function Experience({ detailed = false }: ExperienceProps) {
+export function Experience({ profile, detailed = false }: ExperienceProps) {
   return (
     <section
       className="section experience-section"
@@ -17,14 +16,16 @@ export function Experience({ detailed = false }: ExperienceProps) {
         <p className="eyebrow">03 / Experience</p>
         <h2 id="experience-heading">Experience That Shapes the Work.</h2>
         <p>From internal business applications to software engineering in R&D.</p>
-        <ExternalLink href={profile.linkedin} className="text-link">
-          View LinkedIn <ArrowUpRightIcon size={17} aria-hidden="true" />
-        </ExternalLink>
+        {profile.linkedin && (
+          <ExternalLink href={profile.linkedin} className="text-link">
+            View LinkedIn <ArrowUpRightIcon size={17} aria-hidden="true" />
+          </ExternalLink>
+        )}
       </Reveal>
       <div className="experience-section-timeline">
         {profile.experiences.map((item, index) => (
           <Reveal
-            key={item.company}
+            key={`${item.company}-${item.start}-${index}`}
             className="experience-section-timeline-entry"
             delay={index * 0.06}
           >
@@ -39,6 +40,7 @@ export function Experience({ detailed = false }: ExperienceProps) {
             </article>
           </Reveal>
         ))}
+        {!profile.experiences.length && <p>No published experience details yet.</p>}
       </div>
     </section>
   );

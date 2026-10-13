@@ -6,12 +6,12 @@ import {
   DribbbleLogoIcon,
   InstagramLogoIcon,
 } from '@phosphor-icons/react/dist/ssr';
-import { profile } from '@/content/profile';
+import type { ProfilePayload } from '@/lib/cms/model';
 import { ExternalLink } from '../ExternalLink';
 import type { FooterSocial } from './type';
 import './style.css';
 
-export function Footer() {
+export function Footer({ profile }: { profile: ProfilePayload }) {
   const socials: FooterSocial[] = [
     { name: 'GitHub', href: profile.github, Icon: GithubLogoIcon },
     { name: 'LinkedIn', href: profile.linkedin, Icon: LinkedinLogoIcon },
@@ -35,15 +35,19 @@ export function Footer() {
           © {new Date().getUTCFullYear()} {profile.name}
         </span>
         <div className="site-footer-social-links">
-          {socials.map(({ name, href, Icon }) => (
-            <ExternalLink key={name} href={href} aria-label={name} className="icon-button">
-              <Icon size={21} aria-hidden="true" />
-            </ExternalLink>
-          ))}
+          {socials
+            .filter(({ href }) => href)
+            .map(({ name, href, Icon }) => (
+              <ExternalLink key={name} href={href} aria-label={name} className="icon-button">
+                <Icon size={21} aria-hidden="true" />
+              </ExternalLink>
+            ))}
         </div>
-        <ExternalLink href={profile.cv} className="text-link">
-          View Resume <ArrowUpRightIcon size={15} aria-hidden="true" />
-        </ExternalLink>
+        {profile.cv && (
+          <ExternalLink href={profile.cv} className="text-link">
+            View Resume <ArrowUpRightIcon size={15} aria-hidden="true" />
+          </ExternalLink>
+        )}
       </div>
     </footer>
   );

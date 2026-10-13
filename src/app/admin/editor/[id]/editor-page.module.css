@@ -1,0 +1,10 @@
+.archived-notice {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #d69f50;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, #f8e6bf 38%, var(--surface));
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}

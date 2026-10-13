@@ -1,0 +1,34 @@
+.canvas {
+  --foreground: var(--text);
+  --accent-strong: var(--accent);
+  --line-strong: var(--control-border);
+  --shadow-soft: 0 0.65rem 1.6rem rgb(17 24 39 / 8%);
+
+  min-height: 100dvh;
+  margin: 0;
+  background:
+    radial-gradient(
+      ellipse at 92% 0%,
+      color-mix(in srgb, var(--accent-soft) 72%, transparent),
+      transparent 34rem
+    ),
+    var(--background);
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 20;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-160%);
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--button);
+  color: var(--button-text);
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}

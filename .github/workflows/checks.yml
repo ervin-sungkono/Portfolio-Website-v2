@@ -2,9 +2,9 @@ name: Checks
 
 on:
   push:
-    branches: [main, feat/portfolio-rework-phase-1]
+    branches: [main, dev, feat/portfolio-cms-neon]
   pull_request:
-    branches: [main, feat/portfolio-rework-phase-1]
+    branches: [main, dev, feat/portfolio-cms-neon]
 
 permissions:
   contents: read
@@ -30,3 +30,53 @@ jobs:
       - run: npm run test:browser
         env:
           NEXT_PUBLIC_RECAPTCHA_KEY: review-test-key
+
+  cms:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: portfolio-ci-local-only
+          POSTGRES_DB: portfolio_cms_test
+        ports:
+          - '127.0.0.1:5432:5432'
+        options: >-
+          --health-cmd "pg_isready -U postgres -d portfolio_cms_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Migrate, seed, bootstrap local owner, and run CMS checks
+        env:
+          CMS_TEST_DATABASE_URL_MIGRATIONS: postgresql://postgres:portfolio-ci-local-only@127.0.0.1:5432/portfolio_cms_test
+        run: |
+          set -euo pipefail
+          secret_dir="$(mktemp -d "${RUNNER_TEMP:-/tmp}/portfolio-cms-ci.XXXXXX")"
+          secret_file="$secret_dir/runtime.env"
+          trap 'rm -rf "$secret_dir"' EXIT
+
+          export DATABASE_URL_MIGRATIONS='postgresql://postgres:portfolio-ci-local-only@127.0.0.1:5432/portfolio_cms_test'
+          export CMS_TEST_SECRET_FILE="$secret_file"
+          npm run cms:migrate
+          npm run cms:test-environment
+
+          set -a
+          . "$secret_file"
+          set +a
+
+          npm run cms:seed
+          npm run cms:bootstrap-owner
+          npm run typecheck:cms
+          npm run test:cms
+          npm run test:cms:integration
+          npm run build
+          npm run test:cms:browser

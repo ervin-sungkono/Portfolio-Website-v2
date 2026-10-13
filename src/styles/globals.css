@@ -36,6 +36,7 @@
   --accent: #2459d3;
   --accent-text: #f7f8fa;
   --accent-soft: #e9effc;
+  --error-text: #a52d34;
   --button: #252a32;
   --button-text: #f7f8fa;
   --radius: 0.75rem;
@@ -54,6 +55,7 @@
     --accent: #8baefe;
     --accent-text: #141619;
     --accent-soft: #202c42;
+    --error-text: #ff9299;
     --button: #e8ecf4;
     --button-text: #1b2029;
 
