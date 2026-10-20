@@ -6,22 +6,46 @@
 .heroScene {
   position: relative;
 }
-@media (min-width: 64rem) and (min-height: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+
+.heroVisualStack {
+  display: grid;
+  min-width: 0;
+}
+
+.heroSlide {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.heroScene [data-parallax='hero-image'] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@media (width >= 64rem) and (height >= 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   /* Keep the first screen's layout stable before the scene hydrates. */
   .heroStage {
     min-height: calc(100svh - var(--measured-header-height, var(--header-height)));
   }
-}
 
-.heroScene[data-pinned='true'] {
-  /* One viewport to read the stage, plus half a viewport for its animation. */
-  min-height: calc(150svh - var(--measured-header-height, var(--header-height)));
-}
+  .heroScene[data-pinned='true'] {
+    /* One viewport to read the stage, plus half a viewport for its animation. */
+    min-height: calc(150svh - var(--measured-header-height, var(--header-height)));
+  }
 
-.heroScene[data-pinned='true'] .heroStage {
-  position: sticky;
-  top: var(--measured-header-height, var(--header-height));
-  min-height: calc(100svh - var(--measured-header-height, var(--header-height)));
+  .heroScene[data-pinned='true'] .heroStage {
+    position: sticky;
+    top: var(--measured-header-height, var(--header-height));
+    min-height: calc(100svh - var(--measured-header-height, var(--header-height)));
+  }
+
+  .parallaxPlane[data-parallax-active='true'] {
+    top: calc(0rem - var(--parallax-travel));
+    height: calc(100% + var(--parallax-travel) + var(--parallax-travel));
+  }
 }
 
 .parallaxFrame,
@@ -38,11 +62,6 @@
   left: 0;
 }
 
-.parallaxPlane[data-parallax-active='true'] {
-  top: -1rem;
-  height: calc(100% + 2rem);
-}
-
 .progress {
   position: fixed;
   inset: 0 0 auto;
@@ -55,46 +74,77 @@
 
 .cursor {
   position: fixed;
+  inset: 0;
+  color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 60;
+  overflow: clip;
+}
+
+.cursorFrame {
+  position: absolute;
   top: 0;
   left: 0;
-  width: 0;
-  height: 0;
+  box-sizing: border-box;
+  color: inherit;
   pointer-events: none;
-  z-index: 50;
 }
 
-.cursorFeedback {
-  width: 0;
-  height: 0;
-}
-
-.cursorReticle {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--space-8);
-  height: var(--space-8);
-  transform: translate(-50%, -50%);
-  color: var(--accent);
-}
-
-.cursorReticle[data-mode='link'] {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.cursorReticle[data-mode='project'] {
-  width: var(--space-20);
-  height: var(--space-8);
-  background: var(--surface-high);
-}
-
-.cursorCorner {
+.cursorDot {
   position: absolute;
-  width: var(--space-2);
-  height: var(--space-2);
-  border: solid currentColor;
+  top: 0;
+  left: 0;
+  color: inherit;
+  pointer-events: none;
+}
+
+.cursorDot::before,
+.cursorDot::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: '';
+  background: currentcolor;
+  transform: translate(-50%, -50%);
+  transition:
+    width 140ms ease,
+    height 140ms ease,
+    border-radius 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.cursorDot::before {
+  width: 2px;
+  height: 8px;
+}
+
+.cursorDot::after {
+  width: 8px;
+  height: 2px;
+}
+
+.cursor[data-cursor-hovered='true'] .cursorDot::before {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px currentcolor;
+}
+
+.cursor[data-cursor-hovered='true'] .cursorDot::after {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+}
+
+.cursorFrame .cursorCorner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: solid currentcolor;
   border-width: 0;
-  filter: drop-shadow(0 0 1px var(--background));
 }
 
 .cursorCorner:nth-child(1) {
@@ -125,10 +175,13 @@
   border-left-width: 2px;
 }
 
-.cursorLabel {
-  font-size: var(--text-xs);
-  font-weight: 750;
+@media (width >= 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cursorActive,
+  .cursorActive * {
+    cursor: none !important;
+  }
 }
+
 @media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse), (width < 64rem) {
   .cursor {
     display: none;
@@ -138,6 +191,7 @@
     transform: none !important;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .progress {
     display: none;

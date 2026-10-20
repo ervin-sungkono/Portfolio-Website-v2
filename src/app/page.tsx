@@ -8,7 +8,7 @@ import { ProjectCard } from '@/components/ProjectCard';
 import { Experience } from '@/components/Experience';
 import { EngineeringHighlights } from '@/components/EngineeringHighlights';
 import { Reveal } from '@/components/motion/Reveal';
-import { PointerSurface } from '@/components/motion/PointerSurface';
+import { ParallaxImage } from '@/components/motion/ParallaxImage';
 import { ScrollHero } from '@/components/motion/ScrollHero';
 import { pageMetadata, site } from '@/lib/metadata';
 import styles from './home.module.css';
@@ -43,7 +43,7 @@ export default function HomePage() {
                 Explore Projects <ArrowUpRightIcon size={20} aria-hidden="true" />
               </Link>
               <ExternalLink href={profile.cv} className="text-link">
-                View CV <ArrowUpRightIcon size={17} aria-hidden="true" />
+                View Resume <ArrowUpRightIcon size={17} aria-hidden="true" />
               </ExternalLink>
               <ExternalLink href={profile.github} className="text-link">
                 GitHub <ArrowUpRightIcon size={17} aria-hidden="true" />
@@ -52,13 +52,13 @@ export default function HomePage() {
           </Reveal>
         }
         visual={
-          <PointerSurface>
-            <Link
-              href={`/project/${mainProject.slug}`}
-              className={`hero-visual ${styles.heroVisual}`}
-              data-cursor="project"
-            >
-              <div className="hero-image">
+          <Link
+            href={`/project/${mainProject.slug}`}
+            className={`hero-visual ${styles.heroVisual}`}
+            data-cursor="project"
+          >
+            <div className={`hero-image ${styles.heroMedia}`}>
+              <div data-parallax="hero-image">
                 <Image
                   src={mainProject.image}
                   alt="WeTrack Kanban board with tasks organised into sprints"
@@ -68,15 +68,41 @@ export default function HomePage() {
                   preload
                 />
               </div>
-              <div className="hero-image-caption">
-                <div>
-                  <strong>WeTrack</strong>
-                  <span>A workspace for getting things done.</span>
-                </div>
-                <ArrowUpRightIcon size={24} aria-hidden="true" />
+            </div>
+            <div className="hero-image-caption">
+              <div>
+                <strong>{mainProject.name}</strong>
+                <span>A workspace for getting things done.</span>
               </div>
-            </Link>
-          </PointerSurface>
+              <ArrowUpRightIcon size={24} aria-hidden="true" />
+            </div>
+          </Link>
+        }
+        nextVisual={
+          <Link
+            href={`/project/${secondaryProject.slug}`}
+            className={`hero-visual ${styles.heroVisual}`}
+            data-cursor="project"
+          >
+            <div className={`hero-image ${styles.heroMedia}`}>
+              {/* Replace this placeholder with the supplied project image. */}
+              <div className={styles.heroPlaceholder}>
+                <span className={styles.placeholderWindow} aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                <span>Preview coming soon</span>
+              </div>
+            </div>
+            <div className="hero-image-caption">
+              <div>
+                <strong>{secondaryProject.name}</strong>
+                <span>Project preview coming soon.</span>
+              </div>
+              <ArrowUpRightIcon size={24} aria-hidden="true" />
+            </div>
+          </Link>
         }
       />
 
@@ -93,10 +119,21 @@ export default function HomePage() {
 
         <div className={styles.bentoGrid}>
           <div className={styles.primaryProject}>
-            <ProjectCard project={mainProject} featured index={1} sizes={imageSizes.homePrimary} />
+            <ProjectCard
+              project={mainProject}
+              featured
+              index={1}
+              sizes={imageSizes.homePrimary}
+              parallaxTravel={1.5}
+            />
           </div>
           <div className={styles.secondaryProject}>
-            <ProjectCard project={secondaryProject} index={2} sizes={imageSizes.homeSecondary} />
+            <ProjectCard
+              project={secondaryProject}
+              index={2}
+              sizes={imageSizes.homeSecondary}
+              parallaxTravel={1}
+            />
           </div>
           <Link href="/engineering" className={styles.engineeringTeaser} data-cursor="link">
             <span className={styles.teaserKicker}>Architecture / Small pieces</span>
@@ -107,7 +144,12 @@ export default function HomePage() {
             </span>
           </Link>
           <div className={styles.additionalProject}>
-            <ProjectCard project={additionalProject} index={3} sizes={imageSizes.homeAdditional} />
+            <ProjectCard
+              project={additionalProject}
+              index={3}
+              sizes={imageSizes.homeAdditional}
+              parallaxTravel={1}
+            />
           </div>
           <Link href="/design" className={styles.designTeaser} data-cursor="link">
             <span className={styles.teaserKicker}>Interface studies</span>
@@ -152,17 +194,35 @@ export default function HomePage() {
         <div className={`design-preview-grid ${styles.designGallery}`}>
           {[designs[3], designs[1]].map((design, index) => (
             <Reveal key={design.id}>
-              <ExternalLink href={design.url} className="design-tile" data-cursor="project">
+              <ExternalLink
+                href={design.url}
+                className={`design-tile ${index === 0 ? styles.parallaxArtwork : ''}`}
+                data-cursor="project"
+              >
                 <div className="design-image">
-                  <Image
-                    src={design.image}
-                    alt={design.title}
-                    width={1200}
-                    height={900}
-                    sizes={
-                      index === 0 ? imageSizes.homeArtworkPrimary : imageSizes.homeArtworkSecondary
-                    }
-                  />
+                  {index === 0 ? (
+                    <ParallaxImage travel={1.5}>
+                      <Image
+                        src={design.image}
+                        alt={design.title}
+                        width={1200}
+                        height={900}
+                        sizes={imageSizes.homeArtworkPrimary}
+                      />
+                    </ParallaxImage>
+                  ) : (
+                    <Image
+                      src={design.image}
+                      alt={design.title}
+                      width={1200}
+                      height={900}
+                      sizes={
+                        index === 0
+                          ? imageSizes.homeArtworkPrimary
+                          : imageSizes.homeArtworkSecondary
+                      }
+                    />
+                  )}
                 </div>
                 <div className="design-caption">
                   <h3>{design.title.replace(' - ', ': ')}</h3>

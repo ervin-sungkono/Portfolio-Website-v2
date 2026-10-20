@@ -40,7 +40,7 @@ export function Footer() {
           ))}
         </div>
         <ExternalLink href={profile.cv} className="text-link">
-          View CV <ArrowUpRightIcon size={15} aria-hidden="true" />
+          View Resume <ArrowUpRightIcon size={15} aria-hidden="true" />
         </ExternalLink>
       </div>
     </footer>
