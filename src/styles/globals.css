@@ -17,6 +17,7 @@
   --text-body: 1rem;
   --text-title: 1.25rem;
   --text-heading-small: 1.5rem;
+
   /* Linear interpolation from a 20rem viewport to 80rem, bounded at both ends. */
   --text-heading: clamp(1.75rem, 1.3333rem + 2.0833vw, 3rem);
   --text-display: clamp(2.75rem, 1.8333rem + 4.5833vw, 5.5rem);
@@ -25,10 +26,9 @@
   --layout-gap: clamp(1.5rem, 1rem + 2.5vw, 3rem);
   --header-height: 4rem;
   --anchor-offset: calc(var(--measured-header-height, var(--header-height)) + var(--space-6));
-
   --background: #f8f9fb;
   --surface: #eef1f6;
-  --surface-high: #ffffff;
+  --surface-high: #fff;
   --text: #1e2530;
   --muted: #5e6877;
   --line: #dce1e8;
@@ -40,6 +40,7 @@
   --button-text: #f7f8fa;
   --radius: 0.75rem;
   --font: var(--font-manrope), sans-serif;
+
   color-scheme: light;
 }
 
@@ -56,6 +57,7 @@
   --accent-soft: #202c42;
   --button: #e8ecf4;
   --button-text: #1b2029;
+
   color-scheme: dark;
 }
 
@@ -64,6 +66,8 @@
 }
 
 html {
+  /* Keep the isolated body's background painted for the cursor's difference blend. */
+  background: var(--background);
   scroll-padding-top: var(--anchor-offset);
 }
 
@@ -252,12 +256,12 @@ p {
   transform: translateY(-2px);
 }
 
-:root[data-theme='dark'] .button:hover {
-  color: #141619;
-}
-
 .button:active {
   transform: translateY(0) scale(0.98);
+}
+
+:root[data-theme='dark'] .button:hover {
+  color: #141619;
 }
 
 .button-outline {
@@ -340,7 +344,7 @@ p {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -427,6 +431,7 @@ p {
   letter-spacing: -0.025em;
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- The caption and heading are separate components. */
 .hero-image-caption span {
   display: block;
   color: var(--muted);
@@ -582,6 +587,7 @@ p {
   gap: var(--space-4);
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- Footer text is separate from heading spans. */
 .footer-bottom > span {
   color: var(--muted);
   font-size: var(--text-xs);
@@ -619,6 +625,7 @@ p {
   border-radius: var(--radius);
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- Organization marks are separate from design tiles. */
 .organisation-links img {
   width: 8.25rem;
   height: 3.25rem;
@@ -727,6 +734,7 @@ p {
   gap: var(--space-2);
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- Tag spans are separate from heading spans. */
 .tags span {
   font-size: var(--text-xs);
   font-weight: 600;
@@ -749,6 +757,7 @@ p {
   text-align: center;
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- Empty-state text is separate from page headings. */
 .empty-state p {
   color: var(--muted);
 }
@@ -774,6 +783,7 @@ p {
   margin-bottom: var(--space-6);
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- Detail copy is separate from page headings. */
 .detail-body p,
 .feature-list {
   color: var(--muted);
@@ -848,6 +858,7 @@ p {
   font-weight: 700;
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- Contact fields and collection search are separate forms. */
 .form-field input,
 .form-field textarea {
   padding: var(--space-3) var(--space-4);
@@ -896,6 +907,7 @@ textarea::placeholder {
   margin: var(--space-4) 0 0;
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- Form notes are separate from collection filters. */
 .form-note a {
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -935,6 +947,7 @@ textarea::placeholder {
 .captcha-container {
   min-height: 0;
 }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -952,7 +965,7 @@ textarea::placeholder {
   }
 }
 
-@media (min-width: 64rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
+@media (width >= 64rem) and (height >= 48rem) and (prefers-reduced-motion: no-preference) {
   .experience-intro {
     position: sticky;
     top: var(--anchor-offset);
@@ -963,11 +976,13 @@ textarea::placeholder {
 .loading-spinner {
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .loading-spinner {
     animation: none;
@@ -975,6 +990,7 @@ textarea::placeholder {
 }
 
 /* Content-first defaults: stack before columns become too narrow. */
+/* stylelint-disable no-descending-specificity -- This shared layout rule spans unrelated page components. */
 .hero,
 .experience,
 .detail-body,
@@ -985,7 +1001,7 @@ textarea::placeholder {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--layout-gap);
 }
-
+/* stylelint-enable no-descending-specificity */
 .hero-copy h1 {
   max-width: 15ch;
 }
@@ -996,6 +1012,7 @@ textarea::placeholder {
   gap: var(--space-2) var(--space-4);
 }
 
+/* stylelint-disable-next-line no-descending-specificity -- This rule sets grid placement, not button hover styles. */
 .hero-copy .hero-actions > .button {
   grid-column: 1 / -1;
 }
@@ -1012,14 +1029,16 @@ textarea::placeholder {
   min-width: 0;
 }
 
+/* stylelint-disable no-descending-specificity -- These prose selectors belong to separate page sections. */
 .section-heading p,
 .page-heading p,
 .hero-description {
   text-wrap: pretty;
 }
+/* stylelint-enable no-descending-specificity */
 
 /* 48rem: two gallery columns each retain roughly 20rem of usable width. */
-@media (min-width: 48rem) {
+@media (width >= 48rem) {
   .selected-grid,
   .project-grid,
   .design-grid,
@@ -1048,8 +1067,9 @@ textarea::placeholder {
     padding: var(--space-8);
   }
 }
+
 /* 64rem: hero/form columns and full navigation now have room to breathe. */
-@media (min-width: 64rem) {
+@media (width >= 64rem) {
   :root {
     --header-height: 4.75rem;
   }
@@ -1067,9 +1087,8 @@ textarea::placeholder {
   }
 
   .collection-toolbar {
-    flex-direction: row;
+    flex-flow: row wrap;
     align-items: center;
-    flex-wrap: wrap;
   }
 
   .search-form {

@@ -15,19 +15,22 @@ export function ProjectCard({
   headingLevel = 3,
   index,
   sizes = imageSizes.twoColumns,
+  parallaxTravel,
 }: {
   project: Project;
   featured?: boolean;
   headingLevel?: 2 | 3;
   index?: number;
   sizes?: string;
+  parallaxTravel?: 1 | 1.25 | 1.5 | 2;
 }) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const study = projectStudies[project.slug];
+  const Surface = parallaxTravel === undefined ? PointerSurface : 'div';
 
   return (
     <article className={`${styles.card} ${featured ? styles.featured : ''}`}>
-      <PointerSurface className={styles.pointerSurface}>
+      <Surface className={styles.pointerSurface}>
         <Link
           className={styles.imageLink}
           href={`/project/${project.slug}`}
@@ -41,7 +44,7 @@ export function ProjectCard({
                 ? project.category.toUpperCase()
                 : String(index).padStart(2, '0')}
             </span>
-            <ParallaxImage>
+            <ParallaxImage travel={parallaxTravel}>
               <Image
                 src={project.image}
                 alt={`${project.name} application screenshot`}
@@ -53,7 +56,7 @@ export function ProjectCard({
             </ParallaxImage>
           </div>
         </Link>
-      </PointerSurface>
+      </Surface>
       <Reveal className={styles.content}>
         <div className={styles.heading}>
           <p className="editorial-label">{project.category}</p>

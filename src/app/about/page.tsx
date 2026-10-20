@@ -66,7 +66,7 @@ export default function AboutPage() {
             together.
           </p>
           <ExternalLink href={profile.cv} className="button button-outline">
-            View CV <ArrowUpRightIcon size={19} aria-hidden="true" />
+            View Resume <ArrowUpRightIcon size={19} aria-hidden="true" />
           </ExternalLink>
         </div>
         <div className={styles.avatarFrame}>
