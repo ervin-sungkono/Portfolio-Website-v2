@@ -108,12 +108,14 @@
   display: grid;
   background: var(--surface);
 }
-@media (max-height: 30rem) {
+
+@media (height <= 30rem) {
   .nav {
     padding-block: var(--space-1);
   }
 }
-@media (min-width: 64rem) {
+
+@media (width >= 64rem) {
   .inner {
     flex-wrap: nowrap;
     gap: var(--space-6);

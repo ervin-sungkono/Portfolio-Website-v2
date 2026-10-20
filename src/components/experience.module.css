@@ -93,7 +93,7 @@
   max-width: 55ch;
 }
 
-@media (min-width: 64rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
+@media (width >= 64rem) and (height >= 48rem) and (prefers-reduced-motion: no-preference) {
   .intro {
     position: sticky;
     top: var(--anchor-offset);

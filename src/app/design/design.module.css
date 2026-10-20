@@ -130,13 +130,13 @@
   color: var(--accent);
 }
 
-@media (min-width: 48rem) {
+@media (width >= 48rem) {
   .designGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 64rem) {
+@media (width >= 64rem) {
   .designGrid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
