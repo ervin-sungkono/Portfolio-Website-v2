@@ -57,7 +57,7 @@
   margin-bottom: 0;
 }
 
-@media (min-width: 48rem) {
+@media (width >= 48rem) {
   .featuredGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -71,7 +71,7 @@
   }
 }
 
-@media (min-width: 64rem) {
+@media (width >= 64rem) {
   .featuredGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

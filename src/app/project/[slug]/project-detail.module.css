@@ -173,7 +173,7 @@
   margin-bottom: 0;
 }
 
-@media (min-width: 64rem) {
+@media (width >= 64rem) {
   .projectPage .studyLayout {
     grid-template-columns: minmax(14rem, 0.8fr) minmax(0, 2fr);
   }
