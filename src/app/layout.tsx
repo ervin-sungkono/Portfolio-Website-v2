@@ -4,7 +4,7 @@ import '@/styles/globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { site } from '@/lib/metadata';
-import { MotionEnhancements } from '@/components/motion/Enhancements';
+import { MotionEnhancements } from '@/components/MotionEnhancements';
 import { ParticleAccent } from '@/components/ParticleAccent';
 
 const manrope = localFont({

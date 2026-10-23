@@ -6,7 +6,7 @@ import { ArrowLeftIcon, ArrowUpRightIcon, GithubLogoIcon } from '@phosphor-icons
 import { projects, findProject, projectStudies, relatedProjects } from '@/lib/content';
 import { ExternalLink } from '@/components/ExternalLink';
 import { ProjectCard } from '@/components/ProjectCard';
-import engineeringStyles from '@/components/engineering.module.css';
+import engineeringStyles from '@/app/engineering/engineering.module.css';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './project-detail.module.css';
 import { imageSizes } from '@/lib/image-sizes';

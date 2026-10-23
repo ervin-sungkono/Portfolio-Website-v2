@@ -4,7 +4,7 @@ import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { designs } from '@/lib/content';
 import { profile } from '@/content/profile';
 import { ExternalLink } from '@/components/ExternalLink';
-import { Reveal } from '@/components/motion/Reveal';
+import { Reveal } from '@/components/Reveal';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './design.module.css';
 import { imageSizes } from '@/lib/image-sizes';

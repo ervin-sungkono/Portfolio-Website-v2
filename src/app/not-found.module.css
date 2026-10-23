@@ -27,6 +27,11 @@
   border-radius: var(--radius);
   background: var(--background);
   text-align: center;
+
+  h1 {
+    font-size: var(--text-heading);
+    margin-bottom: var(--space-5);
+  }
 }
 
 .code {
@@ -36,11 +41,6 @@
   font-weight: 750;
   line-height: 1;
   letter-spacing: -0.075em;
-}
-
-.copy h1 {
-  font-size: var(--text-heading);
-  margin-bottom: var(--space-5);
 }
 
 .description {

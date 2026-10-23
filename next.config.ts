@@ -13,6 +13,7 @@ const config: NextConfig = {
     localPatterns: [{ pathname: '/_next/static/media/**', search: '' }],
     // Match complete paths and queries, including Dribbble's existing resize parameter.
     remotePatterns: [...projects, ...designs].map(({ image }) => new URL(image)),
+    unoptimized: true, // FIXME: temporary fix until Vercel image optimization works again
   },
 };
 

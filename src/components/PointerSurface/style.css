@@ -1,0 +1,8 @@
+.pointer-surface {
+  min-width: 0;
+  transform-origin: center;
+
+  @media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse), (width < 64rem) {
+    transform: none !important;
+  }
+}

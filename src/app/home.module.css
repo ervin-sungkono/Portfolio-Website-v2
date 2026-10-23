@@ -1,59 +1,83 @@
 .home {
   position: relative;
   min-width: 0;
-}
 
-.home > [data-scroll-scene] > section {
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--layout-gap);
-  align-items: center;
+  > [data-scroll-scene] > section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--layout-gap);
+    align-items: center;
+  }
+
+  .heroVisual {
+    transition:
+      border-color 0.18s,
+      box-shadow 0.18s;
+  }
+
+  .heroVisual:hover {
+    box-shadow: 0 0 0 1px var(--accent);
+    transform: none;
+  }
+
+  .parallaxArtwork:hover img {
+    transform: none;
+  }
 }
 
 .heroCopy {
   min-width: 0;
-}
 
-.heroCopy h1 {
-  max-width: 11em;
-  font-size: clamp(2.75rem, 4.15vw, 4.25rem);
-  line-height: 1.02;
-  letter-spacing: -0.065em;
-}
+  h1 {
+    max-width: 11em;
+    font-size: clamp(2.75rem, 4.15vw, 4.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.065em;
+  }
 
-.heroCopy h1 span {
-  display: block;
-  max-width: 18em;
-  margin-top: 0.2em;
-  color: var(--muted);
-  font-size: 0.62em;
-  line-height: 1.15;
-  letter-spacing: -0.035em;
+  h1 span {
+    display: block;
+    max-width: 18em;
+    margin-top: 0.2em;
+    color: var(--muted);
+    font-size: 0.62em;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+  }
 }
 
 .heroVisual {
   position: relative;
   min-width: 0;
-}
 
-.home .heroVisual {
-  transition:
-    border-color 0.18s,
-    box-shadow 0.18s;
-}
-
-.home .heroVisual:hover {
-  box-shadow: 0 0 0 1px var(--accent);
-  transform: none;
+  &::after {
+    position: absolute;
+    z-index: 1;
+    inset: var(--space-3);
+    border-radius: calc(var(--radius) - var(--space-2));
+    background:
+      linear-gradient(var(--accent), var(--accent)) left top / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) left top / 1px var(--space-5),
+      linear-gradient(var(--accent), var(--accent)) right top / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) right top / 1px var(--space-5),
+      linear-gradient(var(--accent), var(--accent)) left bottom / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) left bottom / 1px var(--space-5),
+      linear-gradient(var(--accent), var(--accent)) right bottom / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) right bottom / 1px var(--space-5);
+    background-repeat: no-repeat;
+    content: '';
+    opacity: 0.5;
+    pointer-events: none;
+  }
 }
 
 .heroMedia {
   position: relative;
   aspect-ratio: 1.62;
-}
 
-.heroMedia img {
-  height: 100%;
-  aspect-ratio: auto;
+  img {
+    height: 100%;
+    aspect-ratio: auto;
+  }
 }
 
 .heroPlaceholder {
@@ -77,44 +101,20 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-}
 
-.placeholderWindow span {
-  height: var(--space-2);
-  border-radius: var(--space-1);
-  background: var(--accent-soft);
-}
+  span {
+    height: var(--space-2);
+    border-radius: var(--space-1);
+    background: var(--accent-soft);
+  }
 
-.placeholderWindow span:nth-child(2) {
-  width: 75%;
-}
+  span:nth-child(2) {
+    width: 75%;
+  }
 
-.placeholderWindow span:nth-child(3) {
-  width: 45%;
-}
-
-.home .parallaxArtwork:hover img {
-  transform: none;
-}
-
-.heroVisual::after {
-  position: absolute;
-  z-index: 1;
-  inset: var(--space-3);
-  border-radius: calc(var(--radius) - var(--space-2));
-  background:
-    linear-gradient(var(--accent), var(--accent)) left top / var(--space-5) 1px,
-    linear-gradient(var(--accent), var(--accent)) left top / 1px var(--space-5),
-    linear-gradient(var(--accent), var(--accent)) right top / var(--space-5) 1px,
-    linear-gradient(var(--accent), var(--accent)) right top / 1px var(--space-5),
-    linear-gradient(var(--accent), var(--accent)) left bottom / var(--space-5) 1px,
-    linear-gradient(var(--accent), var(--accent)) left bottom / 1px var(--space-5),
-    linear-gradient(var(--accent), var(--accent)) right bottom / var(--space-5) 1px,
-    linear-gradient(var(--accent), var(--accent)) right bottom / 1px var(--space-5);
-  background-repeat: no-repeat;
-  content: '';
-  opacity: 0.5;
-  pointer-events: none;
+  span:nth-child(3) {
+    width: 45%;
+  }
 }
 
 .selected,
@@ -141,10 +141,10 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--layout-gap);
   align-items: stretch;
-}
 
-.bentoGrid > * {
-  min-width: 0;
+  > * {
+    min-width: 0;
+  }
 }
 
 .primaryProject,
@@ -226,12 +226,12 @@
   border-radius: calc(var(--radius) - var(--space-2));
   background: var(--surface-high);
   aspect-ratio: 4 / 3;
-}
 
-.teaserImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .designTeaser h3 {
@@ -292,20 +292,20 @@
   .designTeaser {
     grid-column: 10 / span 3;
     grid-row: 2;
-  }
 
-  .designTeaser h3 {
-    font-size: clamp(1.125rem, 0.95rem + 0.5vw, 1.5rem);
-    line-height: 1.2;
+    h3 {
+      font-size: clamp(1.125rem, 0.95rem + 0.5vw, 1.5rem);
+      line-height: 1.2;
+    }
   }
 
   .designGallery {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
     align-items: start;
-  }
 
-  .designGallery > :nth-child(2) {
-    margin-top: clamp(var(--space-8), 5vw, var(--space-16));
+    > :nth-child(2) {
+      margin-top: clamp(var(--space-8), 5vw, var(--space-16));
+    }
   }
 }
 
