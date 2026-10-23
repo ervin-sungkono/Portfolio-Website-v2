@@ -31,7 +31,6 @@ export default defineConfig({
       EMAIL: '',
       EMAIL_PASS: '',
       RECAPTCHA_SECRET: '',
-      RECAPTCHA_KEY: '',
     },
   },
 });

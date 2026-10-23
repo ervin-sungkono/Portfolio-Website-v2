@@ -86,7 +86,6 @@ Provider code stays in a `server-only` module. Errors return usable feedback wit
 | `EMAIL_PASS`                | Gmail app password; server-only.                                |
 | `NEXT_PUBLIC_RECAPTCHA_KEY` | Public invisible reCAPTCHA v2 site key, embedded at build time. |
 | `RECAPTCHA_SECRET`          | Server-only verification secret.                                |
-| `RECAPTCHA_KEY`             | Supported legacy alias for the server secret.                   |
 
 UI work, unit tests, typechecking, and builds do not require production credentials. Browser tests mock CAPTCHA/delivery and clear provider secrets in their server configuration. Never print or commit secret values. A real delivery test requires an explicit user request and verified hostname/provider setup.
 

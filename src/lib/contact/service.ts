@@ -5,9 +5,8 @@ import { captchaTokenMaxLength, emailText, type ContactMessage } from './validat
 export function mailConfigured() {
   return Boolean(process.env.EMAIL && process.env.EMAIL_PASS);
 }
-// The existing deployment uses RECAPTCHA_KEY; local setup uses the clearer name.
 export function captchaSecret() {
-  return process.env.RECAPTCHA_SECRET || process.env.RECAPTCHA_KEY;
+  return process.env.RECAPTCHA_SECRET;
 }
 
 export async function sendContactEmail(data: ContactMessage) {

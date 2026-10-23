@@ -73,7 +73,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 
 ## Contact and release boundaries
 
-- Production credentials are only needed for live integration. Use `.env.example` and the architecture reference; `RECAPTCHA_KEY` remains a supported legacy alias. Never print or commit secrets, and keep provider code server-only.
+- Production credentials are only needed for live integration. Use `.env.example` and the architecture reference. Never print or commit secrets, and keep provider code server-only.
 - Preserve request validation, the 64 KiB streamed-body cap, abuse checks, duplicate-submission prevention, read-only pending fields, draft retention, and graceful LinkedIn fallback.
 - Automated tests must not send real email. Live delivery requires an explicit user request and verified hostname/provider setup; Gmail receipt remains unverified.
 - Current release scope is the rework branch/draft PR and preview. Do not merge, promote production, change DNS/domains, or modify production secrets without authorization. Do not repeat requests for authorization already provided in the session.
