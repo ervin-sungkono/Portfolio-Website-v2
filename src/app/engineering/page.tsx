@@ -7,8 +7,8 @@ import {
   portfolioSourceRef,
 } from '@/lib/content';
 import { ExternalLink } from '@/components/ExternalLink';
-import styles from '@/components/engineering.module.css';
-import { Reveal } from '@/components/motion/Reveal';
+import styles from './engineering.module.css';
+import { Reveal } from '@/components/Reveal';
 import { pageMetadata } from '@/lib/metadata';
 import { profile } from '@/content/profile';
 

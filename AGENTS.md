@@ -1,29 +1,29 @@
 # Portfolio agent handoff
 
+Updated **23 October 2026 (Asia/Jakarta)**. These instructions describe the rework and current documentation; inspect live repository state before continuing.
+
 ## Repository and branch
 
 - Repository: https://github.com/ervin-sungkono/Portfolio-Website-v2.
-- Current rework branch: `feat/portfolio-rework-phase-1`.
-- Draft PR: https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2, targeting `main`.
-- Start continuation work from the rework branch, not the legacy `main` implementation. Check `git status`, the active branch, and remote head before editing; preserve unrelated work.
-- These instructions describe the handoff on 10 October 2026. Verify current Git/deployment state rather than treating dated verification as a fresh result. New explicit user instructions take precedence over these project defaults.
+- Continue from `feat/portfolio-rework-phase-1`. [PR #2](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2) was confirmed open, draft, and targeting `main` on 23 October. The dated commit/remote snapshot is in `docs/verification.md`.
+- Check Git status, active branch, and remote head before editing. Preserve unrelated or concurrent work. Components use the directory and nested CSS organization described in the architecture and responsive/motion references; don't mistake historical checks for validation of later edits.
+- Existing explicit user instructions take precedence over project defaults. A dated document is not fresh Git, CI, deployment, or provider evidence.
 
-## Read first
+## Read first and maintain documentation
 
-Read `README.md`, `docs/architecture.md`, and the sections relevant to your task in `docs/responsive-and-motion.md`, `docs/verification.md`, and `docs/portfolio-audit-2026-10-09.md`. The latest remediation entry in the verification document supersedes the earlier audit findings it resolves.
+Read `README.md` and `docs/architecture.md`, then the relevant sections of:
 
-## Setup and commands
+| Document                        | Owns                                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `docs/architecture.md`          | Application boundaries, content/provenance, SEO, contact, images, and release operations. |
+| `docs/responsive-and-motion.md` | Visual system, responsive rules, accessibility, and current motion behavior.              |
+| `docs/verification.md`          | Dated observations, check coverage, historical evidence, and remaining work.              |
 
-Use Node.js 24 (the package requires Node.js 22 or later), npm, and the committed `package-lock.json`.
+Keep each topic in its owning document and link to it elsewhere. Update current guidance when behavior changes; retain only useful dated evidence and unresolved limitations. Replace completed proposals and superseded findings instead of adding parallel dated documents. Record the actual checks performed, their date, and their limits; do not turn old results into a fresh pass.
 
-```sh
-npm ci
-npm run dev
-```
+## Setup and checks
 
-For a hosted Codex environment, select the repository above and the rework branch for the task. Use `npm ci` as both setup and maintenance scripts so cached dependencies match the selected branch. No tools or files from an earlier scratch workspace are required.
-
-Available checks:
+Use Node.js 24, npm, and the committed `package-lock.json`; the package requires Node.js 22 or later. Use `npm ci` for setup and maintenance, including hosted environments, then `npm run dev`.
 
 ```sh
 npm run typecheck
@@ -34,54 +34,51 @@ npm run format:check
 git diff --check
 ```
 
-Run checks appropriate to the change. Application changes should pass typechecking, relevant tests, build, formatting, linting, and whitespace checks. Documentation-only changes need formatting and whitespace checks. `npm run lint:css` checks CSS with Stylelint. `npm test` runs contact validation and request-body unit tests. `npm run test:browser` runs the focused Playwright regressions against a production build; see README for the dummy CAPTCHA key setup. GitHub Actions runs these checks with Node.js 24.
+Application changes should pass relevant type, CSS lint, unit/browser, build, formatting, and whitespace checks. `npm run test:browser` covers contact/API boundaries, project 404 recovery, cursor behavior, and hero/parallax; it is not a complete responsive or accessibility suite. Follow README for the production build and dummy CAPTCHA key. CI is configured for Node.js 24; inspect its actual run before claiming it passed.
+
+Documentation-only work needs formatting, local link/fragment validation, and whitespace checks. Scope checks to the changed files when unrelated work is present, and report that scope accurately.
 
 ## Architecture and maintenance
 
-- Stack: Next.js 16.4.0 App Router, React 19.2, strict TypeScript, native CSS/CSS modules, and Motion 14.0.0. Read installed Next.js documentation before using its APIs. Avoid unrelated framework or dependency upgrades.
-- Follow KISS, DRY, and YAGNI. Prefer small readable functions and existing boundaries; add dependencies or abstractions only when the task needs them.
-- `src/app` owns routes, layouts, metadata, and API handlers. Prefer Server Components for pages and content; keep browser interaction in focused client islands.
-- `src/components` owns reusable UI and motion. `src/styles/globals.css` owns shared theme, spacing, typography, and responsive tokens; CSS modules own local styles.
-- Name React component implementation files with `.tsx` or `.jsx` extensions in PascalCase. Keep framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx` unchanged.
-- `src/content` owns typed profile/engineering content and project/design JSON. Access collections through `src/lib/content.ts`; do not scatter duplicate content lookups.
-- `src/lib/metadata.ts` owns the public origin and shared SEO helpers. `src/lib/contact` owns shared validation and server-only provider integration.
-- Preserve existing routes, project slugs, assets, CV/social/source links, and team credits. Collections use server-rendered GET filters. Unknown project slugs return 404/noindex.
-- Engineering source links use `portfolioSourceRef` in `src/content/engineering.ts`. Keep it pointed at the rework branch while under review; update it to `main` only after the implementation is merged.
+- Stack: Next.js 16.4.0 App Router, React 19.2, strict TypeScript, native CSS/CSS Modules, and Motion 14.0.0. Read installed Next.js documentation before using its APIs. Avoid unrelated framework/dependency upgrades.
+- Follow KISS, DRY, and YAGNI. Prefer small functions and existing boundaries; add dependencies or abstractions only when the task needs them.
+- `src/app` owns routes/layouts/metadata/API handlers. Prefer Server Components for pages/content and focused client islands for browser interaction.
+- `src/components` owns reusable UI; `src/styles/globals.css` owns shared tokens/primitives. The current refactor colocates component `index.tsx`, `type.ts`, and prefixed/nested `style.css` in PascalCase directories; pages retain CSS Modules. Inspect and preserve this organization during related work.
+- Use PascalCase for standalone React `.tsx`/`.jsx` filenames and component directories. Preserve established `index.tsx` directory entry points and framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx`.
+- `src/content` owns profile/engineering facts and JSON snapshots. Access project/design collections through `src/lib/content.ts`; do not duplicate lookups. Shared motion helpers currently live in `src/lib/motion`.
+- `src/lib/metadata.ts` owns public metadata; `src/lib/contact` owns validation and server-only providers. Preserve routes, slugs, assets, CV/social/source links, team credits, GET filters, and unknown-project 404/noindex behavior.
+- Keep `portfolioSourceRef` in `src/content/engineering.ts` on the rework branch while under review. Update it to `main` only after merge.
+- `next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Describe image delivery accordingly. Re-enabling transformations needs fresh validation; historical cache/source-selection results do not apply to current rendering.
 
-## Identity, SEO, and content scope
+## Identity, SEO, and scope
 
-- The owner's full name is **Ervin Cahyadinata Sungkono**. `profile.name` in `src/content/profile.ts` is authoritative. Use the full name in visible identity text, accessible alternatives, page titles/descriptions, social metadata, and structured data; do not reintroduce the shortened alias.
-- The public origin is **https://ervincs.com**, defined in `src/lib/metadata.ts`. Preview hostnames must not enter canonical URLs, sitemap, robots, or structured data. A `SITE_URL` variable does not control the current origin.
-- Preserve distinct route descriptions and matching social metadata. Filtered collection URLs canonicalize to the unfiltered collection. Structured data must match visible, verified facts; serialize it safely.
-- Write natural, specific descriptions of the owner's actual work. Do not promise search rankings, stuff keywords, invent metrics, or claim unverified seniority or personal team contributions.
-- Professional portfolio content improvements were deferred by the user on 9 October 2026. Do not expand them unless newly requested.
-- CMS work is phase 2 and deferred. Do not add database, authentication, editor/admin UI, scheduled imports, or speculative CMS layers without a new request.
+- The full name is **Ervin Cahyadinata Sungkono**; `profile.name` in `src/content/profile.ts` is authoritative. Use it in visible identity, accessible alternatives, metadata, and structured data.
+- The public origin is **https://ervincs.com** in `src/lib/metadata.ts`. Preview hosts must not enter canonicals, sitemap, robots, or structured data. `SITE_URL` does not control the origin.
+- Preserve distinct route descriptions and matching social metadata. Filtered URLs canonicalize to the unfiltered collection. Structured data must match visible verified facts and be serialized safely.
+- Write specific, natural descriptions without invented metrics, seniority, personal team contributions, or ranking promises. Professional content expansion remains deferred until requested.
+- CMS is deferred to phase 2. Do not add database/auth/admin UI, scheduled imports, or speculative CMS layers without a new request.
 
-## Responsive behavior and motion
+## Responsive behavior, motion, and accessibility
 
-- Use the documented rem-based tokens, fluid sizing calculations, and content-fit breakpoints. Check typography, full-name logo/header, grids, spacing, and controls at phone/tablet widths, text enlargement, and reflow. Avoid accumulating arbitrary device-specific overrides.
-- The requested scroll behavior is a desktop sticky hero with scroll-linked parallax. Preserve native scrolling; do not restore nearest-section scroll snapping or intercept wheel events.
-- Disable decorative motion with reduced-motion preference. Pinning/parallax must fall back to normal flow for mobile/coarse pointers, short viewports, or content that cannot fit. Server-rendered content stays visible with JavaScript disabled.
-- The decorative cursor is desktop fine-pointer/hover only and hidden from assistive technology. Pointer position uses direct Motion values with no delayed movement or position springs. Keep the native cursor usable. Image-tilt springs are separate from cursor position.
-- Clean up event listeners, media subscriptions, and observers. Keep continuous pointer/scroll updates out of React application state.
+- Follow documented rem tokens, fluid sizing, and content-fit thresholds. Check full-name branding, typography, grids, spacing, and controls during text enlargement/reflow; avoid arbitrary device overrides.
+- Preserve native scrolling. The desktop hero uses a stationary project crossfade; selected images use bounded parallax. Do not restore section snapping or intercept wheel events. The second hero image remains an explicit placeholder until supplied.
+- Decorative motion respects reduced motion. Pinning/parallax falls back to ordinary flow for mobile/coarse pointers, short viewports, or content that cannot fit. Server-rendered content stays visible without JavaScript.
+- The cursor is desktop fine-pointer/hover only, decorative, and hidden from assistive technology. Its position uses direct Motion values without springs or delay. Native cursor fallbacks must work; image-tilt springs are separate.
+- Keep continuous pointer/scroll updates out of React state. Clean up listeners, media subscriptions, observers, animation frames, and engines.
+- Preserve skip navigation, landmarks, heading order, keyboard access, visible focus, contrast, and accessible names including visible labels.
+- Mobile navigation is a disclosure: toggle before links, Escape closes and returns focus, leaving the header closes it, and short viewports can scroll all links into view. Do not introduce a modal focus trap.
+- Keep `--control-border` separate from decorative borders. Theme labels describe the destination. Project actions identify their project and avoid redundant links. Forms retain labels, associated errors/live status, first-error focus, and drafts after failure.
+- For UI changes, exercise keyboard navigation and both themes at 320, 390, 820, 1024, and 1440px, enlarged text/reflow, reduced motion, and relevant input/fallback contexts. Add focused browser/axe checks when relevant and report actual coverage.
+- Historical automated results do not prove WCAG conformance. NVDA/VoiceOver, actual browser zoom, forced colors, and real-device checks remain outstanding; root-font enlargement is not browser zoom.
 
-## Accessibility requirements
+## Contact and release boundaries
 
-- Preserve skip navigation, landmarks, heading hierarchy, keyboard access, visible focus, adequate contrast, and meaningful accessible names that include visible labels.
-- The mobile navigation is a disclosure, not a modal: the toggle precedes its links in DOM and visual order; Escape closes it and returns focus to the toggle; leaving the header closes it. Short viewports must scroll all links into view without obscuring focused controls.
-- Keep the dedicated `--control-border` contrast token separate from decorative borders. Theme toggle labels describe the destination action. Card actions identify their project and avoid redundant links.
-- Preserve associated form labels, error descriptions/live status, first-error focus, and drafts after unsuccessful submissions.
-- For UI changes, exercise keyboard navigation and both themes at representative widths (320, 390, 820, 1024, and 1440 px), enlarged text/reflow, and reduced motion. The committed Playwright suite covers contact submission/API boundaries and project 404 recovery; it is not a full responsive or accessibility suite. Add browser/axe checks when relevant and explain the tooling and coverage actually used.
-- Historical automated checks are recorded in `docs/verification.md`; they do not establish full WCAG conformance. Manual NVDA/VoiceOver testing and actual browser zoom remain unverified. Do not label root-font enlargement as browser zoom.
-
-## Contact integration and release boundaries
-
-- Real provider configuration is only needed for integration testing. UI, unit tests, typechecking, and build can run without production credentials. Refer to `.env.example` for `EMAIL`, `EMAIL_PASS`, `NEXT_PUBLIC_RECAPTCHA_KEY`, and `RECAPTCHA_SECRET`; the legacy server alias `RECAPTCHA_KEY` is supported.
-- Never print or commit secrets. Keep provider code server-only and preserve validation/abuse checks and graceful failure with a LinkedIn fallback.
-- Do not send real email during automated tests. Live delivery testing requires an explicit user request and verified reCAPTCHA hostname/provider configuration. Gmail receipt remains unverified.
-- The current release scope is the rework branch/draft PR and preview. Do not merge, promote production, change DNS/domain settings, or modify production secrets unless the user authorizes that action. Existing authorization for a task does not need repeated confirmation.
-- Before deployment work, verify the actual Vercel project/team, branch, commit, runtime, and target. The legacy production configuration was Node.js 18; verify/update the production runtime for this migration before a future release.
-- Report what changed, what was checked, and material limitations. Update relevant documentation when behavior or architecture changes. Never imply that a preview proves production indexing, field Core Web Vitals, remote asset availability, or email delivery.
+- Production credentials are only needed for live integration. Use `.env.example` and the architecture reference; `RECAPTCHA_KEY` remains a supported legacy alias. Never print or commit secrets, and keep provider code server-only.
+- Preserve request validation, the 64 KiB streamed-body cap, abuse checks, duplicate-submission prevention, read-only pending fields, draft retention, and graceful LinkedIn fallback.
+- Automated tests must not send real email. Live delivery requires an explicit user request and verified hostname/provider setup; Gmail receipt remains unverified.
+- Current release scope is the rework branch/draft PR and preview. Do not merge, promote production, change DNS/domains, or modify production secrets without authorization. Do not repeat requests for authorization already provided in the session.
+- Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy setting; inspect the current production runtime and ensure it supports this migration before release.
+- Report changes, checks, and material limits. A preview does not prove production indexing, field Core Web Vitals, hosted image availability/cost, or real email receipt.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

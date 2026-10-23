@@ -1,68 +1,117 @@
-# Responsive layout and motion
+# Visual system, responsive layout, and motion
 
-## Guidance
+Reviewed against the working tree on **23 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
 
-- [MDN: responsive design](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Responsive_Design).
-- [web.dev: typography](https://web.dev/learn/design/typography) and [macro layouts](https://web.dev/learn/design/macro-layouts).
-- [WCAG 2.2: reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) and [minimum target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html).
-- [Motion: scroll animations](https://motion.dev/docs/react-scroll-animations), [springs](https://motion.dev/docs/react-use-spring), and [accessibility](https://motion.dev/docs/react-accessibility).
-- [Motion: element scroll progress](https://motion.dev/docs/react-use-scroll) and [MDN: sticky positioning](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/position).
+## Visual system
 
-These sources establish principles, not one mandatory set of breakpoints or font sizes. The following scale is this portfolio's content-fit decision.
+The Engineering Editorial presentation uses Manrope, strong heading hierarchy, cobalt accents, neutral light/dark surfaces, fine dividers, editorial indexes, and repeated image framing. Professional facts, artwork, team credits, routes, and links remain the content foundation.
 
-## Sizing system
+`src/styles/globals.css` owns shared tokens. The root font size is not fixed. Ordinary spacing uses a 0.25rem rhythm, text uses relative units, line heights are unitless, and text measure uses `ch`. Metadata is 0.75rem, small/control text 0.875rem, body/input text 1rem, titles 1.25rem, and small headings 1.5rem. A separate `--control-border` token distinguishes controls from softer decorative borders in both themes.
 
-`src/styles/globals.css` owns shared tokens. Spacing uses a 0.25rem base rhythm (4px at the default root size), with named multiples. Type sizes are 0.75rem for metadata, 0.875rem for controls, 1rem for body/input text, 1.25rem for titles, and 1.5rem for small headings. The root font size is not fixed. Text measure uses `ch`, line heights are unitless, and images retain intrinsic dimensions/aspect ratios.
-
-Fluid tokens interpolate between a 20rem and 80rem viewport, then stop at defined bounds. At a default 16px root:
+Fluid values interpolate from a 20rem to 80rem viewport and stop at bounded endpoints:
 
 | Token           | Narrow endpoint | Wide endpoint |
 | --------------- | --------------- | ------------- |
-| Display heading | 2.75rem / 44px  | 5.5rem / 88px |
-| Section heading | 1.75rem / 28px  | 3rem / 48px   |
-| Page gutter     | 1rem / 16px     | 3rem / 48px   |
-| Section spacing | 3.5rem / 56px   | 6rem / 96px   |
-| Layout gap      | 1.5rem / 24px   | 3rem / 48px   |
+| Display heading | 2.75rem         | 5.5rem        |
+| Section heading | 1.75rem         | 3rem          |
+| Page gutter     | 1rem            | 3rem          |
+| Section spacing | 3.5rem          | 6rem          |
+| Layout gap      | 1.5rem          | 3rem          |
 
-For example, a display heading grows 44px over a 960px viewport interval. The slope `44 / 960` gives `4.5833vw`; the intercept is 29.333px or `1.8333rem`. The resulting rule is `clamp(2.75rem, 1.8333rem + 4.5833vw, 5.5rem)`. The two-column homepage hero uses its own bounded 44–68px scale to preserve its composition. Other fluid tokens use the same endpoint calculation. Text never relies on viewport units alone.
+For example, the display heading is `clamp(2.75rem, 1.8333rem + 4.5833vw, 5.5rem)`: it grows 44px over the 960px interval at a default 16px root. The homepage hero uses a local 44–68px bounded scale to fit its two-column composition. Text never relies on viewport units alone.
 
-## Layout thresholds
+Modular screenshots use proportional cover cropping without inset padding or letterboxing. Detail screenshots keep their natural aspect ratio so visitors can inspect the complete interface. Moving image planes include overscan; their outer links, captions, and focus indicators remain stationary on selected homepage surfaces.
 
-The default stacks content. At 48rem, project/design galleries have room for two usable columns, roughly 20rem each after gutters and a gap. At 64rem, the hero, contact form, and full navigation have enough room for their content. Tablet portrait keeps the hero stacked. Project featured work, archives/results, and the Design gallery use three columns at 64rem. Tablet featured work places a full-width lead card above its supporting pair. Design closes partial desktop rows with balanced pairs: a remainder of two fills one row; a remainder of one redistributes the last four into two pair rows. This keeps DOM order and 4:3 cover frames without dense packing or fixed caption heights. The container caps at 75rem. These choices respond to content width rather than detecting a particular device.
+## Page composition and layout
 
-Long headings and project names wrap when necessary; flex/grid children can shrink. Header and anchor offsets share a nominal height token, with the actual header height measured by a cleaned-up ResizeObserver when JavaScript is available. This keeps wrapped controls, the menu viewport, and sticky/anchor offsets aligned during text enlargement. Mobile navigation scrolls within the dynamic viewport height. The header uses the original square favicon artwork instead of shrinking a logo containing a second name. Mobile hero actions use a full-width primary action followed by a CV/GitHub row.
+| Surface         | Current composition                                                                                                                             |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home            | Sticky project-preview hero, asymmetric five-part selected work, engineering evidence, experience timeline, curated artwork, and contact close. |
+| Projects        | Three featured entries plus the remaining archive; GET filters search the whole collection without duplicates.                                  |
+| Project details | Natural-ratio screenshot, overview, documented implementation/tradeoffs, attribution, and related projects.                                     |
+| Engineering     | Numbered evidence panels, architecture boundaries, and native sticky introductions.                                                             |
+| About           | Profile introduction, experience timeline, and grouped existing skills.                                                                         |
+| Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                                                            |
+| Contact         | Editorial introduction and the labelled form with validation and status feedback.                                                               |
+| Not found       | Standalone viewport-height recovery page with its own particles and pause control.                                                              |
 
-Primary buttons, icon buttons, filters, and standalone text links have a minimum 2.75rem height (44px by default), exceeding WCAG's 24px minimum for these controls. Borders and visually hidden clipping retain pixel values; ordinary type and spacing use the shared relative scale.
+The container caps at **75rem**. Layout starts stacked and uses content-fit thresholds:
+
+- At **48rem**, galleries have room for two columns. Tablet featured projects use a full-width lead above the supporting pair.
+- At **64rem**, galleries use three columns and the hero, full navigation, and contact layout can use wider compositions. Tablet portrait keeps the hero stacked.
+- The homepage's asymmetric selected-work composition starts at **70rem** so compact panels retain usable width.
+- In the desktop Design grid, a remainder of two fills a wider pair; a remainder of one redistributes the last four entries into two pair rows. DOM order remains intact, without dense packing or fixed caption heights.
+
+Headings, full-name branding, and project names wrap; flex/grid children can shrink. Phone evidence indexes stack above copy, skills collapse when labels need room, and hero actions use a full-width primary action followed by a CV/GitHub row. These are content constraints rather than device detection.
+
+The header shares its measured height through a cleaned-up ResizeObserver, with a nominal token as fallback. Hero pinning, anchor offsets, and mobile-menu height use that measurement. The square favicon artwork avoids a second tiny name inside the logo. Short-screen menus scroll within dynamic viewport limits and retain clearance for focused links.
+
+## Accessibility and input
+
+Preserve skip navigation, landmarks, heading order, keyboard access, visible focus, meaningful image alternatives, and accessible names containing visible labels. Primary controls, icon buttons, filters, and standalone text links have a minimum 2.75rem height (44px at the default root size).
+
+Mobile navigation is a disclosure. Its toggle precedes its links in DOM and visual order; Escape closes it and returns focus to the toggle; focus leaving the header closes it. It does not use a modal focus trap. All links must remain reachable on short screens and with enlarged text.
+
+Theme labels describe the destination action and theme choice persists. Project actions include the project name and avoid redundant title/arrow links. Form fields retain associated labels, `aria-describedby` errors, first-error focus, polite status, and drafts on failure. Submission details live in [architecture](architecture.md#contact-integration).
+
+For UI changes, exercise both themes and keyboard navigation at **320, 390, 820, 1024, and 1440px**, plus text enlargement/reflow, short viewports, coarse pointers, reduced motion, and no JavaScript. Root-font enlargement is distinct from actual browser zoom. Automated results do not establish full accessibility conformance.
 
 ## Motion boundaries
 
-Motion 14 supplies small Client Components in `src/components/motion`. Pages continue to render content on the server and pass it into these islands.
+Native scrolling controls the document. There is no section snapping, wheel interception, artificial scroll smoothing, or nearest-section settling. Motion remains an enhancement over visible server HTML. Motion components are colocated under `src/components/<Component>/`; see [code boundaries](architecture.md#code-boundaries).
 
-- `Reveal` runs a 0.35-second transform/opacity animation with 10px travel once when content enters the viewport. Server HTML stays visible without JavaScript. Keyboard focus completes running reveals; reduced-motion mode skips them.
-- `PointerSurface` applies bounded spring tilt to imagery for a mouse with fine pointer/hover capability at desktop width. Coordinates update springs rather than React state, and pointer exit returns the image to neutral.
-- `MotionEnhancements` provides scroll progress and loads the cursor component only when the viewport is at least 64rem wide, has fine-pointer/hover capability, and reduced motion is not requested.
-- `DesktopCursor` shows a 32px four-corner reticle around an 8px plus while idle. Over an enabled link, button, or other interactive target, the plus morphs into a 12px focus ring with a center dot, and four corners frame the target with 8px of clearance on each side. Leaving restores the plus and the pointer-centered corner reticle. The clearance is decorative; it does not enlarge the clickable or hovered area. The native cursor is hidden only while the custom cursor is active; it remains available over text-entry fields, disabled controls, and iframes, and on small/coarse-pointer contexts, with reduced motion, or after pointer exit/cancel, window blur, document hiding, and component cleanup. The frame rechecks its target on scroll and resize and follows ongoing layout or transform changes with a scoped requestAnimationFrame loop while a target remains hovered or the frame is transitioning. The frame morphs over 160ms when its target changes, then follows its live bounds directly. The center marker changes shape over 140ms but follows direct pointer Motion values without position interpolation or springs. Continuous updates stay out of React state.
+| Component            | Behavior and boundary                                                                                                                                 |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Reveal`             | One entry animation: 10px travel over 0.35 seconds. Focus completes an active reveal; reduced motion skips it. Content is visible without JavaScript. |
+| `PointerSurface`     | Bounded image tilt up to 4 degrees, using springs for a desktop mouse with fine-pointer/hover capability. Pointer exit/cancel returns to neutral.     |
+| `MotionEnhancements` | Scroll progress and conditional cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.                           |
+| `ScrollHero`         | Desktop content-fit sticky scene with a reversible project crossfade.                                                                                 |
+| `ParallaxImage`      | Bounded image-only travel inside a clipped frame, with matching overscan.                                                                             |
+| `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |
+| `ParticleAccent`     | Selectively loaded decorative engine with separate normal-page and 404 compositions.                                                                  |
 
-Touch input and reduced-motion preferences disable cursor and tilt effects. Main-page motion avoids scroll hijacking. The sparse shared particle background covers the full viewport on every normal page and moves continuously; reduced motion removes it. The standalone particle 404 retains its explicit pause/resume control. See verification notes for responsive and interaction checks.
+Keep continuous pointer/scroll values out of React state. Discrete state may select a project, focus hold, or motion eligibility. Clean up media subscriptions, observers, listeners, animation frames, and engine instances.
 
-## Scroll scenes and parallax
+## Hero crossfade and image parallax
 
-Section snapping has been removed. Scrolling remains native, with no wheel interception, artificial smoothing, or nearest-section settling.
+`src/lib/motion/use-scroll-motion.ts` enables scroll motion only with **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. `ScrollHero` additionally measures whether its content fits below the header. The eligible scene reserves one viewport for reading plus half a viewport of scroll travel, then releases into normal flow.
 
-`ScrollHero` holds the desktop hero below the header while its project preview crossfades from WeTrack to ChatGPT Clone. The second visual is an explicit placeholder awaiting the owner's image. The image, project name, caption, and destination change together; the copy, frame geometry, and actions remain stationary. Fade progress runs between 20% and 80% of the existing scene; the active link switches at its midpoint. The inactive slide is inert, hidden from assistive technology, and excluded from pointer interaction. Keyboard focus holds the selected project and its opacity until focus leaves the preview. Scrolling backwards reverses the fade. The scene reserves one viewport for reading plus half a viewport of scroll travel, then releases into normal flow.
+The hero crossfades **WeTrack into ChatGPT Clone**. The latter still uses an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; the active project switches at the midpoint. Copy, frame geometry, and actions stay stationary. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
 
-`ParallaxImage` keeps its shared default of ±1rem for archive, filtered, and related-project cards. The homepage opts its lead screenshot into ±1.5rem; its two supporting screenshots retain ±1rem after crop review. One homepage AudioWaves artwork preview uses ±1.5rem; the other preview and full design gallery stay static. Each moving plane extends by its travel distance above and below its clipped frame, preventing blank edges at either limit. Modular screenshots use cover cropping without inset padding; touch, reduced-motion, and no-JavaScript layouts use the ordinary full-frame plane. The selected homepage surfaces omit whole-link tilt, and the hero omits hover lift and scroll scale, keeping links, labels, and captions anchored. Project detail screenshots and the About avatar remain static. Experience and engineering introductions use native sticky positioning alongside their scrolling content.
+Only one preview is interactive and exposed to assistive technology: the other is inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Otherwise, phone/tablet, coarse-pointer, short/oversized, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel.
 
-A shared media hook enables scroll motion only at the existing 64rem desktop width, at least 48rem viewport height, with fine-pointer/hover capability, and with no reduced-motion preference. The height threshold leaves room for the existing type and spacing; the hero also measures whether its actual content fits below the header. Oversized content, including enlarged text, disables hero pinning. Resize and media observers clean up. Motion values handle scroll updates without React state on each frame.
+| Image surface                                                              | Travel                             |
+| -------------------------------------------------------------------------- | ---------------------------------- |
+| Homepage lead project                                                      | ±1.5rem.                           |
+| Two supporting homepage projects                                           | ±1rem, retained after crop review. |
+| One homepage AudioWaves artwork preview                                    | ±1.5rem.                           |
+| Archive, filtered, and related-project cards                               | Shared default ±1rem.              |
+| Other homepage artwork, full Design grid, detail screenshots, About avatar | Static.                            |
 
-Phone/tablet layouts, short viewports, reduced-motion mode, and no-JavaScript rendering use the ordinary stacked layout with no reserved scroll scene. Server-rendered content stays visible. The direct reticle cursor continues to track pointer movement without spring lag.
+Each moving plane extends its travel distance above and below the frame: a frame of height `H` with ±`d` travel needs a plane of `H + 2d`. Overscan also crops content, so review both endpoints for technical UI, lettering, and focal subjects before increasing travel. The selected homepage project cards omit whole-link tilt. Readable copy, navigation, filters, forms, and feedback do not receive scroll transforms. Native sticky experience/engineering introductions remain independent of these effects.
 
-## Particle accents
+## Desktop cursor
 
-`ParticleAccent` dynamically imports the tsParticles 4.4 engine, basic circle/movement features, interactivity, repulse, and particle-link plugins. It does not load the full library or a React adapter. Reduced motion and data saver skip engine loading; changing reduced motion destroys an active field. Canvas content is decorative and hidden from assistive technology, and pointer detection never captures clicks or obscures links.
+On eligible desktop fine-pointer/hover screens, the idle cursor has an **8px plus** inside a **32px four-corner reticle**. Hovering an enabled interactive target changes the center into a **12px ring with a dot** and frames the target **8px outside each edge**. That gap is decorative and does not enlarge the hit area. Leaving restores the pointer-centered reticle.
 
-The root layout renders a single fixed, inset-zero field behind Home, About, Projects/results, project details, Engineering, Design, and Contact. Its canvas fills the viewport at the top, middle, and bottom of any page; it does not allocate a document-height bitmap or repeat an engine per section. Body isolation keeps the negative-z-index field above the body background and behind text, controls, cards, and imagery. The background has no side-margin restriction or fading mask. Header, menu, form, and card surfaces keep their existing opaque backgrounds.
+The center follows raw pointer Motion values without interpolation, position springs, or delayed movement. Shape changes take 140ms; target-frame morphs take 160ms. A requestAnimationFrame loop follows live target geometry while hovered or completing a transition, with scroll/resize refreshes and cleanup. Continuous coordinates do not enter React state.
 
-The field uses 44 small, low-opacity dots from 48rem width and 18 below, with 160px/110px nearby connection distances, 0.75px lines, and 0.18 link opacity before the field’s 0.65 opacity. Movement stays slow at 20fps without retina scaling, repulsion, or click spawning on normal pages. Touch devices and text enlargement receive the same viewport coverage; reduced motion and data saver omit the decorative engine. There is no normal-page pause button, as requested. An IntersectionObserver pauses offscreen fields, while hidden tabs also pause. Normal-page motion resumes on return and continues across theme changes. A scoped main-content observer detects the standalone 404 marker, removes the shared engine, and restores it on recovery navigation. Matching CSS hides the normal field immediately during the transition. The shared implementation preserves the 404 visitor’s manual pause and paints a static frame in the new palette when paused. Media/theme/route/visibility observers and listeners clean up.
+The native cursor is hidden only while the replacement is active. Text-entry fields, contenteditable regions, disabled controls, iframes, pointer exit/cancel, window blur, document hiding, reduced motion, and cleanup restore it. Small/coarse-pointer and no-JavaScript contexts retain native interaction. The overlay cannot capture clicks and is hidden from assistive technology. The `html` background token keeps difference blending visible against the isolated body's painted background in both themes.
 
-The 404 restores the original standalone composition without header/footer chrome. Its section uses a dynamic-viewport minimum height and can grow for short screens/enlarged content. It uses up to 56 particles on larger fine-pointer screens and 24 elsewhere, capped at 30fps with retina scaling disabled. Gentle hover repulsion is enabled only for the former. The 404 has no connection lines; neither field allows click spawning or unbounded particle counts. Pause/resume is keyboard accessible, hidden tabs pause, and navigation destroys the engine instance.
+## Particle fields
+
+`ParticleAccent` dynamically loads the tsParticles 4.4 engine, basic circle/movement features, interactivity, repulse, and links plugins. It does not load the full bundle or a React adapter. Reduced motion and data saver skip loading; live reduced-motion changes destroy the field. Canvas content is decorative, hidden from assistive technology, and cannot capture clicks.
+
+| Setting               | Normal pages                                                                         | Standalone 404                                                    |
+| --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Coverage              | One fixed inset-zero field behind all normal routes throughout scrolling/navigation. | One field behind the standalone recovery composition.             |
+| Particles             | 44 from 48rem width, 18 below.                                                       | Up to 56 on larger fine-pointer screens, 24 elsewhere.            |
+| Frame cap             | 20fps.                                                                               | 30fps.                                                            |
+| Lines and interaction | Faint nearby connectors; no repulsion or click spawning.                             | No connectors; gentle repulsion only on eligible desktop screens. |
+| Manual pause          | No normal-page pause button, as requested.                                           | Keyboard-accessible pause/resume.                                 |
+
+Both disable retina scaling and bound particle counts. Normal-page connector distances are 160px/110px with 0.75px lines and 0.18 link opacity before field opacity. Body isolation places the field above the background and behind content; opaque cards, header, menu, and form retain readability. Touch and enlarged text retain full-viewport coverage with the smaller composition where applicable.
+
+Hidden tabs and offscreen fields pause. Route observation destroys the shared field while the standalone 404 marker is present and restores it on recovery; CSS suppresses overlap during transitions. The 404 preserves its visitor's pause choice through visibility/theme changes and can paint a static frame in the new palette. Its dynamic-viewport minimum height grows for short screens or enlarged content. Engine instances, media/theme/route/visibility observers, and listeners clean up.
+
+Historical browser coverage and the limits of fixture-based image reviews are recorded once in [verification](verification.md). Bounded engine settings are safeguards rather than measured battery, accessibility, or field-performance results.

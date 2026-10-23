@@ -1,9 +1,9 @@
 .headingCopy {
   min-width: 0;
-}
 
-.headingCopy h1 {
-  max-width: 16ch;
+  h1 {
+    max-width: 16ch;
+  }
 }
 
 .heading .headingCopy > p:not(.eyebrow) {
@@ -16,6 +16,10 @@
   align-items: start;
   gap: var(--layout-gap);
   padding-bottom: var(--space-20);
+
+  > * {
+    min-width: 0;
+  }
 }
 
 .intro {
@@ -28,26 +32,22 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-}
 
-.intro h2 {
-  max-width: 15ch;
-  font-size: var(--text-heading-small);
-}
+  h2 {
+    max-width: 15ch;
+    font-size: var(--text-heading-small);
+  }
 
-.intro > p:not(.eyebrow) {
-  color: var(--muted);
-  font-size: var(--text-body);
-  max-width: 35ch;
-  margin-block: var(--space-6) var(--space-8);
-}
+  > p:not(.eyebrow) {
+    color: var(--muted);
+    font-size: var(--text-body);
+    max-width: 35ch;
+    margin-block: var(--space-6) var(--space-8);
+  }
 
-.intro > a {
-  margin-top: auto;
-}
-
-.layout > * {
-  min-width: 0;
+  > a {
+    margin-top: auto;
+  }
 }
 
 @media (width < 64rem) {
@@ -64,9 +64,9 @@
 
   .intro {
     padding: var(--space-6);
-  }
 
-  .intro > a {
-    margin-top: 0;
+    > a {
+      margin-top: 0;
+    }
   }
 }

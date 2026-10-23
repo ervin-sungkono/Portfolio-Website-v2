@@ -3,6 +3,14 @@
   align-items: center;
   grid-template-columns: minmax(0, 1.1fr) minmax(17rem, 0.9fr);
   gap: var(--layout-gap);
+
+  .heroCopy > .intro {
+    max-width: 48ch;
+    color: var(--muted);
+    font-size: var(--text-body);
+    margin: var(--space-6) 0 var(--space-8);
+    text-wrap: pretty;
+  }
 }
 
 .heroCopy,
@@ -18,14 +26,6 @@
   max-width: 13ch;
 }
 
-.hero .heroCopy > .intro {
-  max-width: 48ch;
-  color: var(--muted);
-  font-size: var(--text-body);
-  margin: var(--space-6) 0 var(--space-8);
-  text-wrap: pretty;
-}
-
 .avatarFrame {
   min-height: 18rem;
   display: grid;
@@ -34,13 +34,13 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--accent-soft);
-}
 
-.avatarFrame img {
-  width: min(100%, 24rem);
-  height: auto;
-  aspect-ratio: 1;
-  object-fit: contain;
+  img {
+    width: min(100%, 24rem);
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+  }
 }
 
 .skills {
@@ -49,13 +49,13 @@
 
 .skillsHeading {
   margin-bottom: var(--space-8);
-}
 
-.skillsHeading > p:last-child {
-  color: var(--muted);
-  font-size: var(--text-body);
-  max-width: 58ch;
-  margin: var(--space-4) 0 0;
+  > p:last-child {
+    color: var(--muted);
+    font-size: var(--text-body);
+    max-width: 58ch;
+    margin: var(--space-4) 0 0;
+  }
 }
 
 .skillGroups {
@@ -69,20 +69,20 @@
   border-radius: var(--radius);
   background: var(--surface);
   padding: var(--space-6);
-}
 
-.skillGroup h3 {
-  margin: 0 0 var(--space-5);
-  font-size: var(--text-title);
-}
+  h3 {
+    margin: 0 0 var(--space-5);
+    font-size: var(--text-title);
+  }
 
-.skillGroup ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
-  gap: var(--space-3);
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    gap: var(--space-3);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 .skillItem {
@@ -93,13 +93,13 @@
   font-size: var(--text-sm);
   font-weight: 650;
   overflow-wrap: anywhere;
-}
 
-.skillItem img {
-  width: 1.5rem;
-  height: 1.5rem;
-  flex: 0 0 auto;
-  object-fit: contain;
+  img {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 auto;
+    object-fit: contain;
+  }
 }
 
 :global(:root[data-theme='dark']) .skillItem img[src$='nextjs.svg'] {
@@ -155,10 +155,10 @@
 
   .avatarFrame {
     min-height: 0;
-  }
 
-  .avatarFrame img {
-    width: min(100%, 20rem);
+    img {
+      width: min(100%, 20rem);
+    }
   }
 
   .skillGroups {

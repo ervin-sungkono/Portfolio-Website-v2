@@ -1,18 +1,18 @@
 .designIntro {
   max-width: 58rem;
   padding-bottom: var(--space-8);
-}
 
-.designIntro > :global(.editorial-label) {
-  margin: 0 0 var(--space-5);
-}
+  > :global(.editorial-label) {
+    margin: 0 0 var(--space-5);
+  }
 
-.designIntro h1 {
-  max-width: 16ch;
-}
+  h1 {
+    max-width: 16ch;
+  }
 
-.designIntro h1 span {
-  color: var(--muted);
+  h1 span {
+    color: var(--muted);
+  }
 }
 
 .profileLink {
@@ -26,10 +26,10 @@
   gap: var(--space-6);
   padding-block: 0 var(--space-5);
   border-bottom: 1px solid var(--line);
-}
 
-.collectionBar :global(.design-filters) {
-  margin: 0;
+  :global(.design-filters) {
+    margin: 0;
+  }
 }
 
 .designCount {
@@ -40,13 +40,13 @@
   margin: 0;
   color: var(--muted);
   font-size: var(--text-xs);
-}
 
-.designCount span {
-  color: var(--text);
-  font-size: var(--text-title);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  span {
+    color: var(--text);
+    font-size: var(--text-title);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 .designGrid {
@@ -67,6 +67,18 @@
   flex-direction: column;
   min-width: 0;
   border-radius: var(--radius);
+
+  &:hover .artworkImage {
+    transform: scale(1.012);
+  }
+
+  &:hover .designCaption {
+    color: var(--accent);
+  }
+
+  &:hover .designCaption > svg {
+    color: var(--accent);
+  }
 }
 
 .artworkFrame {
@@ -91,10 +103,6 @@
   transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-.designTile:hover .artworkImage {
-  transform: scale(1.012);
-}
-
 .designCaption {
   display: flex;
   flex: 1;
@@ -103,31 +111,26 @@
   gap: var(--space-5);
   padding: var(--space-5) var(--space-1) 0;
   transition: color 0.2s;
-}
 
-.designCaption > div {
-  min-width: 0;
-}
+  > div {
+    min-width: 0;
+  }
 
-.designCaption :global(.editorial-label) {
-  margin: 0 0 var(--space-2);
-}
+  :global(.editorial-label) {
+    margin: 0 0 var(--space-2);
+  }
 
-.designCaption h2 {
-  margin: 0;
-  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
-  line-height: 1.35;
-  letter-spacing: -0.035em;
-}
+  h2 {
+    margin: 0;
+    font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+    line-height: 1.35;
+    letter-spacing: -0.035em;
+  }
 
-.designCaption > svg {
-  margin-top: var(--space-2);
-  color: var(--muted);
-}
-
-.designTile:hover .designCaption,
-.designTile:hover .designCaption > svg {
-  color: var(--accent);
+  > svg {
+    margin-top: var(--space-2);
+    color: var(--muted);
+  }
 }
 
 @media (width >= 48rem) {
@@ -139,23 +142,27 @@
 @media (width >= 64rem) {
   .designGrid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
 
-  .designGrid > * {
-    grid-column: span 2;
+    > * {
+      grid-column: span 2;
+    }
+
+    &:has(> :last-child:nth-child(3n + 2)) > :nth-last-child(-n + 2) {
+      grid-column: span 3;
+    }
+
+    &:has(> :last-child:nth-child(3n + 1)) > :nth-last-child(-n + 4) {
+      grid-column: span 3;
+    }
+
+    > :only-child {
+      grid-column: 1 / -1;
+      max-width: 38rem;
+      justify-self: center;
+    }
   }
 
   /* Close partial rows without leaving a lone card or changing reading order. */
-  .designGrid:has(> :last-child:nth-child(3n + 2)) > :nth-last-child(-n + 2),
-  .designGrid:has(> :last-child:nth-child(3n + 1)) > :nth-last-child(-n + 4) {
-    grid-column: span 3;
-  }
-
-  .designGrid > :only-child {
-    grid-column: 1 / -1;
-    max-width: 38rem;
-    justify-self: center;
-  }
 }
 
 @media (width < 40rem) {
@@ -163,10 +170,10 @@
     align-items: flex-start;
     flex-direction: column;
     gap: var(--space-2);
-  }
 
-  .collectionBar :global(.design-filters) {
-    margin-bottom: 0;
+    :global(.design-filters) {
+      margin-bottom: 0;
+    }
   }
 
   .designCount {

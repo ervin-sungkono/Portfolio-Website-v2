@@ -1,0 +1,126 @@
+.desktop-cursor {
+  position: fixed;
+  inset: 0;
+  color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 60;
+  overflow: clip;
+
+  .desktop-cursor-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    color: inherit;
+    pointer-events: none;
+
+    .desktop-cursor-corner {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border: solid currentcolor;
+      border-width: 0;
+
+      &:nth-child(1) {
+        top: 0;
+        left: 0;
+        border-top-width: 2px;
+        border-left-width: 2px;
+      }
+
+      &:nth-child(2) {
+        top: 0;
+        right: 0;
+        border-top-width: 2px;
+        border-right-width: 2px;
+      }
+
+      &:nth-child(3) {
+        bottom: 0;
+        right: 0;
+        border-bottom-width: 2px;
+        border-right-width: 2px;
+      }
+
+      &:nth-child(4) {
+        bottom: 0;
+        left: 0;
+        border-bottom-width: 2px;
+        border-left-width: 2px;
+      }
+    }
+  }
+
+  .desktop-cursor-dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: inherit;
+    pointer-events: none;
+
+    &::before,
+    &::after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      content: '';
+      background: currentcolor;
+      transform: translate(-50%, -50%);
+      transition:
+        width 140ms ease,
+        height 140ms ease,
+        border-radius 140ms ease,
+        background-color 140ms ease,
+        box-shadow 140ms ease;
+    }
+
+    &::before {
+      width: 2px;
+      height: 8px;
+    }
+
+    &::after {
+      width: 8px;
+      height: 2px;
+    }
+  }
+
+  &[data-cursor-hovered='true'] .desktop-cursor-dot {
+    &::before {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow: inset 0 0 0 1.5px currentcolor;
+    }
+
+    &::after {
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+    }
+  }
+}
+
+:root {
+  &.desktop-cursor-active {
+    * {
+      cursor: none !important;
+    }
+  }
+}
+
+@media (width >= 64rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .desktop-cursor-active {
+    * {
+      cursor: none !important;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse), (width < 64rem) {
+  .desktop-cursor {
+    display: none;
+  }
+}
