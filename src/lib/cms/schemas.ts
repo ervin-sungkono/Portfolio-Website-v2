@@ -87,7 +87,8 @@ export const publishMutationSchema = z.discriminatedUnion('kind', [
 ]);
 
 export const uploadMediaSchema = z.strictObject({
-  slug: z.union([z.literal('technologies'), idSchema]),
+  scope: z.enum(['project', 'technology']),
+  slug: idSchema,
   filename: z.string().min(1).max(255),
   mime: z.enum(['image/png', 'image/jpeg', 'image/webp']),
   content: z.string().min(1).max(1_398_104),

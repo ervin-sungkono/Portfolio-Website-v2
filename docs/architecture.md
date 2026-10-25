@@ -6,7 +6,7 @@ Reviewed for component organization on **25 October 2026 (Asia/Jakarta)**. This 
 
 The portfolio preserves verified project facts, artwork, CV, social links, and team credits through server-rendered pages. The stack is Next.js 16.4.3 App Router, React 19.2, strict TypeScript, native CSS, next-themes, Motion 14, Nodemailer 10.2, Auth.js 5 beta, Zod 4, and React Hook Form. Install with the committed lockfile using Node.js 24; the package requires Node.js 22 or newer, while the isolated test loader requires Node.js 24.
 
-The owner-only GitHub CMS lives inside this Next.js application. A separate public repository stores JSON and modest images; there is no database, separate backend, or object-storage provider. The earlier Neon-based PR #3 is closed and unmerged. Professional content expansion remains deferred: do not infer new responsibilities, contributions, seniority, or measured outcomes from the implementation.
+The owner-only GitHub CMS lives inside this Next.js application. A separate public repository stores JSON and modest images; there is no database, separate backend, or object-storage provider. The GitHub-backed CMS is the current implementation; the earlier Neon proposal is historical and is not part of this release. Professional content expansion remains deferred: do not infer new responsibilities, contributions, seniority, or measured outcomes from the implementation.
 
 ## Code boundaries
 
@@ -23,7 +23,7 @@ The owner-only GitHub CMS lives inside this Next.js application. A separate publ
 
 Components use PascalCase directories with `index.tsx`, a colocated style file, and `type.ts` when needed. Reusable public links, controls, cards, and motion wrappers live in `src/components/common`; page-specific components remain in their existing directories. The shared scroll hook is at `src/lib/motion/use-scroll-motion.ts`. Component styles use prefixed selectors and native nesting, while page styles remain CSS Modules. See [verification](verification.md) for dated check coverage and its limits.
 
-Pages and content stay in Server Components. Header navigation, contact submission, motion, and particles use small Client Components. Server-rendered content passes into motion wrappers and remains visible without JavaScript. Continuous pointer and scroll coordinates use Motion values or engine state rather than React state on each frame. Media subscriptions, observers, event listeners, animation frames, and particle engines clean up when their scope ends.
+Pages and content stay in Server Components. Header navigation, contact submission, and decorative motion use small Client Components. Server-rendered content passes into motion wrappers and remains visible without JavaScript. Continuous pointer and scroll coordinates use Motion values rather than React state on each frame. Media subscriptions, observers, event listeners, and animation frames clean up when their scope ends.
 
 Keep functions and boundaries small. Add abstractions or dependencies only when the requested behavior needs them. Read the relevant installed Next.js guide in `node_modules/next/dist/docs/` before changing framework APIs.
 
@@ -32,7 +32,8 @@ Keep functions and boundaries small. Add abstractions or dependencies only when 
 Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, and `/contact`. The content snapshot has 17 project detail pages, for 22 public pages in total, and 16 design entries.
 
 - Project search/category filters and design categories use shareable GET URLs with server rendering.
-- Snapshot mode features the first three projects. GitHub mode uses explicit `featured` flags and `sortOrder`; unfiltered archives exclude featured entries. Filtering searches the complete published collection.
+- Snapshot mode features the first three projects in snapshot order. GitHub mode uses explicit `featured` flags and sorts projects by `sortOrder`, then stable slug; unfiltered archives exclude featured entries. Filtering searches the complete published collection.
+- GitHub category filters include labels referenced by published projects only. They sort by category `sortOrder`, then stable category ID, and deduplicate repeated labels after sorting. Snapshot category filters preserve first appearance in project order.
 - Project details can render newly published slugs after deployment. Their content is cached and invalidated after publication. Unknown/unpublished slugs use 404/noindex recovery; the current checks and any no-JavaScript limits are recorded in [verification](verification.md).
 - Related projects prioritize shared technologies, then category, through a small pure function.
   Preserve public slugs, destinations, assets, and attribution during maintenance. Framework route filenames retain their required names.
@@ -92,13 +93,13 @@ Storage uses `content/site.json`, `content/categories.json`, `content/technologi
 
 After authorized sign-in, choose **Initialize repository** only for a nonexistent or empty public repository, or to reuse a compatible CMS repository. Public requests and builds never initialize storage. The initializer creates a public repository if needed, reads its actual default branch, and writes README plus the three seed documents. Each Contents API commit sets both author and committer to `Portfolio CMS <cms@portfolio.local>`, including bootstrap. Keep that email unassociated with the owner's GitHub account; GitHub may still show the authenticated account as the API actor. Retries inspect existing content and only complete an exact known seed subset. Private, legacy `web-assets`, unrelated populated, and incompatible repositories stop with an actionable error; nothing is erased or reset.
 
-The editor retains drafts after validation, network, or SHA conflicts. Every update compares the loaded file's blob SHA; a stale version returns HTTP 409. Category/technology edits validate references against the current snapshot. Publish/unpublish/delete validate authoritative documents and media before writing. Separate concurrent file writes are not transactional: use one publishing tab for taxonomy changes to avoid a category deletion racing with a project update; manual Git repair can be needed if such a race occurs. All content is public in GitHub, including `published: false` and earlier revisions; unpublishing only hides it from the portfolio.
+The editor retains drafts after validation, network, or SHA conflicts. Every update compares the loaded file's blob SHA; a stale version returns HTTP 409 and preserves the unsaved draft. Explicit conflict reload refreshes only the selected section and discards that section's local draft. Category/technology edits validate references against the current snapshot. Publish/unpublish/delete validate authoritative documents and media before writing. Separate file commits are not a repository-wide transaction: keep one publishing tab for taxonomy work, and sequence category and project changes because a category deletion racing with a project update can still require manual Git repair. All content is public in GitHub, including `published: false` and earlier revisions; unpublishing only hides it from the portfolio.
 
 Images accept PNG, JPEG, and WebP only, at most 1 MiB, with matching MIME, extension, and byte signatures. Arbitrary SVG uploads are rejected. Existing technology SVG references are checked. Uploads use content-hashed names, then the owner selects the returned path in the project/icon form. Upload and JSON commits are separate; an abandoned upload may leave an unused public file. Git history and existing browser/CDN copies cannot be made private by unpublishing.
 
 ### Publishing and ISR
 
-Next.js Cache Components caches the validated public catalog/site/taxonomy for one hour, with stale-while-revalidate behavior and a one-day expiry. The small portfolio shares one catalog loader rather than fetching each project per visitor; individual project lookups also carry `project:<slug>` tags. Cache keys include the configured numeric ID/repository and never session credentials. Owner lookup is cached for one day. Authenticated editor reads bypass the public content cache. Unauthenticated REST limits still apply on cold reads; an upstream failure during background refresh can retain the prior good cached result, while an expired/cold cache can fail visibly.
+Next.js Cache Components uses `cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })` for the validated public catalog/site/taxonomy. These cache-profile values do not promise a hosted propagation time. The small portfolio shares one catalog loader rather than fetching each project per visitor; individual project lookups also carry `project:<slug>` tags. Cache keys include the configured numeric ID/repository and never session credentials. Owner lookup is cached for one day. Authenticated editor reads bypass the public content cache. Unauthenticated REST limits still apply on cold reads; an upstream failure during background refresh can retain the prior good cached result, while an expired/cold cache can fail visibly.
 
 Only after GitHub confirms a content commit does the API invalidate `projects`, `project:<slug>`, `site`, or `taxonomy` and the affected `/`, `/project`, detail, and sitemap paths. `revalidateTag(tag, 'max')` marks data stale; visitors may briefly receive the previous version while regeneration runs. “Cache refreshed” in the editor means invalidation was accepted, not instant global delivery. If invalidation fails after a commit, the saved result and commit link are retained with a **Retry public refresh** operation that does not write another Git commit.
 
@@ -108,7 +109,9 @@ Only after GitHub confirms a content commit does the API invalidate `projects`, 
 
 Use [the LLM mapping instructions](web-assets-migration-agent.md) to audit old content against the shared schemas. The prior one-off conversion utility was removed after the authorized migration; no ongoing runtime behavior depends on it. The instructions treat `web-assets/legacy` as read-only source, compare it with the already migrated `master`, and require a mapping report before edits. No executable converter is maintained.
 
-On 25 October the owner separately authorized publishing to `web-assets/master`, with the old master preserved on `legacy`. Existing `images/` and `icons/` remain as compatibility directories until the application release; initialization can reuse them only with complete, valid CMS documents and never bootstraps over asset-only legacy storage. [Verification](verification.md#authorized-web-assets-publication) records exact refs, author/committer, schema/media read-back, and rollback limits.
+The one-time content migration is complete: `web-assets/master` points to `ce10d45` (parent `3a62ce0`), and `legacy` preserves the original tree at `3a62ce0`. The hosted application cutover remains outstanding. Keep the compatibility `images/` and `icons/` directories through cutover. Do not rerun the removed conversion utility; later content work uses the CMS editor or a separately reviewed mapping. [Verification](verification.md#authorized-web-assets-publication) records exact refs, author/committer, schema/media read-back, and rollback limits.
+
+Before a hosted cutover, capture the current deployment identity, application commit, content repository and branch heads, the `master` migration commit, `legacy` head, compatibility paths, and the current environment-variable names and targets (never their secret values). Roll back an application release through the known-good Vercel deployment and its matching configuration. Roll back content with a reviewed change on the actual current content branch that preserves later publications; do not blindly reset `master` or point the CMS reader at the historical `legacy` tree. Keep `legacy` intact until the cutover has been accepted.
 
 ## Identity and discovery
 
@@ -143,9 +146,9 @@ UI work, unit tests, typechecking, and builds do not require production credenti
 
 ## Image delivery
 
-### Active behavior on 23 October
+### Current behavior on 25 October
 
-Commit `112dceb` sets **`images.unoptimized: true`** in `next.config.ts` as a temporary workaround. Next Image remains responsible for component markup and dimensions, but normal image rendering currently serves original sources without Next's image transformations or generated responsive variants. The existing `sizes` hints and optimizer settings must not be described as active transformation or cache savings.
+`next.config.ts` sets **`images.unoptimized: true`** as a temporary workaround. Next Image remains responsible for component markup and dimensions, but normal image rendering currently serves original sources without Next's image transformations or generated responsive variants. The existing `sizes` hints and optimizer settings must not be described as active transformation or cache savings.
 
 Project screenshots use the original GitHub asset URLs; design artwork retains its Dribbble URLs and queries. Local avatar, organization, and header images use static imports with content-hashed paths. Explicit SVG/GIF and small-header-image bypasses remain. Original files in `public/images` also support existing references and metadata.
 
@@ -162,8 +165,36 @@ These settings remain for a future reactivation; the 10 October optimizer result
 
 Re-enabling optimization needs a focused change and fresh checks of source selection at 1×/2× density, exact URL rejection, output, image coverage, and hosted cache/usage. Old local results or a redeploy do not prove current hosted delivery or savings. Image cropping, tilt, and parallax remain presentation concerns described in [UI behavior](responsive-and-motion.md).
 
+## Hosted release checklist
+
+These are required acceptance steps, not claims that hosted work has been completed. Hosted OAuth, publishing, cache, and application cutover checks remain pending; see [verification](verification.md#remaining-work).
+
+### Isolated preview setup
+
+- [ ] Use the existing `ervin-sungkono` Vercel project and its intended preview host, after confirming the deployment target. Keep contact delivery disabled and leave email/provider secrets unset. Do not create another Vercel project or content repository, and do not connect the content repository as a deployment source.
+- [ ] Use the existing GitHub OAuth app if its callback is configured for the preview host, or a separate development OAuth app. The callback must be `https://<preview-host>/api/auth/callback/github`. Set the five CMS server variables for that preview only: `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, `GITHUB_ADMIN_ID`, and `GITHUB_REPO`. Use a unique random Auth secret; keep values out of logs and reports.
+- [ ] Reuse the existing public `web-assets` repository and its migrated CMS documents on `master`; do not initialize or rerun conversion. Confirm the preview uses Node.js 24 and is noindex. Record the starting application commit, actual CMS default branch and content commit, `master` and `legacy` heads, and the compatibility `images/` and `icons/` paths. Use one publishing tab.
+
+### OAuth, editing, and cache behavior
+
+- [ ] Sign in as the configured owner, sign out, and sign in again. Confirm unauthenticated reads/writes are rejected, wrong-owner access is rejected, session JSON contains no OAuth token, and admin/API responses are private and no-store.
+- [ ] Confirm the existing repository points to the expected default branch and that CMS commits record the configured custom author and committer. Add a uniquely named `cms-release-check-<utc-timestamp>` project with an existing taxonomy entry and a harmless uploaded image in the existing repository. These public test commits remain in Git history after the project is unpublished/deleted; record their commit and test slug.
+- [ ] Visit the detail URL while it is missing, then publish through `/admin`. Confirm the project page, archive, and sitemap update without a deployment, the prior 404 recovers with JavaScript disabled, and the uploaded media loads from its original host. Check both the preview hostname and its Vercel alias, including the internal content-request origin.
+- [ ] Record the content commit time, cache-invalidation result, and when each public route first shows the update. Invalidation marks cached data stale; it does not promise instant global delivery. The cache profile uses `stale: 300`, `revalidate: 3600`, and `expire: 86400`; these are cache parameters, not a hosted propagation SLA. Do not infer one from a single request.
+- [ ] Unpublish and then delete the test project through the CMS. Record when the detail route returns 404/noindex and the sitemap drops it. Record any remaining public uploaded-media path as an orphan; deletion of the project does not delete uploaded media or Git history.
+- [ ] Check an unavailable-upstream case using test fixtures only. Never inject failure into the hosted preview or production source. Confirm the application returns a temporary failure, not a false 404; a background refresh can retain a prior good result, while a cold/expired read can fail visibly.
+
+### Public acceptance and production gate
+
+- [ ] Validate the 17 expected project slugs, shared CMS schemas, published references, every referenced media file, source/demo/CV links, and team credit. Review public pages in both themes with keyboard navigation at 320, 390, 820, 1024, and 1440px. Also check actual browser zoom, reduced motion, no JavaScript, Windows forced colors, and a screen reader; root-font enlargement is not browser zoom.
+- [ ] Confirm public canonicals stay on `https://ervincs.com`, preview responses remain noindex, authenticated responses remain private/no-store, and hosted images still serve original unoptimized files. Record actual image transfer sizes. Do not send email or perform a live contact test.
+- [ ] Before any separately authorized production promotion, verify the actual Vercel project/team, production domain and alias, Git branch/commit, Node.js runtime, and environment-variable targets. Build and smoke-test a fresh production-target candidate from the tested `dev` source with the intended production configuration. Never promote a CMS fixture build or a preview build.
+- [ ] Capture the known-good production deployment, configuration targets, application commit, and content branch/commit before release. For application rollback, restore that deployment with its matching configuration. For content rollback, make a reviewed change on the actual current content branch that preserves later publications; do not reset a branch or discard `legacy`. Keep the `legacy` branch and compatibility paths until hosted cutover is accepted.
+- [ ] Review the readiness follow-up against `codex/github-portfolio-cms`. Obtain passing CI for the resulting PR #5 merge candidate and complete hosted acceptance before preparing PR #5 for `dev`. After testing `dev`, prepare a release PR into the verified production branch and ensure untested changes cannot auto-promote. Merge and promotion require separate authorization.
+- [ ] After a separately authorized production release, monitor runtime errors, GitHub rate limits, public cache behavior, and image delivery for 24 hours. Record observations; a preview does not establish these production outcomes.
+
 ## Release boundaries
 
-Public component work targets `dev`; CMS work is reviewed separately in PR #3. Preview work does not authorize merging, production promotion, DNS/domain changes, or production-secret changes. Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy-production setting; the current production runtime has not been inspected in this pass and must be checked before release.
+Public component work targets `dev`; CMS work is reviewed separately from public UI changes. Preview work does not authorize merging, production promotion, DNS/domain changes, or production-secret changes. Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy-production setting; the current production runtime has not been inspected in this pass and must be checked before release.
 
 Production indexing, real Gmail receipt, field Core Web Vitals, external-link currency, and hosted image availability require their own evidence. See [remaining verification](verification.md#remaining-work) before making release claims.

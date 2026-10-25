@@ -51,9 +51,6 @@ function decodeUpload(input: UploadMediaInput): {
   extension: string;
   stem: string;
 } {
-  if (input.slug !== 'technologies' && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.slug)) {
-    throw validationError('Choose a valid project before uploading media.');
-  }
   if (
     input.filename.length > 255 ||
     !safeFileName.test(input.filename) ||
@@ -121,7 +118,7 @@ export async function uploadMedia(token: string, input: unknown): Promise<Upload
   const digest = createHash('sha256').update(bytes).digest('hex');
   const filename = `${digest}-${stem}.${extension}`;
   const path =
-    parsed.data.slug === 'technologies'
+    parsed.data.scope === 'technology'
       ? `media/technologies/${filename}`
       : `media/projects/${parsed.data.slug}/${filename}`;
   const existing = await readContentFile(repository, path, token);

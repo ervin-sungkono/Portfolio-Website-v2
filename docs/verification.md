@@ -19,7 +19,7 @@ The implemented story is `/admin` → GitHub owner session → shared validation
 - The isolated CMS production build and **4/4 Chromium workflow tests passed**, using local Chrome because the matching Playwright headless-shell executable was absent. They verify real editor forms → protected API → simulated GitHub commits → public ISR refresh, prior 404 recovery and published pages without JavaScript, unpublish/sitemap/delete, PNG upload, session/API restrictions, and absence of duplicate panel IDs. They caught and fixed duplicate React panel keys that had appended stale form instances during editing.
 - Editor checks exercised Projects, Site Profile, Categories, Technologies, and Images at **320, 390, 820, 1024, and 1440 px in both themes**, plus 200% root-font samples at 320/820, visible keyboard focus, and first-error focus. These are reflow/root-font checks, not actual browser zoom or complete WCAG verification. Light-theme screenshots were captured during the sweep; normal test-output cleanup can replace them.
 - After restoring the ordinary non-fixture production build, the full public suite passed **26/26**. The discovered Next.js PPR behavior is documented in [architecture](architecture.md#github-cms): runtime `notFound()` produced blank no-JavaScript recovery, and a rewrite replaced a supplied 404 with 200. The final proxy returns a complete buffered recovery document with explicit 404/noindex/no-store.
-- Final whole-repository Prettier and Git whitespace checks passed. All **29 local Markdown file/fragment references** in README, AGENTS, and the three owning documents resolved. No remote CI result is claimed.
+- Final whole-repository Prettier and Git whitespace checks passed for that local implementation pass. All **29 local Markdown file/fragment references** in README, AGENTS, and the three owning documents resolved. The PR #5 CI baseline is recorded separately below and does not change the scope of these original local checks.
 
 ### CMS component organization follow-up — 25 October 2026
 
@@ -43,7 +43,7 @@ The owner subsequently requested writing the migration to `web-assets/master` an
 - The new master tree has **81 files**: the 46 generated README/content/media files plus 35 compatibility assets. It includes 17 project JSON documents and 25 optimized raster images. README records the numeric-ID → slug audit mapping and rollback guidance.
 - Read-back validation fetched all 20 published JSON documents, compared their bytes to the reviewed bundle, parsed shared Zod schemas, and verified all 25 referenced images with the server's reference/signature/size checks. An existing `master/images/WeTrack-App.png` URL returned HTTP 200 with identical bytes.
 
-The application deployment and OAuth configuration were not changed. Keep the compatibility paths and `legacy` branch until that cutover has been separately verified. Roll back by reviewing and reverting the migration commit, or restoring the prior reader to `legacy`; do not blindly reset a branch containing later publications. Actual rollback execution remains untested.
+The application deployment and OAuth configuration were not changed. The `master` migration is complete at `ce10d45` with the original `3a62ce0` tree preserved on `legacy`; hosted application cutover and rollback execution remain unverified. Keep the compatibility paths and `legacy` branch until cutover is accepted. Any content rollback must be reviewed against the actual current branch and preserve later publications; do not blindly reset a branch.
 
 ### Mapping guide and cleanup — 25 October 2026
 
@@ -53,13 +53,15 @@ After cleanup, the Node.js 24 unit/service suite passed **32/32**, strict TypeSc
 
 ### Integration limits
 
-The owner selected **isolated local workflow verification** for the CMS. The local environment has no CMS OAuth application or persistent content-source configuration. Browser tests use fake GitHub responses and encrypted fixture sessions; they do not establish real consent, token revocation, OAuth-authorized CMS API repository creation/writes, contribution-graph attribution, or hosted Vercel cache propagation. The separately authorized Git CLI migration and its read-back checks are recorded above.
+The owner selected **isolated local workflow verification** for the CMS. The local environment has no CMS OAuth application or persistent content-source configuration. Browser tests use fake GitHub responses and encrypted fixture sessions; they do not establish real consent, token revocation, OAuth-authorized CMS API repository creation/writes, contribution-graph attribution, or hosted Vercel cache propagation. The separately authorized Git CLI migration and its read-back checks are recorded above; hosted acceptance remains pending in the release checklist.
 
 The single-owner MVP protects per-file blob versions. Simultaneous writes to different interdependent files (for example deleting a category while another tab adds that category to a project) are not a repository-wide transaction and can require manual reference repair. Use one publishing tab for taxonomy changes; atomic multi-file publication remains deferred rather than implying that target-file SHA checks prevent every cross-file race.
 
 No merge, production promotion, DNS/domain update, production-secret update, or live email test was performed. Current image delivery remains unoptimized. Real browser zoom, assistive technology, forced colors, real devices, field performance, and production indexing retain the limits below.
 
-## Repository snapshot — 23 October 2026
+## Historical repository snapshot — 23 October 2026
+
+This snapshot is superseded by the [PR #5 baseline](#pr-5-ci-baseline--25-october-2026) below.
 
 - Local branch: `feat/portfolio-rework-phase-1`, at `112dcebc1a22f5d94fd592b829a155b8ba3c27cf`. A fresh remote-head read matched this commit.
 - Remote `main`: `6a2c71db6627ee06648a642c64d9c7ac426dfc8f`.
@@ -68,11 +70,37 @@ No merge, production promotion, DNS/domain update, production-secret update, or 
 - `112dceb` disables image transformation globally with `images.unoptimized: true`. The former active-optimizer guidance and 10 October image results are no longer evidence of current delivery behavior.
 - No current production-runtime, live-provider, Search Console, field-performance, or hosted image-usage inspection was performed. A source/PR read is not a deployment verification.
 
+## Documentation consolidation — 23 October 2026
+
 This pass read all seven previous `/docs` files and reconciled them into the three references above. Current behavior replaces the old design proposal and superseded findings. Useful dated audit/test evidence is retained below; obsolete prototype settings, repeated verification narratives, model/subagent logs, peer-site comparisons, and old live-site claims are removed. Earlier detail remains in Git history.
 
 Only documentation checks apply to this pass: formatting of the three documents, README, and AGENTS; local Markdown file/fragment references; and whitespace checks on those files. Application builds, browser runs, audits, and provider tests are not rerun by a documentation cleanup. The historical results below must not be relabelled as fresh passes.
 
 Documentation validation passed for all five edited Markdown files: Prettier, 22 local file/fragment references, and scoped Git whitespace checks. No repository references to the four removed document paths remained.
+
+## PR #5 CI baseline — 25 October 2026
+
+- [PR #5](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/5) had head branch `codex/github-portfolio-cms` at `23c876e0314c21031a7494db288814434208beb0` and targeted `dev`. GitHub Actions run [40186200820](https://github.com/ervin-sungkono/Portfolio-Website-v2/actions/runs/40186200820) passed for merge candidate `590072412f5debef855c71e2f86b7bb8e6964a73` built from that head. The successful run covered **32 unit tests, 26 public browser tests, and 4 CMS browser tests**.
+- The follow-up release-readiness branch `codex/pr5-release-readiness` is based on that head and targets `codex/github-portfolio-cms`, not `dev`. The CI result above is the baseline before readiness changes; it does not establish hosted OAuth, content-repository writes, or cache propagation. Readiness implementation checks are recorded separately and are not part of this baseline.
+- The current image path remains `images.unoptimized: true`. The `web-assets/master` migration is complete at `ce10d45`, with `legacy` at `3a62ce0`; hosted application cutover remains outstanding. No converter was rerun.
+
+### Readiness environment inspection
+
+- A clean `npm ci` with the final lockfile completed on Node.js 24.19.0/npm 11.9.0. The targeted lockfile update from `fast-uri` 3.1.8 to 3.1.9 is six lines; follow-up `npm audit` reported zero vulnerabilities. The earlier production-only audit also reported zero.
+- A read-only Vercel inspection identified project `ervin-sungkono` (`team_ZOn3x1qeHsySyjQImCK5zKQE` / `prj_xo1e9d33R6A9NpZ9SgbjLo1vusEz`) on Node.js 24.x. Branch-filtered environment metadata for `codex/github-portfolio-cms` returned an empty `envs[]`; no secret values were read. The intended release target and domains still need owner confirmation.
+- Hosted owner OAuth remains blocked on missing setup. No OAuth callback, CMS repository write, hosted cache propagation, hosted image transfer/cost review, live contact delivery, production indexing, or field-performance check is claimed. See the [hosted release checklist](architecture.md#hosted-release-checklist).
+- The readiness follow-up is [PR #6](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/6), targeting PR #5's head branch. Vercel built code commit `6c7b8dad87e6b2269453556e6089da72233cd4b5` as [preview `dpl_3fPWY8556YYu42vDibDzQ1gNLukK`](https://ervin-sungkono-13fkeo58p-ervinsungkonos-projects.vercel.app), reported READY. Read-only HTTP checks confirmed the project archive/detail return 200 and preview noindex; archive canonical and all 22 sitemap URLs remain under `https://ervincs.com`. A missing project returned complete recovery HTML with 404/noindex/no-store on both the deployment hostname and branch alias. `/admin` showed setup guidance; `/api/cms` returned the expected configuration error with 503/private/no-store. These are snapshot-mode checks, not hosted CMS cutover or OAuth acceptance.
+- Implementation CI is tracked in [run 40205727675](https://github.com/ervin-sungkono/Portfolio-Website-v2/actions/runs/40205727675) for head `6c7b8da`, with merge candidate `b95977d4f34d83e0cd827f67e8baed0bd39cd504`. The linked run and PR #6 checks contain the remote outcome; the local results below were executed independently. Documentation follow-ups trigger their own PR checks.
+
+### Release-readiness checks — 25 October 2026
+
+- The final-lock `npm ci` completed on Node.js 24.19.0/npm 11.9.0 and `npm audit` reported zero vulnerabilities after the targeted `fast-uri` update. The unit suite passed **33/33**; ESLint had zero errors and two existing warnings; Stylelint, TypeScript, and the production build passed. An initial sandbox build could not spawn `tsc` (`EPERM`); the supported rerun passed without a configuration change.
+- The public browser suite passed **27/27**, including snapshot category ordering without JavaScript. The CMS browser suite passed **5/5**, including a project named `technologies` uploading and publishing with its cover, technology icon uploads, scope rejection with draft retention, and category reordering through the editor updating public filters without rebuilding. It also retains publication/404 recovery without JavaScript, unpublish/delete, private API restrictions, and the editor theme/reflow sweep. Two new test locators were corrected before the passing rerun.
+- A fixture-only unavailable content-check response produced HTTP 503/no-store rather than a project 404. The ordinary snapshot production build was restored after the CMS suite. Whole-repository formatting, whitespace checks, and all 42 local Markdown file/fragment references passed.
+- An additional local snapshot smoke sweep checked Home, About, Projects, WeTrack, Design, Contact, and missing-project recovery in both themes at 320, 390, 820, 1024, and 1440px: 70 samples had visible headings, keyboard focus, no horizontal overflow, and no page runtime errors. All 17 detail routes rendered their expected headings and canonical URLs without JavaScript; the sitemap kept `https://ervincs.com` URLs. External requests were aborted for this layout check, so artwork rendering and hosted delivery are outside its scope. Actual browser zoom and screen-reader acceptance remain pending.
+- A read-only audit of `web-assets/master` at `ce10d45dc0200b5ff9c146a4f2c43e2b873171ad` (parent `3a62ce04163dfdc8d6e328df385ba538762555b9`, preserved on `legacy`) confirmed that all 17 published project documents, slugs, mappings, and source/demo string pairs match the application snapshot. The shared schemas validate the documents; all category and technology references resolve against the 3 categories and 33 technologies. All 25 WebP files have valid signatures and sizes at or below 1 MiB (1,509,318 bytes total). All 35 compatibility blobs (19 `images/`, 16 `icons/`) match exactly. Application profile, engineering, and project source files were unchanged, preserving existing attribution, CV, and `portfolioSourceRef`.
+- Both commit author and committer are `Portfolio CMS <cms@portfolio.local>`. Direct raw-host GETs returned HTTP 200 for the sampled PNG-to-WebP pairs: WeTrack 127,411→79,308 bytes; ChatGPT 142,732→70,624; Next Pokedex 1,042,142→103,864; Frontend Mentor 225,309→93,456. These are raw payload sizes, not full-page or Vercel transfer measurements; destination-link currency and visual/pixel review were not assessed.
+- Hosted OAuth and publishing remain pending. The content audit and browser results do not establish a hosted write, cache propagation, production image transfer, or production cutover.
 
 ## Public component split — 25 October 2026
 
@@ -117,7 +145,7 @@ Use Node.js 24 and the committed lockfile. Setup and browser commands are in [RE
 
 The browser server uses `127.0.0.1:3103`, clears provider secrets, and does not reuse an existing server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. These tests do not send real email. The public dummy CAPTCHA key must be present at build time; rebuild with the real public key before any deployment that needs live CAPTCHA.
 
-The suite is focused regression coverage. It is not a complete responsive, accessibility, particle, external-asset, or live-provider test suite. Broader checks below were separate dated reviews.
+The suite is focused regression coverage. It is not a complete responsive, accessibility, external-asset, or live-provider test suite. Broader checks below were separate dated reviews.
 
 ## Consolidated historical evidence
 
@@ -173,12 +201,13 @@ These observations establish only that earlier local optimizer baseline. `images
 
 ## Remaining work
 
-- **Browser coverage:** run the focused browser suite for the component-directory/import/CSS reorganization before merge; the checks above do not establish interactive or responsive behavior.
+- **Hosted CMS acceptance:** complete the isolated preview OAuth, owner access, publish/unpublish/delete, stale-tab conflict, media, route-recovery, and observed cache-propagation checks in the [hosted release checklist](architecture.md#hosted-release-checklist). No hosted OAuth exchange, repository write, or Vercel cache propagation has been verified.
+- **Application cutover:** the `web-assets/master` migration is complete at `ce10d45`, with `legacy` preserving `3a62ce0`; hosted application cutover remains outstanding. Do not rerun the removed converter. Keep compatibility paths and `legacy` until the cutover is accepted.
 - **Images:** investigate the temporary optimizer bypass and revalidate before enabling transformations again. Check actual hosted delivery, original download sizes, cache behavior, and usage separately. Review the ChatGPT Clone hero crop when its image is supplied.
 - **Manual accessibility:** NVDA/VoiceOver, actual browser zoom, real devices, and Windows forced-colors focus visibility remain unverified. Root-font enlargement and axe scans do not replace them.
 - **Live contact:** a real CAPTCHA challenge, provider acceptance, and Gmail inbox receipt require an explicit user request and verified hostname/provider configuration. Automated tests must continue to avoid real email.
-- **Dependencies:** obtain a fresh dependency audit before release. The 11 October record included development-only Stylelint/braces alerts; this pass neither reran that audit nor established that they were resolved.
-- **Release environment:** verify Vercel project/team, target commit/branch, runtime, public CAPTCHA build key, and preview/production headers. The historical legacy runtime was Node.js 18; current production settings need inspection.
+- **Dependencies:** the final-lock `npm ci` and audit passed with zero vulnerabilities after updating development dependency `fast-uri` from 3.1.8 to 3.1.9. Re-run the audit before release. The 11 October Stylelint/braces alerts are older findings.
+- **Production release:** inspect the actual Vercel project/team, target branch/commit, runtime, domains/aliases, and environment-variable targets. The historical legacy runtime was Node.js 18; current production settings remain unverified. Production promotion, DNS changes, and production-secret changes require separate authorization.
 - **Public outcomes:** confirm current source/demo/CV/remote-image links and social preview artwork on the authorized hosted release. Search Console submission/indexing, selected canonicals, rankings, field Core Web Vitals, and production image costs remain unverified.
 
 Professional-content expansion remains deferred. GitHub CMS implementation and its current evidence are recorded above; live OAuth/staging publication and release verification remain separate work. No merge, production promotion, DNS change, or production-secret change is authorized by this documentation update.

@@ -154,6 +154,12 @@ globalThis.fetch = async (input, init = {}) => {
     requestUrl.hostname === '127.0.0.1' &&
     requestUrl.port === '3104'
   ) {
+    if (
+      requestUrl.pathname === '/api/content/project' &&
+      requestUrl.searchParams.get('slug') === 'fixture-upstream-unavailable'
+    ) {
+      return jsonResponse({ error: 'Published content is temporarily unavailable.' }, 503);
+    }
     return nativeFetch(input, init);
   }
   const method = init.method ?? (input instanceof Request ? input.method : 'GET');

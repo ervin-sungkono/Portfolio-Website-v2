@@ -22,3 +22,20 @@ test('known project slugs render their server-rendered project page', async ({ p
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'WeTrack App', level: 1 })).toBeVisible();
 });
+
+test('snapshot categories retain their first-appearance order without JavaScript', async ({
+  page,
+}) => {
+  await page.goto('/project?q=app');
+  const categories = page.getByRole('navigation', { name: 'Project categories' });
+  await expect(categories.getByRole('link')).toHaveText([
+    'All Projects',
+    'Website',
+    'Others',
+    'Mobile App',
+  ]);
+  await expect(categories.getByRole('link', { name: 'Mobile App' })).toHaveAttribute(
+    'href',
+    '/project?q=app&category=Mobile+App',
+  );
+});

@@ -698,7 +698,7 @@ export function CmsEditor() {
       const response = await fetch('/api/cms/media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, filename: file.name, mime: file.type, content }),
+        body: JSON.stringify({ scope, slug, filename: file.name, mime: file.type, content }),
       });
       const body = await readJson(response);
       const serverMessage = errorFrom(body);

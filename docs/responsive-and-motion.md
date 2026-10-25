@@ -1,6 +1,6 @@
 # Visual system, responsive layout, and motion
 
-Reviewed against the working tree on **23 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
+Reviewed against the PR #5 working tree on **25 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual system and implemented parallax behavior. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
 
 ## Visual system
 
@@ -32,7 +32,7 @@ Modular screenshots use proportional cover cropping without inset padding or let
 | About           | Profile introduction, experience timeline, and grouped existing skills.                                        |
 | Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                           |
 | Contact         | Editorial introduction and the labelled form with validation and status feedback.                              |
-| Not found       | Standalone viewport-height recovery page with its own particles and pause control.                             |
+| Not found       | Standalone viewport-height recovery page.                                                                      |
 
 The container caps at **75rem**. Layout starts stacked and uses content-fit thresholds:
 
@@ -64,13 +64,13 @@ The owner workspace uses the existing rem tokens and themes, native labelled con
 Native scrolling controls the document. There is no section snapping, wheel interception, artificial scroll smoothing, or nearest-section settling. Motion remains an enhancement over visible server HTML. Motion components are colocated under `src/components/<Component>/`; see [code boundaries](architecture.md#code-boundaries).
 
 | Component            | Behavior and boundary                                                                                                                                 |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Reveal`             | One entry animation: 10px travel over 0.35 seconds. Focus completes an active reveal; reduced motion skips it. Content is visible without JavaScript. |
 | `PointerSurface`     | Bounded image tilt up to 4 degrees, using springs for a desktop mouse with fine-pointer/hover capability. Pointer exit/cancel returns to neutral.     |
 | `MotionEnhancements` | Scroll progress and conditional cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.                           |
 | `ScrollHero`         | Desktop content-fit sticky scene with a reversible project crossfade.                                                                                 |
 | `ParallaxImage`      | Bounded image-only travel inside a clipped frame, with matching overscan.                                                                             |
-| `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |     |
+| `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |
 
 Keep continuous pointer/scroll values out of React state. Discrete state may select a project, focus hold, or motion eligibility. Clean up media subscriptions, observers, listeners, animation frames, and engine instances.
 

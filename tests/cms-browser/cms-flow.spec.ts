@@ -192,7 +192,7 @@ test('owner publishes content and a prior project 404 recovers without a new bui
   await noScriptContext.close();
 });
 
-test('owner image upload validates bytes and stores media in the project folder', async ({
+test('explicit upload destinations preserve drafts and publish a project named technologies', async ({
   browser,
 }) => {
   const context = await browser.newContext({ baseURL });
@@ -203,7 +203,19 @@ test('owner image upload validates bytes and stores media in the project folder'
   const page = await context.newPage();
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await page.getByLabel('Choose a project').selectOption('fixture-project');
+  await page.getByLabel('Choose a project').selectOption('');
+  await page.getByLabel('Project URL slug').fill('technologies');
+  await page.getByLabel('Title', { exact: true }).fill('Technologies Project');
+  await page
+    .getByLabel('Summary', { exact: true })
+    .fill('A valid project slug, not an icon destination.');
+  await page
+    .getByLabel('Description', { exact: true })
+    .fill('Published using its uploaded project cover.');
+  await page.getByLabel('Year', { exact: true }).fill('2026');
+  await page.getByLabel('Published on the public site').check();
+  await page.getByLabel('Website', { exact: true }).check();
+  await page.getByLabel('Next.js', { exact: true }).check();
   await expectUniqueEditorPanels(page);
   await page.getByRole('button', { name: 'Images' }).click();
   await expectUniqueEditorPanels(page);
@@ -212,16 +224,113 @@ test('owner image upload validates bytes and stores media in the project folder'
     mimeType: 'image/png',
     buffer: png,
   });
+  // Simulate an editor tab opened before scope became required.
+  await page.route(
+    '**/api/cms/media',
+    async (route) => {
+      const { scope: _scope, ...oldRequest } = route.request().postDataJSON();
+      void _scope;
+      await route.continue({ postData: JSON.stringify(oldRequest) });
+    },
+    { times: 1 },
+  );
+  const rejectedUpload = page.waitForResponse('**/api/cms/media');
+  await page.getByRole('button', { name: 'Upload image' }).click();
+  expect((await rejectedUpload).status()).toBe(400);
+  await expect(page.locator('#cms-editor-images-panel').getByRole('alert')).toContainText('scope');
+  await page.getByRole('button', { name: 'Projects', exact: true }).click();
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Technologies Project');
+  await expect(page.getByLabel('Project URL slug')).toHaveValue('technologies');
+  await page.getByRole('button', { name: 'Images', exact: true }).click();
   await page.getByRole('button', { name: 'Upload image' }).click();
   await expect(page.getByRole('heading', { name: 'Image uploaded' })).toBeVisible();
   const path = await page.getByLabel('Repository path').inputValue();
-  expect(path).toMatch(/^media\/projects\/fixture-project\/[a-f0-9]{64}-browser-cover\.png$/);
+  expect(path).toMatch(/^media\/projects\/technologies\/[a-f0-9]{64}-browser-cover\.png$/);
   await page.getByRole('button', { name: 'Use as cover' }).click();
   await page.getByRole('button', { name: 'Projects', exact: true }).click();
   await expectUniqueEditorPanels(page);
   await expect(page.getByLabel('Cover image path')).toHaveValue(path);
+  await page.getByRole('button', { name: 'Create project' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Project created.' })).toBeVisible();
+  await waitForStatus(context, '/project/technologies', 200);
+  const publicPage = await context.newPage();
+  await publicPage.goto('/project/technologies');
+  await expect(publicPage.getByRole('heading', { name: 'Technologies Project' })).toBeVisible();
+  await expect(publicPage.locator(`img[src$="${path}"]`).first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'Images', exact: true }).click();
+  await page.getByLabel('Image destination').selectOption('technology');
+  await page.getByRole('button', { name: 'Upload image' }).click();
+  await expect(page.getByLabel('Repository path')).toHaveValue(
+    /^media\/technologies\/[a-f0-9]{64}-browser-cover\.png$/,
+  );
+  await page.getByRole('combobox', { name: 'Technology', exact: true }).selectOption('nextjs');
+  await page.getByRole('button', { name: 'Use as technology icon' }).click();
+  await page.getByRole('button', { name: 'Technologies', exact: true }).click();
+  await page.getByRole('button', { name: 'Save technologies' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Technologies saved.' })).toBeVisible();
+  await context.close();
+});
+
+test('saved category order updates public filters without rebuilding and preserves search URLs', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ baseURL });
+  await addOwnerCookie(context);
+  const page = await context.newPage();
+  const publicPage = await context.newPage();
+  await page.goto('/admin');
+  await page.getByRole('button', { name: 'Categories', exact: true }).click();
+  await page.getByLabel('New category ID').fill('mobile');
+  await page.getByRole('button', { name: 'Add category', exact: true }).click();
+  await page.locator('input[name="mobile.label"]').fill('Mobile');
+  await page.getByRole('button', { name: 'Save categories' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Categories saved.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Projects', exact: true }).click();
+  await page.getByLabel('Choose a project').selectOption('fixture-project');
+  await page.getByLabel('Mobile', { exact: true }).check();
   await page.getByRole('button', { name: 'Save project' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Project saved.' })).toBeVisible();
+
+  const filterLinks = publicPage
+    .getByRole('navigation', { name: 'Project categories' })
+    .getByRole('link');
+  await expect
+    .poll(
+      async () => {
+        await publicPage.goto('/project?q=fixture');
+        return filterLinks.allTextContents();
+      },
+      { timeout: 30_000 },
+    )
+    .toEqual(['All Projects', 'Website', 'Mobile']);
+
+  await page.getByRole('button', { name: 'Categories', exact: true }).click();
+  await page.locator('input[name="mobile.sortOrder"]').fill('0');
+  await page.getByRole('button', { name: 'Save categories' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Categories saved.' })).toBeVisible();
+  await expect
+    .poll(
+      async () => {
+        await publicPage.goto('/project?q=fixture');
+        return filterLinks.allTextContents();
+      },
+      { timeout: 30_000 },
+    )
+    .toEqual(['All Projects', 'Mobile', 'Website']);
+  await expect(filterLinks.filter({ hasText: 'All Projects' })).toHaveAttribute(
+    'href',
+    '/project?q=fixture',
+  );
+  await expect(filterLinks.filter({ hasText: 'Mobile' })).toHaveAttribute(
+    'href',
+    '/project?q=fixture&category=Mobile',
+  );
+  await filterLinks.filter({ hasText: 'Mobile' }).click();
+  await expect(
+    publicPage.getByRole('heading', { name: 'Fixture Portfolio Project' }),
+  ).toBeVisible();
+  await expect(publicPage.getByRole('searchbox')).toHaveValue('fixture');
   await context.close();
 });
 
@@ -265,6 +374,7 @@ test('private CMS APIs reject missing/wrong-owner sessions, bad tokens, cross-or
   const invalidMedia = await context.request.post(new URL('/api/cms/media', baseURL).href, {
     headers: { Origin: baseURL },
     data: {
+      scope: 'project',
       slug: 'fixture-project',
       filename: 'spoof.jpg',
       mime: 'image/jpeg',
@@ -278,6 +388,7 @@ test('private CMS APIs reject missing/wrong-owner sessions, bad tokens, cross-or
   const invalidImageBytes = await context.request.post(new URL('/api/cms/media', baseURL).href, {
     headers: { Origin: baseURL },
     data: {
+      scope: 'project',
       slug: 'fixture-project',
       filename: 'spoof.png',
       mime: 'image/png',
@@ -285,6 +396,12 @@ test('private CMS APIs reject missing/wrong-owner sessions, bad tokens, cross-or
     },
   });
   expect(invalidImageBytes.status()).toBe(400);
+
+  const unavailable = await context.request.get('/project/fixture-upstream-unavailable');
+  expect(unavailable.status()).toBe(503);
+  expect(unavailable.headers()['cache-control']).toBe('no-store');
+  expect(await unavailable.text()).toContain('temporarily unavailable');
+  expect(await unavailable.text()).not.toContain('This Page Isn’t Here.');
 
   await context.close();
 });

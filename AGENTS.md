@@ -1,11 +1,11 @@
 # Portfolio agent handoff
 
-Updated **25 October 2026 (Asia/Jakarta)**. Continue from `dev`, where rework PR #2 has merged; inspect live repository state before continuing.
+Updated **25 October 2026 (Asia/Jakarta)**. PR #5 has head `codex/github-portfolio-cms` at `23c876e` and targets `dev`. Current release-readiness work is on `codex/pr5-release-readiness`, based on that head and targeting `codex/github-portfolio-cms`, not `dev`; inspect live repository and PR state before continuing.
 
 ## Repository and branch
 
 - Repository: https://github.com/ervin-sungkono/Portfolio-Website-v2.
-- Start public component work from `dev`. The earlier Neon CMS [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3) was closed without merging. The GitHub-backed CMS implementation is on `codex/github-portfolio-cms`; inspect live Git/PR state before continuing.
+- Start public component work from `dev`. The GitHub-backed CMS is the current implementation; the earlier Neon proposal is historical and is not part of this release. See [verification](docs/verification.md) for the PR #5 candidate and the current CI baseline.
 - Check Git status, active branch, and remote head before editing. Preserve unrelated or concurrent work. Components use the directory and nested CSS organization described in the architecture and responsive/motion references; don't mistake historical checks for validation of later edits.
 - Existing explicit user instructions take precedence over project defaults. A dated document is not fresh Git, CI, deployment, or provider evidence.
 
@@ -47,7 +47,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - Use PascalCase for standalone React `.tsx`/`.jsx` filenames and component directories. Preserve established `index.tsx` directory entry points and framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx`.
 - `src/content` owns profile/engineering facts and JSON snapshots. Access project/design collections through `src/lib/content.ts`; do not duplicate lookups. Shared motion helpers currently live in `src/lib/motion`.
 - `src/lib/metadata.ts` owns public metadata; `src/lib/contact` owns validation and server-only providers. Preserve routes, slugs, assets, CV/social/source links, team credits, GET filters, and unknown-project 404/noindex behavior.
-- Preserve `portfolioSourceRef` in `src/content/engineering.ts` during this component-only change. Update source links in a separately reviewed change.
+- Preserve `portfolioSourceRef` in `src/content/engineering.ts` during public UI changes. Update source links in a separately reviewed change.
 - `next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Describe image delivery accordingly. Re-enabling transformations needs fresh validation; historical cache/source-selection results do not apply to current rendering.
 
 ## Identity, SEO, and scope
@@ -57,7 +57,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - Preserve distinct route descriptions and matching social metadata. Filtered URLs canonicalize to the unfiltered collection. Structured data must match visible verified facts and be serialized safely.
 - Write specific, natural descriptions without invented metrics, seniority, personal team contributions, or ranking promises. Professional content expansion remains deferred until requested.
 - The single-owner CMS uses GitHub OAuth and a separate public content repository, with shared schemas and server-only credential access. `src/lib/cms` owns auth/storage/publishing/cache boundaries; UI never calls GitHub directly. There is no explicit `server-only` npm dependency; Next.js resolves the marker. Do not add a database, separate backend, object-storage provider, multi-user roles, or speculative layers.
-- `web-assets/master` contains the migrated CMS layout; `legacy` preserves the prior tree. Keep compatibility `images/` and `icons/` URLs until the application cutover is verified. Migration refs and checks are in `docs/verification.md`; [LLM mapping instructions](docs/web-assets-migration-agent.md) describe future audits. No converter or migration utility is maintained.
+- `web-assets/master` contains the completed migration at `ce10d45`; `legacy` preserves the original `3a62ce0` tree. The hosted application cutover remains outstanding. Keep compatibility `images/` and `icons/` URLs through acceptance; do not rerun the removed converter. Refs and checks are in [verification](docs/verification.md); [LLM mapping instructions](docs/web-assets-migration-agent.md) describe future audits.
 - Preserve the project response boundary in `src/proxy.ts`: Proxy uses the cached public reader via `/api/content/project`, and missing projects return complete 404/noindex/no-store HTML. Replacing it with a runtime `notFound()` or PPR rewrite alone regresses JavaScript-disabled recovery. Internal origin comes from trusted platform configuration, not a request Host header.
 
 ## Responsive behavior, motion, and accessibility
@@ -79,7 +79,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - Preserve request validation, the 64 KiB streamed-body cap, abuse checks, duplicate-submission prevention, read-only pending fields, draft retention, and graceful LinkedIn fallback.
 - Automated tests must not send real email. Live delivery requires an explicit user request and verified hostname/provider setup; Gmail receipt remains unverified.
 - Current application release scope is development and preview. The owner separately authorized the `web-assets` master/legacy migration recorded in verification. Do not merge application changes, promote production, change DNS/domains, or modify production secrets without authorization.
-- Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy setting; inspect the current production runtime and ensure it supports this migration before release.
+- Follow the [hosted release checklist](docs/architecture.md#hosted-release-checklist) before deployment. Verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy setting; inspect the current production runtime before release.
 - Report changes, checks, and material limits. A preview does not prove production indexing, field Core Web Vitals, hosted image availability/cost, or real email receipt.
 
 <!-- BEGIN:nextjs-agent-rules -->
