@@ -7,11 +7,14 @@ import {
   InstagramLogoIcon,
 } from '@phosphor-icons/react/dist/ssr';
 import { profile } from '@/content/profile';
+import { cacheLife } from 'next/cache';
 import { ExternalLink } from '../common/ExternalLink';
 import type { FooterSocial } from './type';
 import './style.css';
 
-export function Footer() {
+export async function Footer() {
+  'use cache';
+  cacheLife('days');
   const socials: FooterSocial[] = [
     { name: 'GitHub', href: profile.github, Icon: GithubLogoIcon },
     { name: 'LinkedIn', href: profile.linkedin, Icon: LinkedinLogoIcon },

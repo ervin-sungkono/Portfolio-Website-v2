@@ -68,10 +68,12 @@ export function ProjectCard({
             <span className="sr-only"> for {project.name}</span>
             <ArrowUpRightIcon size={16} aria-hidden="true" />
           </Link>
-          <ExternalLink href={project.source} className="text-link">
-            Source <span className="sr-only"> for {project.name}</span>
-            <ArrowUpRightIcon size={16} aria-hidden="true" />
-          </ExternalLink>
+          {project.source && (
+            <ExternalLink href={project.source} className="text-link">
+              Source <span className="sr-only"> for {project.name}</span>
+              <ArrowUpRightIcon size={16} aria-hidden="true" />
+            </ExternalLink>
+          )}
         </div>
       </Reveal>
     </article>

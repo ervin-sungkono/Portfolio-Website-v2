@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { MagnifyingGlassIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
-import { featuredProjects, projects, filterProjects } from '@/lib/content';
+import { getProjects, selectFeaturedProjects, filterProjects } from '@/lib/content';
 import { ProjectCard } from '@/components/common/ProjectCard';
 import { pageMetadata } from '@/lib/metadata';
 import { profile } from '@/content/profile';
 import styles from './projects.module.css';
 import { imageSizes } from '@/lib/image-sizes';
+
+export const instant = false;
 
 export const metadata = pageMetadata({
   title: 'Software Engineering Projects',
@@ -18,17 +20,23 @@ export default async function ProjectsPage({
 }: {
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  const params = await searchParams;
+  const [params, projects] = await Promise.all([searchParams, getProjects()]);
+  const featuredProjects = selectFeaturedProjects(projects);
   const query = typeof params.q === 'string' ? params.q : '';
   const category = typeof params.category === 'string' ? params.category : '';
-  const filtered = filterProjects(query, category);
-  const categories = [...new Set(projects.map((project) => project.category))];
+  const filtered = filterProjects(projects, query, category);
+  const categoryLabels = projects.flatMap((project) => project.categories ?? [project.category]);
+  const categories = [...new Set(categoryLabels)];
   const isUnfiltered = !query && !category;
 
   function categoryUrl(value: string) {
     const search = new URLSearchParams();
-    if (query) search.set('q', query);
-    if (value) search.set('category', value);
+    if (query) {
+      search.set('q', query);
+    }
+    if (value) {
+      search.set('category', value);
+    }
     return `/project${search.size ? `?${search.toString()}` : ''}`;
   }
 

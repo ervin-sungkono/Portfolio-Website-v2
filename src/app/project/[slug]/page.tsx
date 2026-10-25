@@ -2,27 +2,25 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
 import { ArrowLeftIcon, ArrowUpRightIcon, GithubLogoIcon } from '@phosphor-icons/react/dist/ssr';
-import { projects, findProject, projectStudies, relatedProjects } from '@/lib/content';
+import { getProjects, findProject, projectStudies, relatedProjects } from '@/lib/content';
 import { ExternalLink } from '@/components/common/ExternalLink';
 import { ProjectCard } from '@/components/common/ProjectCard';
-import engineeringStyles from '@/app/engineering/engineering.module.css';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './project-detail.module.css';
 import { imageSizes } from '@/lib/image-sizes';
 
 type Props = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return projects.map(({ slug }) => ({ slug }));
-}
-
-export const dynamicParams = false;
+export const instant = false;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const project = findProject(slug);
-  if (!project) return { title: 'Project Not Found' };
+  const project = await findProject(slug);
+  if (!project) {
+    return { title: 'Project Not Found' };
+  }
   return pageMetadata({
     title: project.name,
     description: project.description,
@@ -33,10 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProjectPage({ params }: Props) {
-  const project = findProject((await params).slug);
-  if (!project) notFound();
+  await connection();
+  const project = await findProject((await params).slug);
+  if (!project) {
+    notFound();
+  }
   const study = projectStudies[project.slug];
-  const related = relatedProjects(project);
+  const related = relatedProjects(await getProjects(), project);
 
   return (
     <div className={`container ${styles.projectPage}`}>
@@ -54,9 +55,11 @@ export default async function ProjectPage({ params }: Props) {
               Open Project <ArrowUpRightIcon size={18} aria-hidden="true" />
             </ExternalLink>
           )}
-          <ExternalLink href={project.source} className="button button-outline">
-            <GithubLogoIcon size={19} aria-hidden="true" /> View Source
-          </ExternalLink>
+          {project.source && (
+            <ExternalLink href={project.source} className="button button-outline">
+              <GithubLogoIcon size={19} aria-hidden="true" /> View Source
+            </ExternalLink>
+          )}
         </div>
       </section>
 
@@ -74,6 +77,21 @@ export default async function ProjectPage({ params }: Props) {
         </div>
       </figure>
 
+      {Boolean(project.gallery?.length) && (
+        <section className={styles.gallery} aria-label={`${project.name} screenshots`}>
+          {project.gallery?.map((image, index) => (
+            <Image
+              key={image}
+              src={image}
+              alt={`${project.name} screenshot ${index + 2}`}
+              width={1600}
+              height={1000}
+              sizes={imageSizes.twoColumns}
+            />
+          ))}
+        </section>
+      )}
+
       <div className={`detail-body section ${styles.studyLayout}`}>
         <aside className={styles.sidebar}>
           <section className={styles.sideSection} aria-labelledby="built-with-heading">
@@ -89,7 +107,7 @@ export default async function ProjectPage({ params }: Props) {
             </p>
           </section>
           {study && (
-            <nav className={engineeringStyles.contents} aria-label="Project walkthrough sections">
+            <nav className={styles.contents} aria-label="Project walkthrough sections">
               <a href="#overview">Overview</a>
               <a href="#engineering">Implementation &amp; Tradeoffs</a>
               <a href="#next-step">Next Validation Step</a>
@@ -101,7 +119,7 @@ export default async function ProjectPage({ params }: Props) {
           <section className={styles.chapter} aria-labelledby="overview">
             <p className="editorial-label">Overview</p>
             <h2 id="overview">About the Project</h2>
-            <p>{study?.context || project.description}</p>
+            <p>{project.details || study?.context || project.description}</p>
             {study && (
               <>
                 <h3>The Problem</h3>
@@ -114,12 +132,14 @@ export default async function ProjectPage({ params }: Props) {
                 </ul>
               </>
             )}
-            <ExternalLink
-              href={project.source}
-              className={`text-link ${styles.implementationLink}`}
-            >
-              Explore the Implementation <ArrowUpRightIcon size={17} aria-hidden="true" />
-            </ExternalLink>
+            {project.source && (
+              <ExternalLink
+                href={project.source}
+                className={`text-link ${styles.implementationLink}`}
+              >
+                Explore the Implementation <ArrowUpRightIcon size={17} aria-hidden="true" />
+              </ExternalLink>
+            )}
           </section>
 
           {study && (
@@ -132,9 +152,9 @@ export default async function ProjectPage({ params }: Props) {
                     Implementation summaries follow the public documentation. Tradeoffs are a
                     technical reading of those choices; next steps describe further validation.
                   </p>
-                  <div className={engineeringStyles.decisions}>
+                  <div className={styles.decisions}>
                     {study.decisions.map((decision) => (
-                      <article key={decision.title} className={engineeringStyles.decision}>
+                      <article key={decision.title} className={styles.decision}>
                         <h3>{decision.title}</h3>
                         <p>{decision.implementation}</p>
                         <p>
@@ -143,7 +163,7 @@ export default async function ProjectPage({ params }: Props) {
                       </article>
                     ))}
                   </div>
-                  <div id="next-step" className={engineeringStyles.nextStep}>
+                  <div id="next-step" className={styles.nextStep}>
                     <h3>Next Validation Step</h3>
                     <p>{study.nextStep}</p>
                   </div>

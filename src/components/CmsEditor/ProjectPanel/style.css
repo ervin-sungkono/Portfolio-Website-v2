@@ -1,0 +1,49 @@
+.cms-editor .cms-editor-project-panel {
+  .cms-editor-project-picker {
+    width: min(100%, 28rem);
+  }
+
+  .cms-editor-slug-field {
+    max-width: 44rem;
+  }
+
+  .cms-editor-grid-compact {
+    max-width: 40rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cms-editor-checkbox-list,
+  .cms-editor-check-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3) var(--space-5);
+  }
+
+  .cms-editor-checkbox {
+    display: flex;
+    align-items: start;
+    gap: var(--space-3);
+    min-width: 0;
+    min-height: 2.75rem;
+    padding-block: var(--space-2);
+    font-size: var(--text-body);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+
+    input {
+      width: 1.25rem;
+      height: 1.25rem;
+      flex: 0 0 auto;
+      margin: 0.125rem 0 0;
+      accent-color: var(--accent);
+    }
+  }
+}
+
+@media (width >= 48rem) {
+  .cms-editor .cms-editor-project-panel {
+    .cms-editor-check-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

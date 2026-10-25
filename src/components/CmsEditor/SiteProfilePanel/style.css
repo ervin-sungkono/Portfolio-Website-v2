@@ -1,0 +1,7 @@
+@media (width >= 48rem) {
+  .cms-editor .cms-editor-site-panel {
+    .cms-editor-social-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    }
+  }
+}

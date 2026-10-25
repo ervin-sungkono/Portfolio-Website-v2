@@ -2,26 +2,29 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRightIcon, ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { profile } from '@/content/profile';
-import { featuredProjects, designs } from '@/lib/content';
+import { getProjects, selectFeaturedProjects, getSiteContent, designs } from '@/lib/content';
 import { ExternalLink } from '@/components/common/ExternalLink';
 import { ProjectCard } from '@/components/common/ProjectCard';
 import { Experience } from '@/components/Experience';
-import { EngineeringHighlights } from '@/components/EngineeringHighlights';
 import { Reveal } from '@/components/common/Reveal';
 import { ParallaxImage } from '@/components/common/ParallaxImage';
 import { ScrollHero } from '@/components/ScrollHero';
-import { pageMetadata, site } from '@/lib/metadata';
+import { pageMetadata } from '@/lib/metadata';
 import styles from './home.module.css';
 import { imageSizes } from '@/lib/image-sizes';
 
-export const metadata = pageMetadata({
-  title: site.title,
-  description: site.description,
-  path: '/',
-});
+export async function generateMetadata() {
+  const content = await getSiteContent();
+  const title = content.siteTitle.includes(profile.name)
+    ? content.siteTitle
+    : `${content.siteTitle} | ${profile.name}`;
+  return pageMetadata({ title, description: content.introduction, path: '/' });
+}
 
-export default function HomePage() {
-  const [mainProject, secondaryProject, additionalProject] = featuredProjects;
+export default async function HomePage() {
+  const [projects, content] = await Promise.all([getProjects(), getSiteContent()]);
+  const [mainProject, secondaryProject, additionalProject] = selectFeaturedProjects(projects);
+  const [headline, ...rest] = content.headline.split('\n');
 
   return (
     <div className={`container ${styles.home}`}>
@@ -30,14 +33,15 @@ export default function HomePage() {
           <Reveal className={`hero-copy ${styles.heroCopy}`}>
             <p className="eyebrow">Software Engineering &amp; Interface Design</p>
             <h1>
-              Frontend Engineering.
-              <br />
-              <span>From UI to Integration.</span>
+              {headline}
+              {rest.length > 0 && (
+                <>
+                  <br />
+                  <span>{rest.join(' ')}</span>
+                </>
+              )}
             </h1>
-            <p className="hero-description">
-              I’m {profile.name}, a software engineer at Samsung R&amp;D Institute Indonesia with a
-              focus on frontend development and interface design.
-            </p>
+            <p className="hero-description">{content.introduction}</p>
             <div className="hero-actions">
               <Link href="/project" className="button">
                 Explore Projects <ArrowUpRightIcon size={20} aria-hidden="true" />
@@ -52,57 +56,67 @@ export default function HomePage() {
           </Reveal>
         }
         visual={
-          <Link
-            href={`/project/${mainProject.slug}`}
-            className={`hero-visual ${styles.heroVisual}`}
-            data-cursor="project"
-          >
-            <div className={`hero-image ${styles.heroMedia}`}>
-              <div data-parallax="hero-image">
-                <Image
-                  src={mainProject.image}
-                  alt="WeTrack Kanban board with tasks organised into sprints"
-                  width={1600}
-                  height={990}
-                  sizes={imageSizes.hero}
-                  preload
-                />
+          mainProject ? (
+            <Link
+              href={`/project/${mainProject.slug}`}
+              className={`hero-visual ${styles.heroVisual}`}
+              data-cursor="project"
+            >
+              <div className={`hero-image ${styles.heroMedia}`}>
+                <div data-parallax="hero-image">
+                  <Image
+                    src={mainProject.image}
+                    alt={
+                      mainProject.slug === 'wetrack-app'
+                        ? 'WeTrack Kanban board with tasks organised into sprints'
+                        : `${mainProject.name} application interface`
+                    }
+                    width={1600}
+                    height={990}
+                    sizes={imageSizes.hero}
+                    preload
+                  />
+                </div>
               </div>
-            </div>
-            <div className="hero-image-caption">
-              <div>
-                <strong>{mainProject.name}</strong>
-                <span>A workspace for getting things done.</span>
+              <div className="hero-image-caption">
+                <div>
+                  <strong>{mainProject.name}</strong>
+                  <span>Selected project.</span>
+                </div>
+                <ArrowUpRightIcon size={24} aria-hidden="true" />
               </div>
-              <ArrowUpRightIcon size={24} aria-hidden="true" />
-            </div>
-          </Link>
+            </Link>
+          ) : (
+            <p>Featured projects will appear here.</p>
+          )
         }
         nextVisual={
-          <Link
-            href={`/project/${secondaryProject.slug}`}
-            className={`hero-visual ${styles.heroVisual}`}
-            data-cursor="project"
-          >
-            <div className={`hero-image ${styles.heroMedia}`}>
-              {/* Replace this placeholder with the supplied project image. */}
-              <div className={styles.heroPlaceholder}>
-                <span className={styles.placeholderWindow} aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </span>
-                <span>Preview coming soon</span>
+          secondaryProject ? (
+            <Link
+              href={`/project/${secondaryProject.slug}`}
+              className={`hero-visual ${styles.heroVisual}`}
+              data-cursor="project"
+            >
+              <div className={`hero-image ${styles.heroMedia}`}>
+                {/* Replace this placeholder with the supplied project image. */}
+                <div className={styles.heroPlaceholder}>
+                  <span className={styles.placeholderWindow} aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                  <span>Preview coming soon</span>
+                </div>
               </div>
-            </div>
-            <div className="hero-image-caption">
-              <div>
-                <strong>{secondaryProject.name}</strong>
-                <span>Project preview coming soon.</span>
+              <div className="hero-image-caption">
+                <div>
+                  <strong>{secondaryProject.name}</strong>
+                  <span>Project preview coming soon.</span>
+                </div>
+                <ArrowUpRightIcon size={24} aria-hidden="true" />
               </div>
-              <ArrowUpRightIcon size={24} aria-hidden="true" />
-            </div>
-          </Link>
+            </Link>
+          ) : null
         }
       />
 
@@ -119,37 +133,35 @@ export default function HomePage() {
 
         <div className={styles.bentoGrid}>
           <div className={styles.primaryProject}>
-            <ProjectCard
-              project={mainProject}
-              featured
-              index={1}
-              sizes={imageSizes.homePrimary}
-              parallaxTravel={1.5}
-            />
+            {mainProject && (
+              <ProjectCard
+                project={mainProject}
+                featured
+                index={1}
+                sizes={imageSizes.homePrimary}
+                parallaxTravel={1.5}
+              />
+            )}
           </div>
           <div className={styles.secondaryProject}>
-            <ProjectCard
-              project={secondaryProject}
-              index={2}
-              sizes={imageSizes.homeSecondary}
-              parallaxTravel={1}
-            />
+            {secondaryProject && (
+              <ProjectCard
+                project={secondaryProject}
+                index={2}
+                sizes={imageSizes.homeSecondary}
+                parallaxTravel={1}
+              />
+            )}
           </div>
-          <Link href="/engineering" className={styles.engineeringTeaser} data-cursor="link">
-            <span className={styles.teaserKicker}>Architecture / Small pieces</span>
-            <h3>How the pieces fit.</h3>
-            <p>Architecture notes for this portfolio and selected project walkthroughs.</p>
-            <span className={styles.teaserAction}>
-              Explore engineering <ArrowUpRightIcon size={18} aria-hidden="true" />
-            </span>
-          </Link>
           <div className={styles.additionalProject}>
-            <ProjectCard
-              project={additionalProject}
-              index={3}
-              sizes={imageSizes.homeAdditional}
-              parallaxTravel={1}
-            />
+            {additionalProject && (
+              <ProjectCard
+                project={additionalProject}
+                index={3}
+                sizes={imageSizes.homeAdditional}
+                parallaxTravel={1}
+              />
+            )}
           </div>
           <Link href="/design" className={styles.designTeaser} data-cursor="link">
             <span className={styles.teaserKicker}>Interface studies</span>
@@ -175,7 +187,15 @@ export default function HomePage() {
         </Link>
       </section>
 
-      <EngineeringHighlights />
+      {content.socialLinks.length > 0 && (
+        <nav className="hero-actions" aria-label="Published social links">
+          {content.socialLinks.map(({ label, url }) => (
+            <ExternalLink key={label} href={url} className="text-link">
+              {label}
+            </ExternalLink>
+          ))}
+        </nav>
+      )}
 
       <Experience />
 

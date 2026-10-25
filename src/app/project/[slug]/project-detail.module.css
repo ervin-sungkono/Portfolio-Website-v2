@@ -63,6 +63,19 @@
   object-position: center;
 }
 
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+  }
+}
+
 .sidebar,
 .projectStory {
   min-width: 0;
@@ -140,6 +153,60 @@
 
 .implementationLink {
   margin-top: var(--space-5);
+}
+
+.contents {
+  margin-top: var(--space-8);
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+
+  a {
+    min-height: 2.75rem;
+    padding-block: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--muted);
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+}
+
+.decisions {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.decision {
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--line);
+
+  h3 {
+    margin: 0 0 var(--space-4);
+  }
+
+  p {
+    color: var(--muted);
+    font-size: var(--text-body);
+    line-height: 1.85;
+  }
+}
+
+.nextStep {
+  margin-top: var(--space-8);
+  padding: var(--space-6);
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 var(--radius) var(--radius) 0;
+
+  h3 {
+    margin: 0 0 var(--space-3);
+  }
+
+  p {
+    margin: 0;
+  }
 }
 
 .technicalChapter > :global(.walkthrough) {

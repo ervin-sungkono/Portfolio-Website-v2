@@ -1,0 +1,13 @@
+.cms-editor .cms-editor-category-panel {
+  .cms-editor-order-field {
+    max-width: 12rem;
+  }
+}
+
+@media (width >= 48rem) {
+  .cms-editor .cms-editor-category-panel {
+    .cms-editor-category-row {
+      grid-template-columns: minmax(5rem, 0.65fr) minmax(0, 1.8fr) minmax(7rem, 0.6fr) auto;
+    }
+  }
+}

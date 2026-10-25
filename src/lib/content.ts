@@ -1,25 +1,53 @@
 import projectData from '@/content/projects.json';
 import designData from '@/content/designs.json';
+import { getPublicContent } from '@/lib/cms/public';
+import { profile } from '@/content/profile';
+import { site } from '@/lib/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
-export type Project = (typeof projectData)[number];
+export type Project = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  image: string;
+  topics: string[];
+  category: string;
+  source: string | null;
+  demo: string | null;
+  featured?: boolean;
+  details?: string;
+  gallery?: string[];
+  categories?: string[];
+  tags?: string[];
+};
 export type Design = (typeof designData)[number];
 
-// One content boundary for pages. CMS implementation belongs in phase 2.
-export const projects: readonly Project[] = projectData;
 export const designs: readonly Design[] = designData;
-export const featuredProjects = projects.slice(0, 3);
 
-export function findProject(slug: string) {
-  return projects.find((project) => project.slug === slug);
+export async function getProjects(): Promise<readonly Project[]> {
+  const remote = await getPublicContent();
+  return remote?.projects ?? projectData;
 }
 
-export function filterProjects(query: string, category: string) {
+export function selectFeaturedProjects(projects: readonly Project[]) {
+  return projects.filter((project, index) => project.featured ?? index < 3).slice(0, 3);
+}
+
+export async function findProject(slug: string) {
+  'use cache';
+  cacheTag(`project:${slug}`, 'projects', 'taxonomy');
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 });
+  return (await getProjects()).find((project) => project.slug === slug);
+}
+
+export function filterProjects(projects: readonly Project[], query: string, category: string) {
   const term = query.trim().toLowerCase();
   return projects.filter(
     (project) =>
-      (!category || project.category === category) &&
+      (!category || (project.categories ?? [project.category]).includes(category)) &&
       (!term ||
-        `${project.name} ${project.description} ${project.topics.join(' ')}`
+        `${project.name} ${project.description} ${project.topics.join(' ')} ${(project.tags ?? []).join(' ')}`
           .toLowerCase()
           .includes(term)),
   );
@@ -35,7 +63,7 @@ export {
   portfolioSourceRef,
 } from '@/content/engineering';
 
-export function relatedProjects(project: Project, limit = 2) {
+export function relatedProjects(projects: readonly Project[], project: Project, limit = 2) {
   // Shared technologies take priority, followed by projects in the same category.
   return projects
     .filter((candidate) => candidate.slug !== project.slug)
@@ -49,4 +77,17 @@ export function relatedProjects(project: Project, limit = 2) {
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(({ project: candidate }) => candidate);
+}
+
+export async function getSiteContent() {
+  const remote = await getPublicContent();
+  return (
+    remote?.site ?? {
+      schemaVersion: 1 as const,
+      siteTitle: site.title,
+      headline: 'Frontend Engineering.\nFrom UI to Integration.',
+      introduction: `I’m ${profile.name}, a software engineer at Samsung R&D Institute Indonesia with a focus on frontend development and interface design.`,
+      socialLinks: [],
+    }
+  );
 }

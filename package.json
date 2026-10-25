@@ -7,31 +7,37 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "lint:css": "stylelint \"src/**/*.css\"",
-    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test": "node --import ./tests/register-server-only.mjs --experimental-strip-types --test tests/*.test.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:cms:browser": "node scripts/test-cms-browser.mjs"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.8",
+    "@hookform/resolvers": "^5.2.2",
     "@phosphor-icons/react": "^2.1.10",
-    "@tsparticles/basic": "4.4.0",
-    "@tsparticles/engine": "4.4.0",
-    "@tsparticles/interaction-external-repulse": "4.4.0",
-    "@tsparticles/interaction-particles-links": "4.4.0",
-    "@tsparticles/plugin-interactivity": "4.4.0",
     "motion": "14.0.0",
-    "next": "16.4.0",
-    "nodemailer": "^10.1.0",
+    "next": "16.4.3",
+    "next-auth": "^5.0.0-beta.32",
+    "next-themes": "^0.4.6",
+    "nodemailer": "^10.2.1",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.91.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
+    "@stylistic/stylelint-plugin": "^5.3.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "eslint": "^10.13.0",
+    "eslint-config-next": "16.4.3",
+    "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.6.2",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
@@ -39,6 +45,14 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "next-auth": {
+      "nodemailer": "$nodemailer"
+    },
+    "@auth/core": {
+      "nodemailer": "$nodemailer"
+    }
   },
   "type": "module"
 }
