@@ -13,7 +13,9 @@ const HOVER_FRAME_GAP = 8;
 const INTERACTIVE_SELECTOR = 'a[href], button, [role="button"], [data-cursor]';
 
 function isNativeCursorRegion(element: Element) {
-  if (element.closest('input, textarea, select, iframe')) return true;
+  if (element.closest('input, textarea, select, iframe')) {
+    return true;
+  }
   const editable = element.closest('[contenteditable]');
   return editable !== null && editable.getAttribute('contenteditable')?.toLowerCase() !== 'false';
 }
@@ -24,7 +26,9 @@ function isUnavailable(element: Element) {
 
 function getInteractiveTarget(element: Element) {
   const target = element.closest(INTERACTIVE_SELECTOR);
-  if (!target || isUnavailable(target)) return null;
+  if (!target || isUnavailable(target)) {
+    return null;
+  }
   return target;
 }
 
@@ -56,7 +60,9 @@ export default function DesktopCursor() {
     };
 
     function stopTracking() {
-      if (frameId) window.cancelAnimationFrame(frameId);
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+      }
       frameId = 0;
     }
 
@@ -90,7 +96,9 @@ export default function DesktopCursor() {
     }
 
     function restoreNativeCursor() {
-      if (!visible) return;
+      if (!visible) {
+        return;
+      }
       visible = false;
       target = null;
       setHovered(false);
@@ -121,7 +129,9 @@ export default function DesktopCursor() {
           width: morphFrom.width + (destination.width - morphFrom.width) * eased,
           height: morphFrom.height + (destination.height - morphFrom.height) * eased,
         });
-        if (progress >= 1) morphing = false;
+        if (progress >= 1) {
+          morphing = false;
+        }
       } else {
         setFrame(destination);
       }
@@ -130,7 +140,9 @@ export default function DesktopCursor() {
     }
 
     function syncFrameToHitTarget() {
-      if (!visible) return false;
+      if (!visible) {
+        return false;
+      }
 
       const hit = document.elementFromPoint(clientX, clientY);
       if (hit && (isNativeCursorRegion(hit) || isUnavailable(hit))) {
@@ -163,7 +175,9 @@ export default function DesktopCursor() {
 
     function refreshAtPointer() {
       if (syncFrameToHitTarget()) {
-        if (!frameId) frameId = window.requestAnimationFrame(trackTarget);
+        if (!frameId) {
+          frameId = window.requestAnimationFrame(trackTarget);
+        }
       } else {
         stopTracking();
       }
@@ -195,24 +209,33 @@ export default function DesktopCursor() {
     }
 
     function over(event: PointerEvent) {
-      if (event.pointerType === 'mouse' && visible) refreshAtPointer();
+      if (event.pointerType === 'mouse' && visible) {
+        refreshAtPointer();
+      }
     }
 
     function out(event: PointerEvent) {
-      if (event.relatedTarget === null || event.relatedTarget instanceof HTMLIFrameElement)
+      if (event.relatedTarget === null || event.relatedTarget instanceof HTMLIFrameElement) {
         restoreNativeCursor();
+      }
     }
 
     function viewportChanged() {
-      if (visible) refreshAtPointer();
+      if (visible) {
+        refreshAtPointer();
+      }
     }
 
     function mediaChanged() {
-      if (!media.matches) restoreNativeCursor();
+      if (!media.matches) {
+        restoreNativeCursor();
+      }
     }
 
     function visibilityChanged() {
-      if (document.visibilityState !== 'visible') restoreNativeCursor();
+      if (document.visibilityState !== 'visible') {
+        restoreNativeCursor();
+      }
     }
 
     document.addEventListener('pointermove', move, { passive: true });

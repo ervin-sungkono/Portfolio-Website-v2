@@ -16,7 +16,6 @@ const navigation: NavigationItem[] = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Projects', href: '/project' },
-  { label: 'Engineering', href: '/engineering' },
   { label: 'Design', href: '/design' },
 ];
 
@@ -28,7 +27,9 @@ export function Header() {
 
   useEffect(() => {
     const element = header.current;
-    if (!element) return;
+    if (!element) {
+      return;
+    }
     const measure = () => {
       document.documentElement.style.setProperty(
         '--measured-header-height',
@@ -45,7 +46,9 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setOpen(false);
@@ -61,7 +64,9 @@ export function Header() {
       ref={header}
       className="site-header"
       onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false);
+        }
       }}
     >
       <div className="container site-header-inner">

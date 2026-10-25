@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAnimate, useInView, useReducedMotion } from 'motion/react';
 import type { RevealProps } from './type';
 import './style.css';
@@ -13,7 +13,9 @@ export function Reveal({ children, className, delay = 0 }: RevealProps) {
   const playback = useRef<{ complete(): void } | null>(null);
 
   useEffect(() => {
-    if (!inView || reduceMotion !== false) return;
+    if (!inView || reduceMotion !== false) {
+      return;
+    }
     const animation = animate(
       scope.current,
       { opacity: [0, 1], y: [10, 0] },

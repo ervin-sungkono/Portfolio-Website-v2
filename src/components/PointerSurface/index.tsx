@@ -22,10 +22,13 @@ export function PointerSurface({ children, className }: PointerSurfaceProps) {
       reduceMotion !== false ||
       event.pointerType !== 'mouse' ||
       !window.matchMedia('(min-width: 64rem) and (hover: hover) and (pointer: fine)').matches
-    )
+    ) {
       return;
+    }
     const bounds = ref.current?.getBoundingClientRect();
-    if (!bounds) return;
+    if (!bounds) {
+      return;
+    }
     const x = Math.max(-0.5, Math.min(0.5, (event.clientX - bounds.left) / bounds.width - 0.5));
     const y = Math.max(-0.5, Math.min(0.5, (event.clientY - bounds.top) / bounds.height - 0.5));
     rotateX.set(-y * 8);

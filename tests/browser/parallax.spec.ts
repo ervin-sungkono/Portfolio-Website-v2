@@ -26,7 +26,9 @@ function hero(page: Page) {
 
 async function box(locator: Locator): Promise<Box> {
   const bounds = await locator.boundingBox();
-  if (!bounds) throw new Error('Expected a visible parallax element with a bounding box.');
+  if (!bounds) {
+    throw new Error('Expected a visible parallax element with a bounding box.');
+  }
   return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
 }
 
@@ -300,7 +302,9 @@ test('keeps a keyboard-focused hero project active until focus moves', async ({ 
   await expect(scene).toHaveAttribute('data-pinned', 'true');
 
   for (let attempt = 0; attempt < 24; attempt += 1) {
-    if (await firstLink.evaluate((element) => element === document.activeElement)) break;
+    if (await firstLink.evaluate((element) => element === document.activeElement)) {
+      break;
+    }
     await page.keyboard.press('Tab');
   }
   await expect(firstLink).toBeFocused();

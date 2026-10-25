@@ -27,15 +27,21 @@ export function ScrollHero({ copy, visual, nextVisual }: ScrollHeroProps) {
   useMotionValueEvent(scrollYProgress, 'change', (progress) => {
     const active = progress >= 0.5;
     // Only the project boundary updates React; continuous fading uses Motion values.
-    if (active !== nextActive) setNextActive(active);
+    if (active !== nextActive) {
+      setNextActive(active);
+    }
   });
 
   useEffect(() => {
     const element = stage.current;
-    if (!element) return;
+    if (!element) {
+      return;
+    }
     function measure() {
       const current = stage.current;
-      if (!current) return;
+      if (!current) {
+        return;
+      }
       const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
       setFits(current.offsetHeight <= window.innerHeight - header + 1);
     }
@@ -61,7 +67,9 @@ export function ScrollHero({ copy, visual, nextVisual }: ScrollHeroProps) {
             className="scroll-hero-slide"
             onFocusCapture={() => setFocusedSlide(0)}
             onBlurCapture={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) setFocusedSlide(null);
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setFocusedSlide(null);
+              }
             }}
             style={{
               opacity: holdVisual ? Number(!showNext) : firstOpacity,
@@ -77,7 +85,9 @@ export function ScrollHero({ copy, visual, nextVisual }: ScrollHeroProps) {
             className="scroll-hero-slide"
             onFocusCapture={() => setFocusedSlide(1)}
             onBlurCapture={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) setFocusedSlide(null);
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setFocusedSlide(null);
+              }
             }}
             style={{
               opacity: holdVisual ? Number(showNext) : nextOpacity,

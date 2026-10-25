@@ -3,10 +3,8 @@ import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { profile, skills } from '@/content/profile';
 import { Experience } from '@/components/Experience';
 import { ExternalLink } from '@/components/common/ExternalLink';
-import { EngineeringHighlights } from '@/components/EngineeringHighlights';
 import { pageMetadata, site } from '@/lib/metadata';
 import styles from './about.module.css';
-import avatar from '@public/images/hero-image.png';
 import bnccLogo from '@public/images/bncc-logo-default.png';
 import faveLogo from '@public/images/fave-logo-default.png';
 
@@ -69,18 +67,7 @@ export default function AboutPage() {
             View Resume <ArrowUpRightIcon size={19} aria-hidden="true" />
           </ExternalLink>
         </div>
-        <div className={styles.avatarFrame}>
-          <Image
-            src={avatar}
-            alt={`${profile.name}’s original illustrated portfolio avatar`}
-            width={684}
-            height={722}
-            sizes="(min-width: 48rem) 24rem, min(20rem, calc(93.3333vw - 3.6667rem))"
-            preload
-          />
-        </div>
       </section>
-      <EngineeringHighlights />
       <Experience detailed />
       <section className={`section ${styles.skills}`}>
         <div className={styles.skillsHeading}>

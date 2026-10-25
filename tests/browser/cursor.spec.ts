@@ -10,7 +10,9 @@ const dot = (page: Page) => page.locator('[data-cursor-dot]');
 
 async function moveToFraction(page: Page, target: Locator, xRatio = 0.5, yRatio = 0.5) {
   const box = await target.boundingBox();
-  if (!box) throw new Error('Expected the cursor target to have a visible bounding box.');
+  if (!box) {
+    throw new Error('Expected the cursor target to have a visible bounding box.');
+  }
 
   const point = {
     x: Math.round(box.x + box.width * xRatio),
@@ -27,7 +29,9 @@ async function expectFrameToMatch(page: Page, target: Locator) {
         frame(page).boundingBox(),
         target.boundingBox(),
       ]);
-      if (!frameBox || !targetBox) return false;
+      if (!frameBox || !targetBox) {
+        return false;
+      }
 
       return (
         Math.abs(frameBox.x - (targetBox.x - 8)) <= 2 &&
@@ -255,7 +259,9 @@ test('uses the nearest button for nested span and SVG pointer targets', async ({
   }
 
   const box = await button.boundingBox();
-  if (!box) throw new Error('Expected the fixture button.');
+  if (!box) {
+    throw new Error('Expected the fixture button.');
+  }
   const outside = { x: Math.round(box.x - 4), y: Math.round(box.y + box.height / 2) };
   await page.mouse.move(outside.x, outside.y);
   await expectIdleCursorAt(page, outside);
