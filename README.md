@@ -1,8 +1,8 @@
 # Ervin Cahyadinata Sungkono's Portfolio
 
-Phase 1 rework of the original portfolio using Next.js 16.4 App Router, React, and strict TypeScript. Existing projects, artwork, public routes, CV, social links, and team credits are preserved. Pages render on the server with focused client components for navigation, contact, and decorative motion.
+Portfolio built with Next.js 16.4 App Router, React, and strict TypeScript. Public pages render on the server with focused client components for navigation, contact, and decorative motion. The owner can manage published projects, homepage copy, taxonomy, and images through a GitHub-backed `/admin` workspace without a database or separate backend.
 
-Public component work starts from `dev` after [PR #2](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2) merged. The CMS feature is reviewed separately in [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3). See the [dated repository snapshot](docs/verification.md#repository-snapshot--23-october-2026) before treating recorded results as current checks.
+Development starts from `dev`. The previous Neon-based [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3) was closed without merging; this implementation follows the separate public GitHub content repository architecture. See [verification](docs/verification.md) for dated checks and remaining integration work.
 
 ## Development
 
@@ -14,10 +14,11 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Production credentials are only needed for live contact integration. The available checks are:
+Production credentials are only needed for live contact integration. ESLint applies the Next.js Core Web Vitals and TypeScript recommendations; Stylelint applies the standard CSS rules. Both enforce LF line endings and final newlines, while `.editorconfig` and `.gitattributes` set the repository defaults. The available checks are:
 
 ```sh
 npm run typecheck
+npm run lint
 npm run lint:css
 npm test
 npm run build
@@ -67,6 +68,10 @@ The documentation was consolidated on **23 October 2026 (Asia/Jakarta)**. Each t
 
 ## Updating content
 
-Edit `src/content/profile.ts`, `projects.json`, `designs.json`, and `engineering.ts`; collection access belongs in `src/lib/content.ts`. Featured projects are the first three entries in `projects.json`. Keep public slugs, original assets/links, team attribution, the full name **Ervin Cahyadinata Sungkono**, and the public origin **https://ervincs.com** consistent.
+Without CMS configuration, the site reads `src/content/profile.ts`, `projects.json`, `designs.json`, and `engineering.ts`. With `GITHUB_ADMIN_ID` and `GITHUB_REPO` set, runtime GitHub content replaces projects and homepage copy through `src/lib/content.ts`. Configured storage errors do not silently fall back to bundled projects. Designs, verified identity/experience, engineering studies, CV, and team attribution remain application content.
 
-Contact variables and provider behavior are documented in [contact integration](docs/architecture.md#contact-integration) and `.env.example`. CMS work and professional content expansion remain deferred. Read [AGENTS.md](AGENTS.md) before implementation work.
+Follow [GitHub CMS setup and operation](docs/architecture.md#github-cms) for the five environment variables, OAuth setup, safe initialization, and publishing. For a legacy content review, use the [LLM mapping instructions](docs/web-assets-migration-agent.md). The content repository must be separate from the application and must not be a Vercel deployment source. Content publishes invalidate ISR without redeploying.
+
+Run `npm run test:cms:browser` for the isolated production CMS workflow; it uses simulated GitHub storage and encrypted test sessions, never a real GitHub write or email. It replaces the local `.next` build with a fixture build; rebuild normally before development or release.
+
+Contact variables and provider behavior are documented in [contact integration](docs/architecture.md#contact-integration) and `.env.example`. Professional content expansion remains deferred. Read [AGENTS.md](AGENTS.md) before implementation work.

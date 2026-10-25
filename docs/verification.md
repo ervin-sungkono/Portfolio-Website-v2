@@ -1,6 +1,63 @@
 # Verification and remaining work
 
-Documentation reconciled on **23 October 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+Documentation reconciled on **25 October 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+
+## GitHub CMS implementation — 25 October 2026
+
+Work started from local and remote `dev` at `fa740ee632d78a0ff0827cdc0bbd63524d34b59c`, verified through GitHub's branch API. The working tree already contained substantial public-component, lint, documentation, and asset/route deletions; those changes were retained. Implementation is on `codex/github-portfolio-cms`. A live read confirmed that the earlier Neon/Blob [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3) is **closed and unmerged**; its database architecture is not part of this implementation.
+
+The implemented story is `/admin` → GitHub owner session → shared validation → configured public content repository commit → ISR invalidation → public content rendering. [Architecture and setup](architecture.md#github-cms) own the configuration, storage, publishing, migration, and rollback instructions. This section records evidence, not a production release approval.
+
+### Local checks
+
+- Node.js **24.22.1** was used for the clean `npm ci` and the full unit/service suite. The existing project dev server initially locked SWC; it was stopped before the successful installation. The explicit `server-only` package was removed as requested; Next.js's build marker remains, with a Node-only test resolver.
+- At initial CMS implementation, **38/38 unit/service tests passed**: 11 existing contact/offline-mail cases, 5 authentication cases, 5 publishing/HTTP/cache cases, 11 GitHub storage cases, and 6 one-off migration-tool cases. The migration-tool cases were removed with that utility after publication; current check counts are listed under [repeatable checks](#repeatable-checks). GitHub requests are simulated in service tests; those tests send no real repository write or email.
+- Authentication coverage includes immutable owner-ID/provider restrictions, rejection of client credential updates, allowlisted session JSON, expired/wrong-owner sessions, and encrypted Auth.js cookie round-trips. It does not exercise GitHub's hosted OAuth consent/callback exchange.
+- Storage coverage includes public reads on a non-`main` default branch, strict/future schemas, media signatures, custom author/committer bootstrap, safe partial initialization, private/unrelated repositories, stale and concurrent SHA conflicts, registry integrity, upload bytes/deduplication, and rate-limit errors.
+- Publishing coverage confirms commit-before-invalidation, no invalidation after failed writes, retained commit success after cache failure, expected path/tag mapping, same-origin mutations, private error responses, and streamed request limits.
+- Production compilation and TypeScript passed under Node.js 24.22.1 with Next.js 16.4.3 and the dummy CAPTCHA key. CSS lint passed. Whole-tree ESLint passed with two existing warnings (contact effect synchronization and an unused motion prop). The production dependency audit returned **zero vulnerabilities** after the Next.js/Nodemailer security patches; npm's full install audit still reported one moderate development dependency finding.
+- The isolated CMS production build and **4/4 Chromium workflow tests passed**, using local Chrome because the matching Playwright headless-shell executable was absent. They verify real editor forms → protected API → simulated GitHub commits → public ISR refresh, prior 404 recovery and published pages without JavaScript, unpublish/sitemap/delete, PNG upload, session/API restrictions, and absence of duplicate panel IDs. They caught and fixed duplicate React panel keys that had appended stale form instances during editing.
+- Editor checks exercised Projects, Site Profile, Categories, Technologies, and Images at **320, 390, 820, 1024, and 1440 px in both themes**, plus 200% root-font samples at 320/820, visible keyboard focus, and first-error focus. These are reflow/root-font checks, not actual browser zoom or complete WCAG verification. Light-theme screenshots were captured during the sweep; normal test-output cleanup can replace them.
+- After restoring the ordinary non-fixture production build, the full public suite passed **26/26**. The discovered Next.js PPR behavior is documented in [architecture](architecture.md#github-cms): runtime `notFound()` produced blank no-JavaScript recovery, and a rewrite replaced a supplied 404 with 200. The final proxy returns a complete buffered recovery document with explicit 404/noindex/no-store.
+- Final whole-repository Prettier and Git whitespace checks passed. All **29 local Markdown file/fragment references** in README, AGENTS, and the three owning documents resolved. No remote CI result is claimed.
+
+### CMS component organization follow-up — 25 October 2026
+
+The editor's six flat child component files were reorganized into `CategoriesPanel/`, `CmsMessage/`, `ImagesPanel/`, `ProjectPanel/`, `SiteProfilePanel/`, and `TechnologiesPanel/`, each with `index.tsx`, `type.ts`, and `style.css`. Shared form styles remain at the editor level; panel-specific rules are colocated and scoped. Component props and editor state types now live in type files. This changes organization and style ownership, not publishing behavior.
+
+Fresh Node.js 24 checks for this refactor passed TypeScript, scoped ESLint, scoped Stylelint, formatting, the isolated production build, and all **4 CMS browser tests**, including the five-width/both-theme/reflow/keyboard sweep. The ordinary non-fixture build was restored afterward. Earlier public-suite and unit results above are not claimed as reruns for this structural change.
+
+### Migration dry-run against public source
+
+The then-available one-off read-only command `npm run cms:migrate-web-assets -- --source ervin-sungkono/web-assets --branch master --dry-run --output ./migration-output` succeeded under Node.js 24.22.1 against source commit **`3a62ce04163dfdc8d6e328df385ba538762555b9`**. It reported `canWrite: true`, **zero errors, missing metadata, or invalid references**, 17 confirmed existing slug mappings, 4 Frontend Mentor challenge entries retained in the aggregate project's report/gallery, 25 optimized raster images, and 46 proposed output files. The `All` filter, legacy SVG icons, and two unreferenced images were reported as skipped. Repository creation years are explicitly recorded as proxies because legacy JSON has no year field.
+
+Dry-run wrote neither a bundle nor a report file and did not mutate GitHub. At the time, migration-specific tests also checked staging/overwrite rejection and source preservation; those tests and the one-off tool were removed after publication. The command and its output are historical evidence, not a currently available npm script.
+
+### Authorized web-assets publication
+
+The owner subsequently requested writing the migration to `web-assets/master` and preserving the old master tree on a new `legacy` branch, then explicitly chose to retain compatibility asset URLs during cutover. The final validated bundle was regenerated from a local clone of the captured source and repository creation metadata read through GitHub after unauthenticated REST requests hit the rate limit.
+
+- [`master`](https://github.com/ervin-sungkono/web-assets/tree/master) now points to migration commit [`ce10d45dc0200b5ff9c146a4f2c43e2b873171ad`](https://github.com/ervin-sungkono/web-assets/commit/ce10d45dc0200b5ff9c146a4f2c43e2b873171ad), whose parent is the original `3a62ce0` commit.
+- [`legacy`](https://github.com/ervin-sungkono/web-assets/tree/legacy) points exactly to **`3a62ce04163dfdc8d6e328df385ba538762555b9`**, preserving the complete prior tree and history. Both refs were updated by one atomic push with explicit expected-head checks.
+- GitHub confirmed both author and committer as **`Portfolio CMS <cms@portfolio.local>`**. The old `data/` JSON is available on `legacy`; the 35 old `images/` and `icons/` files remain unchanged on `master`. Git object comparison confirmed no differences in either compatibility directory.
+- The new master tree has **81 files**: the 46 generated README/content/media files plus 35 compatibility assets. It includes 17 project JSON documents and 25 optimized raster images. README records the numeric-ID → slug audit mapping and rollback guidance.
+- Read-back validation fetched all 20 published JSON documents, compared their bytes to the reviewed bundle, parsed shared Zod schemas, and verified all 25 referenced images with the server's reference/signature/size checks. An existing `master/images/WeTrack-App.png` URL returned HTTP 200 with identical bytes.
+
+The application deployment and OAuth configuration were not changed. Keep the compatibility paths and `legacy` branch until that cutover has been separately verified. Roll back by reviewing and reverting the migration commit, or restoring the prior reader to `legacy`; do not blindly reset a branch containing later publications. Actual rollback execution remains untested.
+
+### Mapping guide and cleanup — 25 October 2026
+
+After the authorized publication and read-back checks, the one-off `scripts/migrate-web-assets.ts` CLI, its `src/lib/cms/migration.ts` conversion module, and six utility-specific tests were removed. No application runtime imports depended on them. [The Markdown guide](web-assets-migration-agent.md) instructs an LLM agent to compare the read-only `legacy` source with existing `master`, map facts to the shared Zod schemas, and report unresolved fields before any separately authorized edits. No repository content or CMS runtime behavior changed in this cleanup.
+
+After cleanup, the Node.js 24 unit/service suite passed **32/32**, strict TypeScript passed, and the normal production build passed with the `server-only` package absent from `node_modules`; Next.js continues to resolve the source boundary markers. Scoped Prettier, package/lock dependency-map consistency, and `git diff --check` passed. A CMS browser-suite retry completed its fixture build but produced no test results and had no Node or Chromium process left; it was interrupted, so the earlier **4/4** result remains the latest successful browser evidence. The normal production build was restored afterward. npm's offline uninstall could not resolve registry metadata, so a fresh `npm ci` after the lockfile edit remains unverified.
+
+### Integration limits
+
+The owner selected **isolated local workflow verification** for the CMS. The local environment has no CMS OAuth application or persistent content-source configuration. Browser tests use fake GitHub responses and encrypted fixture sessions; they do not establish real consent, token revocation, OAuth-authorized CMS API repository creation/writes, contribution-graph attribution, or hosted Vercel cache propagation. The separately authorized Git CLI migration and its read-back checks are recorded above.
+
+The single-owner MVP protects per-file blob versions. Simultaneous writes to different interdependent files (for example deleting a category while another tab adds that category to a project) are not a repository-wide transaction and can require manual reference repair. Use one publishing tab for taxonomy changes; atomic multi-file publication remains deferred rather than implying that target-file SHA checks prevent every cross-file race.
+
+No merge, production promotion, DNS/domain update, production-secret update, or live email test was performed. Current image delivery remains unoptimized. Real browser zoom, assistive technology, forced colors, real devices, field performance, and production indexing retain the limits below.
 
 ## Repository snapshot — 23 October 2026
 
@@ -23,21 +80,29 @@ From refreshed `origin/dev` at `87ca9cd`, reusable public links, cards, motion w
 
 The browser suite does not establish full responsive or accessibility coverage. Next.js 16.4.0 reported a known security vulnerability; a dependency upgrade belongs in a separate reviewed change.
 
+## Lint tooling — 25 October 2026
+
+ESLint 10.13 uses the Next.js 16.4 Core Web Vitals and TypeScript configurations, with Prettier formatting rules disabled. It enforces LF endings, final newlines, and no repeated blank lines. The React `set-state-in-effect` rule is a warning while the current browser-state synchronization effects remain. Stylelint 17.16 uses the standard config and `@stylistic` LF/final-newline rules. Local checks with Node.js 22.14: ESLint completed with no errors and six warnings (three effect synchronizations and three unused identifiers/imports); CSS lint passed. Scoped Prettier checks and `git diff --check` passed. The warning on `src/app/about/page.tsx` is in the existing concurrent edit and was left untouched.
+
+Installing ESLint 10 emitted peer-dependency override warnings because some plugins in `eslint-config-next` still declare peer support only through ESLint 9. The installed Next.js guide documents ESLint 10 compatibility and notes those plugin peer ranges may warn. A local `npm ci` attempt reached cleanup but Windows returned `EPERM` while unlinking Next's SWC binary; a follow-up `npm install` restored `node_modules`. A clean install on the CI runner remains unverified. Unit tests, typechecking, the build, and remote CI were not run for this tooling change.
+
 ## Repeatable checks
 
 Use Node.js 24 and the committed lockfile. Setup and browser commands are in [README](../README.md#development).
 
-| Command                | Scope                                                                                                                       |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `npm run typecheck`    | Strict application TypeScript. The application tsconfig excludes `tests`.                                                   |
-| `npm run lint:css`     | Stylelint across `src/**/*.css`, using `stylelint.config.cjs`.                                                              |
-| `npm test`             | 11 current unit tests: validation, boundaries, streamed JSON, plain-text formatting, and offline Nodemailer JSON transport. |
-| `npm run build`        | Production build and static route generation.                                                                               |
-| `npm run format:check` | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                 |
-| `git diff --check`     | Whitespace in the relevant diff.                                                                                            |
-| `npm run test:browser` | 26 current Chromium regressions against a production build, not the dev server.                                             |
+| Command                    | Scope                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run lint`             | ESLint with Next.js Core Web Vitals and TypeScript recommendations, LF/final-newline, and empty-line checks.                   |
+| `npm run typecheck`        | Strict application TypeScript. The application tsconfig excludes `tests`.                                                      |
+| `npm run lint:css`         | Stylelint across `src/**/*.css`, using `stylelint-config-standard` plus LF and final-newline rules from `@stylistic`.          |
+| `npm test`                 | 32 unit/service tests covering contact, authentication, GitHub storage, and publishing/cache boundaries. Use Node.js 24.       |
+| `npm run build`            | Production build and static route generation.                                                                                  |
+| `npm run format:check`     | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                    |
+| `git diff --check`         | Whitespace in the relevant diff.                                                                                               |
+| `npm run test:browser`     | 26 current Chromium regressions against a production build, not the dev server.                                                |
+| `npm run test:cms:browser` | Isolated GitHub CMS production build and Chromium workflow; replaces `.next` with a fixture build. Rebuild normally afterward. |
 
-`.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, CSS lint, typechecking, unit tests, a dummy-CAPTCHA production build, Chromium installation, and browser tests on the configured main/rework push and PR events. This describes the workflow definition; inspect an actual run before claiming remote CI passed.
+`.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, ESLint, CSS lint, typechecking, unit tests, a dummy-CAPTCHA production build, Chromium installation, and browser tests on pull requests. This describes the current workflow definition; inspect an actual run before claiming remote CI passed.
 
 ### Browser suite coverage
 
@@ -116,4 +181,4 @@ These observations establish only that earlier local optimizer baseline. `images
 - **Release environment:** verify Vercel project/team, target commit/branch, runtime, public CAPTCHA build key, and preview/production headers. The historical legacy runtime was Node.js 18; current production settings need inspection.
 - **Public outcomes:** confirm current source/demo/CV/remote-image links and social preview artwork on the authorized hosted release. Search Console submission/indexing, selected canonicals, rankings, field Core Web Vitals, and production image costs remain unverified.
 
-CMS and professional-content expansion remain deferred scope, as recorded in [architecture](architecture.md#scope-and-stack). No merge, production promotion, DNS change, or production-secret change is authorized by this documentation update.
+Professional-content expansion remains deferred. GitHub CMS implementation and its current evidence are recorded above; live OAuth/staging publication and release verification remain separate work. No merge, production promotion, DNS change, or production-secret change is authorized by this documentation update.
