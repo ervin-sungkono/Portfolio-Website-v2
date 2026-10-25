@@ -25,16 +25,22 @@ export function ContactForm({ siteKey }: ContactFormProps) {
 
   useEffect(() => {
     function warnBeforeLeaving(event: BeforeUnloadEvent) {
-      if (dirty.current) event.preventDefault();
+      if (dirty.current) {
+        event.preventDefault();
+      }
     }
     window.addEventListener('beforeunload', warnBeforeLeaving);
     return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
   }, []);
 
   useEffect(() => {
-    if (!siteKey) return;
+    if (!siteKey) {
+      return;
+    }
     window.portfolioCaptchaReady = () => setCaptchaReady(true);
-    if (typeof window.grecaptcha?.render === 'function') setCaptchaReady(true);
+    if (typeof window.grecaptcha?.render === 'function') {
+      setCaptchaReady(true);
+    }
     return () => {
       delete window.portfolioCaptchaReady;
     };
@@ -47,8 +53,9 @@ export function ContactForm({ siteKey }: ContactFormProps) {
       !captchaElement.current ||
       !window.grecaptcha ||
       widget.current !== null
-    )
+    ) {
       return;
+    }
     widget.current = window.grecaptcha.render(captchaElement.current, {
       sitekey: siteKey,
       size: 'invisible',
@@ -74,9 +81,12 @@ export function ContactForm({ siteKey }: ContactFormProps) {
   }, [captchaReady, siteKey]);
 
   async function captchaToken() {
-    if (!siteKey) return '';
-    if (!window.grecaptcha || widget.current === null)
+    if (!siteKey) {
+      return '';
+    }
+    if (!window.grecaptcha || widget.current === null) {
       throw new Error('Verification is still loading. Please try again in a moment.');
+    }
     const id = widget.current;
     return new Promise<string>((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -100,7 +110,9 @@ export function ContactForm({ siteKey }: ContactFormProps) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submissionInFlight.current || !formRef.current) return;
+    if (submissionInFlight.current || !formRef.current) {
+      return;
+    }
     const form = formRef.current;
     const input = Object.fromEntries(new FormData(form));
     const result = validateContact(input);
@@ -134,7 +146,9 @@ export function ContactForm({ siteKey }: ContactFormProps) {
         if (body.errors) {
           setErrors(body.errors);
           const field = contactFields.find((key) => body.errors?.[key]);
-          if (field) form.querySelector<HTMLInputElement>(`[name="${field}"]`)?.focus();
+          if (field) {
+            form.querySelector<HTMLInputElement>(`[name="${field}"]`)?.focus();
+          }
         }
         throw new Error(body.message || 'Your message could not be sent. Please try again.');
       }
@@ -216,7 +230,9 @@ export function ContactForm({ siteKey }: ContactFormProps) {
             src="https://www.google.com/recaptcha/api.js?onload=portfolioCaptchaReady&render=explicit"
             strategy="afterInteractive"
             onReady={() => {
-              if (typeof window.grecaptcha?.render === 'function') setCaptchaReady(true);
+              if (typeof window.grecaptcha?.render === 'function') {
+                setCaptchaReady(true);
+              }
             }}
             onError={() =>
               setStatus('Verification could not load. Please refresh the page or use LinkedIn.')
