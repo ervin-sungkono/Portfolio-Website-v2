@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { profile, skills } from '@/content/profile';
 import { Experience } from '@/components/Experience';
-import { ExternalLink } from '@/components/ExternalLink';
+import { ExternalLink } from '@/components/common/ExternalLink';
 import { EngineeringHighlights } from '@/components/EngineeringHighlights';
 import { pageMetadata, site } from '@/lib/metadata';
 import styles from './about.module.css';

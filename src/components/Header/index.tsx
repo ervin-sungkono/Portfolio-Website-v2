@@ -4,7 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { ListIcon, XIcon, SunIcon, MoonIcon } from '@phosphor-icons/react';
+import { ListIcon, XIcon } from '@phosphor-icons/react';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { profile } from '@/content/profile';
 import lightLogo from '@public/images/favicon-light.png';
 import darkLogo from '@public/images/favicon-dark.png';
@@ -19,17 +20,9 @@ const navigation: NavigationItem[] = [
   { label: 'Design', href: '/design' },
 ];
 
-function syncThemeColor(theme: string) {
-  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
-    meta.removeAttribute('media');
-    meta.setAttribute('content', theme === 'dark' ? '#141619' : '#f8f9fb');
-  });
-}
-
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const header = useRef<HTMLElement>(null);
 
@@ -52,12 +45,6 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-    setTheme(currentTheme);
-    syncThemeColor(currentTheme);
-  }, [pathname]);
-
-  useEffect(() => {
     if (!open) return;
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -68,18 +55,6 @@ export function Header() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
-
-  function toggleTheme() {
-    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = theme;
-    setTheme(theme);
-    syncThemeColor(theme);
-    try {
-      localStorage.setItem('portfolio-theme', theme);
-    } catch {
-      /* Theme still works without storage. */
-    }
-  }
 
   return (
     <header
@@ -104,19 +79,7 @@ export function Header() {
           </span>
         </Link>
         <div className="site-header-actions">
-          <button
-            type="button"
-            className="icon-button"
-            aria-label={
-              theme
-                ? `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`
-                : 'Switch color theme'
-            }
-            onClick={toggleTheme}
-          >
-            <MoonIcon className="light-logo" size={20} aria-hidden="true" />
-            <SunIcon className="dark-logo" size={20} aria-hidden="true" />
-          </button>
+          <ThemeToggle />
           <button
             ref={menuButton}
             type="button"

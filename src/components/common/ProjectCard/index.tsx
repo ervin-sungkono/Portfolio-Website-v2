@@ -4,7 +4,7 @@ import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { projectStudies } from '@/lib/content';
 import { ExternalLink } from '../ExternalLink';
 import { Reveal } from '../Reveal';
-import { PointerSurface } from '../PointerSurface';
+import { PointerSurface } from '../../PointerSurface';
 import { ParallaxImage } from '../ParallaxImage';
 import { imageSizes } from '@/lib/image-sizes';
 import type { ProjectCardProps } from './type';

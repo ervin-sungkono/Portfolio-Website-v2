@@ -1,11 +1,11 @@
 # Portfolio agent handoff
 
-Updated **23 October 2026 (Asia/Jakarta)**. These instructions describe the rework and current documentation; inspect live repository state before continuing.
+Updated **25 October 2026 (Asia/Jakarta)**. Continue from `dev`, where rework PR #2 has merged; inspect live repository state before continuing.
 
 ## Repository and branch
 
 - Repository: https://github.com/ervin-sungkono/Portfolio-Website-v2.
-- Continue from `feat/portfolio-rework-phase-1`. [PR #2](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2) was confirmed open, draft, and targeting `main` on 23 October. The dated commit/remote snapshot is in `docs/verification.md`.
+- Start public component work from `dev`. The CMS feature is separate in [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3), targeting `dev`. Check the live PR state before relying on dated notes.
 - Check Git status, active branch, and remote head before editing. Preserve unrelated or concurrent work. Components use the directory and nested CSS organization described in the architecture and responsive/motion references; don't mistake historical checks for validation of later edits.
 - Existing explicit user instructions take precedence over project defaults. A dated document is not fresh Git, CI, deployment, or provider evidence.
 
@@ -43,11 +43,11 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - Stack: Next.js 16.4.0 App Router, React 19.2, strict TypeScript, native CSS/CSS Modules, and Motion 14.0.0. Read installed Next.js documentation before using its APIs. Avoid unrelated framework/dependency upgrades.
 - Follow KISS, DRY, and YAGNI. Prefer small functions and existing boundaries; add dependencies or abstractions only when the task needs them.
 - `src/app` owns routes/layouts/metadata/API handlers. Prefer Server Components for pages/content and focused client islands for browser interaction.
-- `src/components` owns reusable UI; `src/styles/globals.css` owns shared tokens/primitives. The current refactor colocates component `index.tsx`, `type.ts`, and prefixed/nested `style.css` in PascalCase directories; pages retain CSS Modules. Inspect and preserve this organization during related work.
+- `src/components` uses PascalCase component directories with `index.tsx`, a colocated style file, and `type.ts` when types are needed. Put reusable public links, controls, cards, and motion wrappers in `src/components/common`. `src/styles/globals.css` owns shared tokens/primitives; pages retain CSS Modules.
 - Use PascalCase for standalone React `.tsx`/`.jsx` filenames and component directories. Preserve established `index.tsx` directory entry points and framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx`.
 - `src/content` owns profile/engineering facts and JSON snapshots. Access project/design collections through `src/lib/content.ts`; do not duplicate lookups. Shared motion helpers currently live in `src/lib/motion`.
 - `src/lib/metadata.ts` owns public metadata; `src/lib/contact` owns validation and server-only providers. Preserve routes, slugs, assets, CV/social/source links, team credits, GET filters, and unknown-project 404/noindex behavior.
-- Keep `portfolioSourceRef` in `src/content/engineering.ts` on the rework branch while under review. Update it to `main` only after merge.
+- Preserve `portfolioSourceRef` in `src/content/engineering.ts` during this component-only change. Update source links in a separately reviewed change.
 - `next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Describe image delivery accordingly. Re-enabling transformations needs fresh validation; historical cache/source-selection results do not apply to current rendering.
 
 ## Identity, SEO, and scope
@@ -76,7 +76,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - Production credentials are only needed for live integration. Use `.env.example` and the architecture reference. Never print or commit secrets, and keep provider code server-only.
 - Preserve request validation, the 64 KiB streamed-body cap, abuse checks, duplicate-submission prevention, read-only pending fields, draft retention, and graceful LinkedIn fallback.
 - Automated tests must not send real email. Live delivery requires an explicit user request and verified hostname/provider setup; Gmail receipt remains unverified.
-- Current release scope is the rework branch/draft PR and preview. Do not merge, promote production, change DNS/domains, or modify production secrets without authorization. Do not repeat requests for authorization already provided in the session.
+- Current release scope is development and preview. CMS work remains separately reviewed in PR #3. Do not merge, promote production, change DNS/domains, or modify production secrets without authorization.
 - Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy setting; inspect the current production runtime and ensure it supports this migration before release.
 - Report changes, checks, and material limits. A preview does not prove production indexing, field Core Web Vitals, hosted image availability/cost, or real email receipt.
 

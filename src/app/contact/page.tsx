@@ -1,6 +1,6 @@
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { ContactForm } from '@/components/ContactForm';
-import { ExternalLink } from '@/components/ExternalLink';
+import { ExternalLink } from '@/components/common/ExternalLink';
 import { profile } from '@/content/profile';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './contact.module.css';

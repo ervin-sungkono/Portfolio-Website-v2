@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowUpRightIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { engineeringCapabilities, findProject } from '@/lib/content';
-import { Reveal } from '../Reveal';
+import { Reveal } from '../common/Reveal';
 import type { EngineeringCapability } from './type';
 import './style.css';
 

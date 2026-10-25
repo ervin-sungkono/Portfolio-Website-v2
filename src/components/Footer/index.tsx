@@ -7,7 +7,7 @@ import {
   InstagramLogoIcon,
 } from '@phosphor-icons/react/dist/ssr';
 import { profile } from '@/content/profile';
-import { ExternalLink } from '../ExternalLink';
+import { ExternalLink } from '../common/ExternalLink';
 import type { FooterSocial } from './type';
 import './style.css';
 

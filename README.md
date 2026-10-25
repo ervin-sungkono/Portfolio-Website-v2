@@ -2,7 +2,7 @@
 
 Phase 1 rework of the original portfolio using Next.js 16.4 App Router, React, and strict TypeScript. Existing projects, artwork, public routes, CV, social links, and team credits are preserved. Pages render on the server with focused client components for navigation, contact, and decorative motion.
 
-Development continues on `feat/portfolio-rework-phase-1` in [draft PR #2](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2), targeting `main`. See the [dated repository snapshot](docs/verification.md#repository-snapshot--23-october-2026) before treating recorded results as current checks.
+Public component work starts from `dev` after [PR #2](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2) merged. The CMS feature is reviewed separately in [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3). See the [dated repository snapshot](docs/verification.md#repository-snapshot--23-october-2026) before treating recorded results as current checks.
 
 ## Development
 
