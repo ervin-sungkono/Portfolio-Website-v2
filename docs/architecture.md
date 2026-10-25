@@ -1,6 +1,6 @@
 # Portfolio architecture and operations
 
-Reviewed against the repository on **23 October 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
+Reviewed for component organization on **25 October 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
 
 ## Scope and stack
 
@@ -21,7 +21,7 @@ CMS integration remains phase 2. There is no database, authentication, editor/ad
 | `src/lib/contact`        | Shared validation, bounded request parsing, and server-only provider integration.  |
 | `src/lib/image-sizes.ts` | Layout-specific image slot hints.                                                  |
 
-The current component layout uses PascalCase directories containing `index.tsx`, `type.ts`, and `style.css`; the shared scroll hook is at `src/lib/motion/use-scroll-motion.ts`. Component styles use prefixed selectors and native nesting, while page styles remain CSS Modules. The documentation pass did not rerun application checks; see [verification](verification.md) for the recorded coverage and its limits.
+Components use PascalCase directories with `index.tsx`, a colocated style file, and `type.ts` when needed. Reusable public links, controls, cards, and motion wrappers live in `src/components/common`; page-specific components remain in their existing directories. The shared scroll hook is at `src/lib/motion/use-scroll-motion.ts`. Component styles use prefixed selectors and native nesting, while page styles remain CSS Modules. See [verification](verification.md) for dated check coverage and its limits.
 
 Pages and content stay in Server Components. Header navigation, contact submission, motion, and particles use small Client Components. Server-rendered content passes into motion wrappers and remains visible without JavaScript. Continuous pointer and scroll coordinates use Motion values or engine state rather than React state on each frame. Media subscriptions, observers, event listeners, animation frames, and particle engines clean up when their scope ends.
 
@@ -112,6 +112,6 @@ Re-enabling optimization needs a focused change and fresh checks of source selec
 
 ## Release boundaries
 
-Work remains on the rework branch and draft PR #2. Preview work does not authorize merging, production promotion, DNS/domain changes, or production-secret changes. Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy-production setting; the current production runtime has not been inspected in this pass and must be checked before release.
+Public component work targets `dev`; CMS work is reviewed separately in PR #3. Preview work does not authorize merging, production promotion, DNS/domain changes, or production-secret changes. Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy-production setting; the current production runtime has not been inspected in this pass and must be checked before release.
 
 Production indexing, real Gmail receipt, field Core Web Vitals, external-link currency, and hosted image availability require their own evidence. See [remaining verification](verification.md#remaining-work) before making release claims.

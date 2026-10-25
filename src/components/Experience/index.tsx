@@ -1,8 +1,8 @@
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { profile } from '@/content/profile';
 import { monthLabel } from '@/lib/dates';
-import { ExternalLink } from '../ExternalLink';
-import { Reveal } from '../Reveal';
+import { ExternalLink } from '../common/ExternalLink';
+import { Reveal } from '../common/Reveal';
 import type { ExperienceProps } from './type';
 import './style.css';
 

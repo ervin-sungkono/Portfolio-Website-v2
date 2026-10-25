@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { MagnifyingGlassIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { featuredProjects, projects, filterProjects } from '@/lib/content';
-import { ProjectCard } from '@/components/ProjectCard';
+import { ProjectCard } from '@/components/common/ProjectCard';
 import { pageMetadata } from '@/lib/metadata';
 import { profile } from '@/content/profile';
 import styles from './projects.module.css';

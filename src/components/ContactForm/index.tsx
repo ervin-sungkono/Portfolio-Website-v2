@@ -4,6 +4,7 @@ import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRightIcon, CircleNotchIcon } from '@phosphor-icons/react';
 import { contactFields, validateContact, type ContactErrors } from '@/lib/contact/validation';
+import { ExternalLink } from '@/components/common/ExternalLink';
 import type { ContactFormProps } from './type';
 import './style.css';
 
@@ -237,14 +238,8 @@ export function ContactForm({ siteKey }: ContactFormProps) {
         {siteKey && (
           <>
             Protected by reCAPTCHA. Google’s{' '}
-            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">
-              Privacy Policy
-            </a>{' '}
-            and{' '}
-            <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">
-              Terms
-            </a>{' '}
-            apply.
+            <ExternalLink href="https://policies.google.com/privacy">Privacy Policy</ExternalLink>{' '}
+            and <ExternalLink href="https://policies.google.com/terms">Terms</ExternalLink> apply.
           </>
         )}
       </p>

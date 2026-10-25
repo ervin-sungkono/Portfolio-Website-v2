@@ -17,6 +17,12 @@ Only documentation checks apply to this pass: formatting of the three documents,
 
 Documentation validation passed for all five edited Markdown files: Prettier, 22 local file/fragment references, and scoped Git whitespace checks. No repository references to the four removed document paths remained.
 
+## Public component split — 25 October 2026
+
+From refreshed `origin/dev` at `87ca9cd`, reusable public links, cards, motion wrappers, and the theme control were organized under `src/components/common`. This was checked locally with Node.js 22.14: `npm ci`, typecheck, CSS lint, all 11 unit tests, whole-repository formatting, a production build using the documented dummy CAPTCHA key, the 25 existing Chromium browser tests, one new theme persistence/navigation browser test, and `git diff --check`. The first build paused after route generation with Next.js's security upgrade notice; an unchanged retry passed. CI's Node.js 24 run and deployed behavior remain separate evidence.
+
+The browser suite does not establish full responsive or accessibility coverage. Next.js 16.4.0 reported a known security vulnerability; a dependency upgrade belongs in a separate reviewed change.
+
 ## Repeatable checks
 
 Use Node.js 24 and the committed lockfile. Setup and browser commands are in [README](../README.md#development).
@@ -29,7 +35,7 @@ Use Node.js 24 and the committed lockfile. Setup and browser commands are in [RE
 | `npm run build`        | Production build and static route generation.                                                                               |
 | `npm run format:check` | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                 |
 | `git diff --check`     | Whitespace in the relevant diff.                                                                                            |
-| `npm run test:browser` | 25 current Chromium regressions against a production build, not the dev server.                                             |
+| `npm run test:browser` | 26 current Chromium regressions against a production build, not the dev server.                                             |
 
 `.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, CSS lint, typechecking, unit tests, a dummy-CAPTCHA production build, Chromium installation, and browser tests on the configured main/rework push and PR events. This describes the workflow definition; inspect an actual run before claiming remote CI passed.
 
@@ -42,6 +48,7 @@ Use Node.js 24 and the committed lockfile. Setup and browser commands are in [RE
 | `project-routes.spec.ts` | 2     | Known project rendering and unknown-project 404/noindex recovery without JavaScript.                                                                                    |
 | `cursor.spec.ts`         | 9     | Raw pointer/frame geometry, clearance and shape changes, rendered contrast, nested targets, reflow/removal, native fallbacks, reduced motion, touch, and no JavaScript. |
 | `parallax.spec.ts`       | 9     | Hero crossfade/reverse scroll, fixed target geometry, travel/coverage, focus hold, reduced motion, coarse pointers, oversized/narrow/short contexts, and no JavaScript. |
+| `theme.spec.ts`          | 1     | Theme destination label and persisted selection across public navigation.                                                                                               |
 
 The browser server uses `127.0.0.1:3103`, clears provider secrets, and does not reuse an existing server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. These tests do not send real email. The public dummy CAPTCHA key must be present at build time; rebuild with the real public key before any deployment that needs live CAPTCHA.
 

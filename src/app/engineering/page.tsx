@@ -6,9 +6,9 @@ import {
   portfolioSource,
   portfolioSourceRef,
 } from '@/lib/content';
-import { ExternalLink } from '@/components/ExternalLink';
+import { ExternalLink } from '@/components/common/ExternalLink';
 import styles from './engineering.module.css';
-import { Reveal } from '@/components/Reveal';
+import { Reveal } from '@/components/common/Reveal';
 import { pageMetadata } from '@/lib/metadata';
 import { profile } from '@/content/profile';
 
