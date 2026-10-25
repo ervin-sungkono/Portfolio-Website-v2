@@ -303,11 +303,31 @@ test('shared schemas reject unknown fields, unsafe URLs, and future versions', (
   );
   assert.equal(
     uploadMediaSchema.safeParse({
+      scope: 'project',
       slug: 'sample-project',
       filename: 'cover.png',
       mime: 'image/png',
       content: 'cG5n',
       extra: true,
+    }).success,
+    false,
+  );
+  assert.equal(
+    uploadMediaSchema.safeParse({
+      slug: 'sample-project',
+      filename: 'cover.png',
+      mime: 'image/png',
+      content: 'cG5n',
+    }).success,
+    false,
+  );
+  assert.equal(
+    uploadMediaSchema.safeParse({
+      scope: 'other',
+      slug: 'sample-project',
+      filename: 'cover.png',
+      mime: 'image/png',
+      content: 'cG5n',
     }).success,
     false,
   );
@@ -563,11 +583,13 @@ test('registry edits cannot orphan an existing project and concurrent writes ret
 test('media uploads require matching raster bytes and store binary bytes with immutable names', async () => {
   setupEnvironment();
   const state = createState();
+  addSeedContent(state);
   installGithub(state);
   const content = Buffer.from(png).toString('base64');
 
   await assert.rejects(
     uploadMedia('owner-token', {
+      scope: 'project',
       slug: '../escape',
       filename: 'cover.png',
       mime: 'image/png',
@@ -578,6 +600,31 @@ test('media uploads require matching raster bytes and store binary bytes with im
   await assert.rejects(
     uploadMedia('owner-token', {
       slug: 'sample-project',
+      filename: 'cover.png',
+      mime: 'image/png',
+      content,
+    }),
+    /scope/,
+  );
+  await assert.rejects(
+    uploadMedia('owner-token', {
+      scope: 'other',
+      slug: 'sample-project',
+      filename: 'cover.png',
+      mime: 'image/png',
+      content,
+    }),
+    /scope/,
+  );
+  assert.equal(
+    state.calls.some(({ init }) => (init.method ?? 'GET') !== 'GET'),
+    false,
+    'invalid or missing upload scope must not write to GitHub',
+  );
+  await assert.rejects(
+    uploadMedia('owner-token', {
+      scope: 'project',
+      slug: 'sample-project',
       filename: 'cover.jpg',
       mime: 'image/jpeg',
       content,
@@ -586,20 +633,31 @@ test('media uploads require matching raster bytes and store binary bytes with im
   );
 
   const uploaded = await uploadMedia('owner-token', {
-    slug: 'sample-project',
+    scope: 'project',
+    slug: 'technologies',
     filename: 'Cover image.png',
     mime: 'image/png',
     content,
   });
   const expectedDigest = createHash('sha256').update(png).digest('hex');
-  assert.ok(uploaded.path.startsWith(`media/projects/sample-project/${expectedDigest}-`));
+  assert.ok(uploaded.path.startsWith(`media/projects/technologies/${expectedDigest}-`));
   assert.equal(uploaded.alreadyExists, false);
   const stored = state.files.get(uploaded.path);
   assert.ok(stored);
   assert.deepEqual(new Uint8Array(stored.bytes), png);
 
+  const publishData = { ...project, media: { cover: uploaded.path, gallery: [] } };
+  await publishContent('owner-token', {
+    kind: 'project',
+    slug: 'technologies',
+    expectedSha: null,
+    data: publishData,
+  });
+  assert.ok(state.files.has('content/projects/technologies.json'));
+
   const duplicate = await uploadMedia('owner-token', {
-    slug: 'sample-project',
+    scope: 'project',
+    slug: 'technologies',
     filename: 'Cover image.png',
     mime: 'image/png',
     content,
@@ -609,6 +667,7 @@ test('media uploads require matching raster bytes and store binary bytes with im
   assert.equal(duplicate.contentSha, stored.sha);
 
   const icon = await uploadMedia('owner-token', {
+    scope: 'technology',
     slug: 'technologies',
     filename: 'React.png',
     mime: 'image/png',

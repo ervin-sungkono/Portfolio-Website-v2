@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { MagnifyingGlassIcon, ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
-import { getProjects, selectFeaturedProjects, filterProjects } from '@/lib/content';
+import {
+  getProjects,
+  getProjectCategories,
+  selectFeaturedProjects,
+  filterProjects,
+} from '@/lib/content';
 import { ProjectCard } from '@/components/common/ProjectCard';
 import { pageMetadata } from '@/lib/metadata';
 import { profile } from '@/content/profile';
@@ -20,13 +25,15 @@ export default async function ProjectsPage({
 }: {
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  const [params, projects] = await Promise.all([searchParams, getProjects()]);
+  const [params, projects, categories] = await Promise.all([
+    searchParams,
+    getProjects(),
+    getProjectCategories(),
+  ]);
   const featuredProjects = selectFeaturedProjects(projects);
   const query = typeof params.q === 'string' ? params.q : '';
   const category = typeof params.category === 'string' ? params.category : '';
   const filtered = filterProjects(projects, query, category);
-  const categoryLabels = projects.flatMap((project) => project.categories ?? [project.category]);
-  const categories = [...new Set(categoryLabels)];
   const isUnfiltered = !query && !category;
 
   function categoryUrl(value: string) {

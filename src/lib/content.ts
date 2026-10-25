@@ -30,6 +30,15 @@ export async function getProjects(): Promise<readonly Project[]> {
   return remote?.projects ?? projectData;
 }
 
+export async function getProjectCategories(): Promise<readonly string[]> {
+  const remote = await getPublicContent();
+  if (remote) {
+    return remote.categories;
+  }
+  const projects: readonly Project[] = projectData;
+  return [...new Set(projects.flatMap((project) => project.categories ?? [project.category]))];
+}
+
 export function selectFeaturedProjects(projects: readonly Project[]) {
   return projects.filter((project, index) => project.featured ?? index < 3).slice(0, 3);
 }

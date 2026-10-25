@@ -2,6 +2,7 @@ import 'server-only';
 
 import { cacheLife, cacheTag } from 'next/cache';
 import { getSnapshot } from './repository.ts';
+import { getPublishedCategoryLabels } from './public-categories.ts';
 import type { Project } from '../content.ts';
 
 function mediaUrl(owner: string, name: string, branch: string, path: string) {
@@ -36,7 +37,11 @@ async function readPublicContent(adminId: string, repositoryName: string) {
       demo: data.links.demo ?? null,
       featured: data.featured,
     }));
-  return { projects, site: snapshot.site.data };
+  return {
+    projects,
+    categories: getPublishedCategoryLabels(snapshot),
+    site: snapshot.site.data,
+  };
 }
 
 export async function getPublicContent() {
