@@ -4,9 +4,9 @@ Reviewed for component organization on **25 October 2026 (Asia/Jakarta)**. This 
 
 ## Scope and stack
 
-Phase 1 preserves the owner's projects, artwork, public routes, CV, social links, and team credits while presenting engineering work through server-rendered pages. The stack is Next.js 16.4.0 App Router, React 19.2, strict TypeScript, native CSS, Motion 14.0.0, selectively loaded tsParticles 4.4.0 features, and Nodemailer 10.1. Install with the committed lockfile; Node.js 24 is recommended and CI uses it. The package requires Node.js 22 or newer.
+The portfolio preserves verified project facts, artwork, CV, social links, and team credits through server-rendered pages. The stack is Next.js 16.4.3 App Router, React 19.2, strict TypeScript, native CSS, next-themes, Motion 14, Nodemailer 10.2, Auth.js 5 beta, Zod 4, and React Hook Form. Install with the committed lockfile using Node.js 24; the package requires Node.js 22 or newer, while the isolated test loader requires Node.js 24.
 
-CMS integration remains phase 2. There is no database, authentication, editor/admin UI, CMS SDK, scheduled import, global state library, or background content synchronization. Professional content expansion also remains deferred. Do not infer new responsibilities, personal team contributions, seniority, or measured outcomes from the implementation.
+The owner-only GitHub CMS lives inside this Next.js application. A separate public repository stores JSON and modest images; there is no database, separate backend, or object-storage provider. The earlier Neon-based PR #3 is closed and unmerged. Professional content expansion remains deferred: do not infer new responsibilities, contributions, seniority, or measured outcomes from the implementation.
 
 ## Code boundaries
 
@@ -29,15 +29,13 @@ Keep functions and boundaries small. Add abstractions or dependencies only when 
 
 ## Routes and collections
 
-Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, `/engineering`, and `/contact`. The content snapshot has 17 project detail pages, for 23 public pages in total, and 16 design entries.
+Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, and `/contact`. The content snapshot has 17 project detail pages, for 22 public pages in total, and 16 design entries.
 
 - Project search/category filters and design categories use shareable GET URLs with server rendering.
-- The first three projects form featured work; unfiltered archives exclude those entries rather than duplicating them. Filtering searches the complete collection.
-- Project details use `generateStaticParams` and `dynamicParams = false`. Unknown slugs return the server-rendered 404 with `noindex` and recovery links, including without JavaScript.
+- Snapshot mode features the first three projects. GitHub mode uses explicit `featured` flags and `sortOrder`; unfiltered archives exclude featured entries. Filtering searches the complete published collection.
+- Project details can render newly published slugs after deployment. Their content is cached and invalidated after publication. Unknown/unpublished slugs use 404/noindex recovery; the current checks and any no-JavaScript limits are recorded in [verification](verification.md).
 - Related projects prioritize shared technologies, then category, through a small pure function.
-- `/engineering` links to source and verification documents. `portfolioSourceRef` in `src/content/engineering.ts` targets `feat/portfolio-rework-phase-1` while under review; change it to `main` after merge.
-
-Preserve public slugs, destinations, assets, and attribution during maintenance. Framework route filenames retain their required names.
+  Preserve public slugs, destinations, assets, and attribution during maintenance. Framework route filenames retain their required names.
 
 ## Content and provenance
 
@@ -56,7 +54,61 @@ The inherited content was reviewed on **7 October 2026**; the documentation date
 | Experience and education                             | The owner's public [LinkedIn profile](https://www.linkedin.com/in/ervin-cahyadinata-sungkono), recorded in `profile.ts`; it is not polled at runtime.           |
 | CV                                                   | Original link retained; its currency has not been independently verified.                                                                                       |
 
-Future CMS work should replace the exports/lookups at the content boundary once its scope is requested. No speculative adapter is needed in phase 1.
+`src/lib/content.ts` is the public content boundary in both modes. GitHub configuration replaces project collection reads and homepage copy; artwork, verified identity/experience, CV, and engineering/team-credit content remain in the application. An unset GitHub source retains the existing snapshots; invalid or unavailable configured storage is never silently replaced with snapshots.
+
+## GitHub CMS
+
+### Setup and source separation
+
+Configure these server-only variables from `.env.example` in local `.env.local` or the intended Vercel environment:
+
+| Variable             | Purpose                                                                          |
+| -------------------- | -------------------------------------------------------------------------------- |
+| `AUTH_SECRET`        | Random secret for Auth.js encrypted sessions; use at least 32 random characters. |
+| `AUTH_GITHUB_ID`     | GitHub OAuth application's client ID.                                            |
+| `AUTH_GITHUB_SECRET` | GitHub OAuth application's client secret.                                        |
+| `GITHUB_ADMIN_ID`    | Owner's immutable numeric GitHub user ID.                                        |
+| `GITHUB_REPO`        | Separate public content repository name, without an owner or slash.              |
+
+Create an OAuth application with callback `https://<deployment-host>/api/auth/callback/github`; for local development use `http://localhost:3000/api/auth/callback/github` with a separate development OAuth app. The provider requests `read:user repo`. The `repo` permission is broad; application writes are constrained to the configured repository and allowlisted paths. Never expose these variables through `NEXT_PUBLIC_`, browser storage, URLs, or logs. Public readers resolve the current owner login from GitHub's numeric-ID endpoint without any OAuth token.
+
+Do not connect the content repository as a Vercel deployment source. Only application source changes need builds. A template installer supplies their own OAuth app, numeric ID, repository name, and Auth secret; no repository picker, database, or extra read token is required. GitHub configuration does not change the canonical public origin `https://ervincs.com`.
+
+Opening `/admin` shows setup or GitHub sign-in. Sign-in accepts only the configured GitHub account ID. Auth.js keeps its OAuth access token in an encrypted HttpOnly, SameSite cookie; client session JSON exposes only the allowlisted identity fields. Every CMS mutation checks that encrypted owner session and verifies the token's current identity with GitHub again. Expired/revoked credentials require another sign-in. Auth/admin responses and CMS APIs do not expose the access token. Next.js resolves the `server-only` build marker itself; there is no `server-only` npm dependency.
+
+### Modules and storage
+
+- `src/lib/cms/schemas.ts`: shared strict Zod documents and mutations, used by React Hook Form and server validation.
+- `github.ts`, `repository.ts`: bounded GitHub access, numeric owner/default-branch resolution, typed files, reads, media/reference validation, and custom-identity commits.
+- `service.ts`, `media.ts`: initialization, optimistic JSON publishing/deletion, and immutable image uploads.
+- `auth.ts`, `auth-policy.ts`, `http.ts`: trusted credential retrieval, owner policy, same-origin mutations, bounded JSON requests, and private responses.
+- `public.ts`, `cache.ts`, `cache-policy.ts`, `publishing.ts`: public cached projection, invalidation, and separation of commit success from cache failures.
+- `src/components/CmsEditor`: structured project, site-profile, category, technology, and image forms; no GitHub API calls or credentials in components. Each panel and `CmsMessage` has a nested PascalCase directory with `index.tsx`, `type.ts`, and component-specific `style.css`. The editor's own `style.css` keeps shared form primitives, avoiding duplicated control styles.
+- `src/proxy.ts` and `/api/content/project`: publication checks before project rendering, using the same cached public content boundary. Missing projects return a buffered recovery document with HTTP 404/noindex/no-store. This avoids Next.js PPR's blank no-JavaScript recovery and status replacement during rewrites. Internal requests use the platform's `VERCEL_URL` or local `127.0.0.1:PORT` (default 3000), never a visitor-supplied Host. Set `PORT` when running the app locally on another port.
+
+Storage uses `content/site.json`, `content/categories.json`, `content/technologies.json`, and `content/projects/<slug>.json`. The filename is the URL identity; project JSON has no duplicate ID/slug. Registries use stable IDs, projects refer to those IDs, and images use repository-relative paths under `media/projects/<slug>/` or `media/technologies/`. No project index is committed. The application's existing route remains `/project/<slug>`.
+
+### Initialization and editing
+
+After authorized sign-in, choose **Initialize repository** only for a nonexistent or empty public repository, or to reuse a compatible CMS repository. Public requests and builds never initialize storage. The initializer creates a public repository if needed, reads its actual default branch, and writes README plus the three seed documents. Each Contents API commit sets both author and committer to `Portfolio CMS <cms@portfolio.local>`, including bootstrap. Keep that email unassociated with the owner's GitHub account; GitHub may still show the authenticated account as the API actor. Retries inspect existing content and only complete an exact known seed subset. Private, legacy `web-assets`, unrelated populated, and incompatible repositories stop with an actionable error; nothing is erased or reset.
+
+The editor retains drafts after validation, network, or SHA conflicts. Every update compares the loaded file's blob SHA; a stale version returns HTTP 409. Category/technology edits validate references against the current snapshot. Publish/unpublish/delete validate authoritative documents and media before writing. Separate concurrent file writes are not transactional: use one publishing tab for taxonomy changes to avoid a category deletion racing with a project update; manual Git repair can be needed if such a race occurs. All content is public in GitHub, including `published: false` and earlier revisions; unpublishing only hides it from the portfolio.
+
+Images accept PNG, JPEG, and WebP only, at most 1 MiB, with matching MIME, extension, and byte signatures. Arbitrary SVG uploads are rejected. Existing technology SVG references are checked. Uploads use content-hashed names, then the owner selects the returned path in the project/icon form. Upload and JSON commits are separate; an abandoned upload may leave an unused public file. Git history and existing browser/CDN copies cannot be made private by unpublishing.
+
+### Publishing and ISR
+
+Next.js Cache Components caches the validated public catalog/site/taxonomy for one hour, with stale-while-revalidate behavior and a one-day expiry. The small portfolio shares one catalog loader rather than fetching each project per visitor; individual project lookups also carry `project:<slug>` tags. Cache keys include the configured numeric ID/repository and never session credentials. Owner lookup is cached for one day. Authenticated editor reads bypass the public content cache. Unauthenticated REST limits still apply on cold reads; an upstream failure during background refresh can retain the prior good cached result, while an expired/cold cache can fail visibly.
+
+Only after GitHub confirms a content commit does the API invalidate `projects`, `project:<slug>`, `site`, or `taxonomy` and the affected `/`, `/project`, detail, and sitemap paths. `revalidateTag(tag, 'max')` marks data stale; visitors may briefly receive the previous version while regeneration runs. “Cache refreshed” in the editor means invalidation was accepted, not instant global delivery. If invalidation fails after a commit, the saved result and commit link are retained with a **Retry public refresh** operation that does not write another Git commit.
+
+`partialPrefetching` is explicitly disabled while migrating the existing portfolio to Cache Components. Project details render on request with cached content; collection GET filters use blocking server rendering so native navigation remains usable. There is no build-time slug allowlist. Public regression checks own the compatibility evidence. Direct GitHub edits appear after cache expiry or an authorized refresh, not via a webhook. Content commits never call a deploy hook or Vercel deployment API. `images.unoptimized: true` still serves original hashed GitHub assets; the CMS does not enable image transformations.
+
+### Legacy content mapping and rollback
+
+Use [the LLM mapping instructions](web-assets-migration-agent.md) to audit old content against the shared schemas. The prior one-off conversion utility was removed after the authorized migration; no ongoing runtime behavior depends on it. The instructions treat `web-assets/legacy` as read-only source, compare it with the already migrated `master`, and require a mapping report before edits. No executable converter is maintained.
+
+On 25 October the owner separately authorized publishing to `web-assets/master`, with the old master preserved on `legacy`. Existing `images/` and `icons/` remain as compatibility directories until the application release; initialization can reuse them only with complete, valid CMS documents and never bootstraps over asset-only legacy storage. [Verification](verification.md#authorized-web-assets-publication) records exact refs, author/committer, schema/media read-back, and rollback limits.
 
 ## Identity and discovery
 
