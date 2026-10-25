@@ -9,6 +9,8 @@ import { pageMetadata } from '@/lib/metadata';
 import styles from './design.module.css';
 import { imageSizes } from '@/lib/image-sizes';
 
+export const instant = false;
+
 export const metadata = pageMetadata({
   title: 'Web & Mobile Interface Design',
   description: `Browse web and mobile interface designs by ${profile.name}, including dashboards, healthcare websites, and application UI explorations.`,

@@ -4,6 +4,8 @@ import designs from './src/content/designs.json';
 
 const config: NextConfig = {
   poweredByHeader: false,
+  cacheComponents: true,
+  partialPrefetching: false,
   images: {
     minimumCacheTTL: 2_678_400, // Stable portfolio assets: 31 days; replace the URL on updates.
     deviceSizes: [640, 768, 960, 1200, 1600, 1920],

@@ -1,0 +1,47 @@
+.cms-editor {
+  .cms-editor-message {
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--background);
+    overflow-wrap: anywhere;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    margin-bottom: var(--space-5);
+
+    p {
+      flex: 1 1 18rem;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    a,
+    .cms-editor-text-button {
+      min-height: 2.75rem;
+      display: inline-flex;
+      align-items: center;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    a:hover,
+    .cms-editor-text-button:hover:not(:disabled) {
+      color: var(--accent);
+    }
+  }
+
+  .cms-editor-message-success {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .cms-editor-message-error,
+  .cms-editor-message-conflict {
+    border-color: #ae3939;
+  }
+}
