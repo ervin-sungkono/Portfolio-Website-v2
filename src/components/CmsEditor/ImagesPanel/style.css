@@ -1,0 +1,39 @@
+.cms-editor .cms-editor-images-panel {
+  .cms-editor-upload-form {
+    max-width: 44rem;
+    margin-bottom: var(--space-8);
+
+    > fieldset {
+      gap: var(--space-5);
+    }
+  }
+
+  .cms-editor-upload-result {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+
+    h3 {
+      margin: 0;
+      font-size: var(--text-title);
+    }
+
+    > a {
+      min-height: 2.75rem;
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      color: var(--accent);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+
+  .cms-editor-technology-picker {
+    width: min(100%, 18rem);
+  }
+}

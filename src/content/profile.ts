@@ -5,7 +5,7 @@ export const profile = {
   linkedin: 'https://www.linkedin.com/in/ervin-cahyadinata-sungkono',
   github: 'https://github.com/ervin-sungkono',
   dribbble: 'https://dribbble.com/ErvinCS',
-  instagram: 'https://www.instagram.com/ervin.cs_09',
+  instagram: 'https://www.instagram.com/ervin.cs',
   cv: 'https://drive.google.com/file/d/1cODpw-zhF3dpDGRBxN0HlxOI1ywUYUbK/view?usp=sharing',
   intro:
     'Software engineer at Samsung R&D Institute Indonesia, with a background in frontend development and interface design.',

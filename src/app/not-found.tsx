@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ParticleAccent } from '@/components/ParticleAccent';
 import styles from './not-found.module.css';
 
 export default function NotFound() {
@@ -21,7 +20,6 @@ export default function NotFound() {
           </Link>
         </div>
       </div>
-      <ParticleAccent />
     </section>
   );
 }

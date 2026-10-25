@@ -1,0 +1,7 @@
+@media (width >= 48rem) {
+  .cms-editor .cms-editor-technologies-panel {
+    .cms-editor-technology-row {
+      grid-template-columns: minmax(5rem, 0.65fr) minmax(0, 1.8fr) minmax(0, 1.2fr) auto;
+    }
+  }
+}

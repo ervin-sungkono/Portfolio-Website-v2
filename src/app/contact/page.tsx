@@ -10,6 +10,7 @@ export const metadata = pageMetadata({
   description: `Contact ${profile.name} about software engineering opportunities, React and Next.js projects, frontend development, or interface design collaborations.`,
   path: '/contact',
 });
+
 export default function ContactPage() {
   return (
     <div className="container">
