@@ -1,7 +1,11 @@
 /** @type {import('stylelint').Config} */
 module.exports = {
   extends: ['stylelint-config-standard'],
+  plugins: ['@stylistic/stylelint-plugin'],
   rules: {
+    // Enforce the repository's LF and final-newline conventions in CSS.
+    '@stylistic/linebreaks': 'unix',
+    '@stylistic/no-missing-end-of-source-newline': true,
     'rule-empty-line-before': [
       'always',
       {
