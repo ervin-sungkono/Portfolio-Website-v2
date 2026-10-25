@@ -25,18 +25,24 @@ export async function sendContactEmail(data: ContactMessage) {
     subject: `Portfolio: ${data.subject}`,
     text: emailText(data),
   });
-  if (!result.accepted.length) throw new Error('Mail was not accepted by the provider');
+  if (!result.accepted.length) {
+    throw new Error('Mail was not accepted by the provider');
+  }
 }
 
 export async function verifyCaptcha(token: string) {
-  if (!token || token.length > captchaTokenMaxLength) return false;
+  if (!token || token.length > captchaTokenMaxLength) {
+    return false;
+  }
   const body = new URLSearchParams({ secret: captchaSecret()!, response: token });
   const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
     method: 'POST',
     body,
     signal: AbortSignal.timeout(10000),
   });
-  if (!response.ok) throw new Error('Captcha service unavailable');
+  if (!response.ok) {
+    throw new Error('Captcha service unavailable');
+  }
   const result = (await response.json()) as { success?: boolean };
   return result.success === true;
 }
