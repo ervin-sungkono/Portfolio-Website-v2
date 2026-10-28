@@ -1,6 +1,6 @@
 # Visual system, responsive layout, and motion
 
-Reviewed against the blog feature on **28 October 2026 (Asia/Jakarta)**. This is the current UI reference for the visual system, responsive layout, accessibility, and motion behavior. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
+Reviewed against the mobile hero follow-up on **28 October 2026 (Asia/Jakarta)**. This is the current UI reference for the visual system, responsive layout, accessibility, and motion behavior. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
 
 ## Visual system
 
@@ -71,7 +71,7 @@ Native scrolling controls the document. There is no section snapping, wheel inte
 | `Reveal`             | One entry animation: 10px travel over 0.35 seconds. Focus completes an active reveal; reduced motion skips it. Content is visible without JavaScript. |
 | `PointerSurface`     | Bounded image tilt up to 4 degrees, using springs for a desktop mouse with fine-pointer/hover capability. Pointer exit/cancel returns to neutral.     |
 | `MotionEnhancements` | Scroll progress and conditional cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.                           |
-| `ScrollHero`         | Desktop content-fit sticky scene with a reversible project crossfade.                                                                                 |
+| `ScrollHero`         | Desktop content-fit sticky scene, or a mobile preview-only sticky crossfade.                                                                          |
 | `ParallaxImage`      | Bounded image-only travel inside a clipped frame, with matching overscan.                                                                             |
 | `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |
 
@@ -79,11 +79,13 @@ Keep continuous pointer/scroll values out of React state. Discrete state may sel
 
 ## Hero crossfade and image parallax
 
-`src/lib/motion/use-scroll-motion.ts` enables scroll motion only with **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. `ScrollHero` additionally measures whether its content fits below the header. The eligible scene reserves one viewport for reading plus half a viewport of scroll travel, then releases into normal flow.
+`src/lib/hooks/use-scroll-motion.ts` defaults to **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. Desktop `ScrollHero` additionally measures whether its entire stage fits below the header. The eligible desktop scene reserves one viewport for reading plus half a viewport of scroll travel, then releases into normal flow. Other image-parallax callers keep this desktop-only default.
 
-The hero crossfades **WeTrack into ChatGPT Clone**. The latter still uses an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; the active project switches at the midpoint. Copy, frame geometry, and actions stay stationary. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
+The hero separately enables a mobile variant below 64rem width, at least 36rem height, with a coarse pointer and no reduced-motion preference. Copy and actions stay in normal flow; only the project-preview stack sticks below the measured header. Its wrapper reserves 50svh of native scroll travel, with the crossfade aligned to that preview’s sticky interval. Preview content must fit below the header; short landscape viewports and oversized previews retain ordinary flow. Stable viewport units set the travel distance, and resize/header/content measurements keep the fit and scroll offsets current.
 
-Only one preview is interactive and exposed to assistive technology: the other is inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Otherwise, phone/tablet, coarse-pointer, short/oversized, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel.
+The hero crossfades **WeTrack into ChatGPT Clone**. The latter still uses an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; the active project switches at the midpoint. On desktop the whole stage stays stationary. On mobile the preview frame stays stationary during its sticky interval while the copy and actions scroll normally. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
+
+Only one preview is interactive and exposed to assistive technology: the other is inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Ineligible layouts, short/oversized previews, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel. Coarse-pointer devices at desktop widths also retain ordinary flow. Mobile hero eligibility does not enable the desktop cursor, card parallax, or image tilt.
 
 | Image surface                                                    | Travel                             |
 | ---------------------------------------------------------------- | ---------------------------------- |

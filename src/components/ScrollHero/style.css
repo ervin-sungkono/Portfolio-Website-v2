@@ -1,6 +1,10 @@
 .scroll-hero {
   position: relative;
 
+  .scroll-hero-visual-scene {
+    min-width: 0;
+  }
+
   .scroll-hero-visual-stack {
     display: grid;
     min-width: 0;
@@ -17,6 +21,21 @@
     left: 0;
     width: 100%;
     height: 100%;
+  }
+}
+
+@media (width < 64rem) and (height >= 36rem) and (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  .scroll-hero[data-mobile-pinned='true'] {
+    .scroll-hero-visual-scene::after {
+      display: block;
+      height: 50svh;
+      content: '';
+    }
+
+    .scroll-hero-visual-stack {
+      position: sticky;
+      top: var(--measured-header-height, var(--header-height));
+    }
   }
 }
 

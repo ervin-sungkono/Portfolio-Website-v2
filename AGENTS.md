@@ -1,6 +1,6 @@
 # Portfolio agent handoff
 
-Updated **28 October 2026 (Asia/Jakarta)**. PR #5 (`codex/github-portfolio-cms` → `dev`) is the base for PR #6 (`codex/pr5-release-readiness` → `codex/github-portfolio-cms`), which remains draft/open. Current blog work is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`; [PR #7](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/7) targets the PR #6 branch. Inspect live repository and PR state before continuing.
+Updated **28 October 2026 (Asia/Jakarta)**. PR #5 (`codex/github-portfolio-cms` → `dev`) is the base for PR #6 (`codex/pr5-release-readiness` → `codex/github-portfolio-cms`), which remains draft/open. Blog work is in [PR #7](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/7), targeting PR #6. The mobile hero follow-up is on `codex/mobile-hero-crossfade`, based on `codex/portfolio-blog`. Inspect live repository and PR state before continuing.
 
 ## Repository and branch
 
@@ -45,7 +45,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - `src/app` owns routes/layouts/metadata/API handlers. Prefer Server Components for pages/content and focused client islands for browser interaction.
 - `src/components` uses PascalCase component directories with `index.tsx`, a colocated style file, and `type.ts` when types are needed. Put reusable public links, controls, cards, and motion wrappers in `src/components/common`. `src/styles/globals.css` owns shared tokens/primitives; pages retain CSS Modules.
 - Use PascalCase for standalone React `.tsx`/`.jsx` filenames and component directories. Preserve established `index.tsx` directory entry points and framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx`.
-- `src/content` owns profile/engineering facts and project/design snapshots. Access project/design/blog collections through `src/lib/content.ts`; do not duplicate lookups. Blog posts are GitHub-only with no bundled samples; use the existing `PostsPanel` and optional `content/posts` collection. Shared motion helpers currently live in `src/lib/motion`.
+- `src/content` owns profile/engineering facts and project/design snapshots. Access project/design/blog collections through `src/lib/content.ts`; do not duplicate lookups. Blog posts are GitHub-only with no bundled samples; use the existing `PostsPanel` and optional `content/posts` collection. Shared motion eligibility lives in `src/lib/hooks/use-scroll-motion.ts`.
 - `src/lib/metadata.ts` owns public metadata; `src/lib/contact` owns validation and server-only providers. Preserve routes, slugs, assets, CV/social/source links, team credits, GET filters, and unknown-project 404/noindex behavior.
 - Preserve `portfolioSourceRef` in `src/content/engineering.ts` during public UI changes. Update source links in a separately reviewed change.
 - `next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Describe image delivery accordingly. Re-enabling transformations needs fresh validation; historical cache/source-selection results do not apply to current rendering.
@@ -65,7 +65,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 
 - Follow documented rem tokens, fluid sizing, and content-fit thresholds. Check full-name branding, typography, grids, spacing, and controls during text enlargement/reflow; avoid arbitrary device overrides.
 - Preserve native scrolling. The desktop hero uses a stationary project crossfade; selected images use bounded parallax. Do not restore section snapping or intercept wheel events. The second hero image remains an explicit placeholder until supplied.
-- Decorative motion respects reduced motion. Pinning/parallax falls back to ordinary flow for mobile/coarse pointers, short viewports, or content that cannot fit. Server-rendered content stays visible without JavaScript.
+- Decorative motion respects reduced motion. The hero has a preview-only mobile crossfade; its text scrolls normally. Short viewports or oversized previews fall back to ordinary flow. Shared card/artwork parallax remains desktop-only, including on touch devices. Server-rendered content stays visible without JavaScript.
 - The cursor is desktop fine-pointer/hover only, decorative, and hidden from assistive technology. Its position uses direct Motion values without springs or delay. Native cursor fallbacks must work; image-tilt springs are separate.
 - Keep continuous pointer/scroll updates out of React state. Clean up listeners, media subscriptions, observers, animation frames, and engines.
 - Preserve skip navigation, landmarks, heading order, keyboard access, visible focus, contrast, and accessible names including visible labels.

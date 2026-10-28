@@ -116,6 +116,18 @@ The ordinary snapshot production build was restored after the CMS fixture suite.
 
 Blog archive/detail and all six CMS panels were exercised at 320, 390, 820, 1024, and 1440px in both themes. The tests also covered keyboard navigation, a root-font enlargement sample, and no page runtime errors in the blog samples. Mobile light and desktop dark article screenshots were inspected. These checks do not replace actual browser zoom, screen-reader testing, hosted OAuth, or real content-repository writes.
 
+## Mobile hero crossfade — 28 October 2026
+
+The follow-up branch `codex/mobile-hero-crossfade` is based on PR #7’s `codex/portfolio-blog` at `2dfaa920cd514043ae3949e7ae2b89cd4e3e9aa6`. It adds a preview-only sticky crossfade for eligible narrow touch layouts while the hero copy and actions scroll normally. Desktop scene pinning and the default eligibility of other image-parallax callers remain unchanged. The [motion reference](responsive-and-motion.md#hero-crossfade-and-image-parallax) owns eligibility, fit, focus, and fallback behavior.
+
+Fresh Node.js 24.19.0 checks passed TypeScript, CSS lint, ESLint (zero errors, the same two existing warnings), **38 unit tests**, the production build, **35 public Chromium browser tests**, and **8 isolated CMS browser tests**. The ordinary snapshot build was restored after the CMS fixture suite. No dependencies or lockfile changed; the clean install and audit from the blog work above were not repeated locally for this UI-only follow-up.
+
+Six new mobile browser cases cover a native touch swipe, reversible fade over the preview’s sticky interval, copy remaining in normal flow, one accessible/interactive project at a time, focus hold, both themes at 320/390/430/820px, short landscape, live reduced motion, an oversized preview, and no JavaScript. Existing desktop hero, image parallax, cursor, contact, project, and blog regressions also passed. The browser checks caught and resolved stale native animation offsets after hydration and an initial spacer that failed to extend the sticky interval. Remote images are stubbed in the automated regressions.
+
+An additional Home sweep checked keyboard focus and both themes at 320, 390, 820, 1024, and 1440px: all ten samples had no horizontal overflow or page runtime errors, with focus visible and outside inert slides. Mobile top/first/next screenshots were inspected at 390px using the existing WeTrack image bytes as a fixture; other external images were blocked. Whole-repository formatting, whitespace, and all 45 local Markdown file/fragment references passed. These are local layout checks, not hosted asset-delivery measurements.
+
+Physical iOS Safari and Android Chrome, dynamic browser-toolbar behavior, actual browser zoom, and screen-reader acceptance remain unverified. A Playwright WebKit launch was blocked by missing host libraries; no WebKit pass is claimed. No content-repository write, email, merge, or production change was performed.
+
 ## Public component split — 25 October 2026
 
 From refreshed `origin/dev` at `87ca9cd`, reusable public links, cards, motion wrappers, and the theme control were organized under `src/components/common`. This was checked locally with Node.js 22.14: `npm ci`, typecheck, CSS lint, all 11 unit tests, whole-repository formatting, a production build using the documented dummy CAPTCHA key, the 25 existing Chromium browser tests, one new theme persistence/navigation browser test, and `git diff --check`. The first build paused after route generation with Next.js's security upgrade notice; an unchanged retry passed. CI's Node.js 24 run and deployed behavior remain separate evidence.
@@ -141,22 +153,23 @@ Use Node.js 24 and the committed lockfile. Setup and browser commands are in [RE
 | `npm run build`            | Production build and static route generation.                                                                                                               |
 | `npm run format:check`     | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                                                 |
 | `git diff --check`         | Whitespace in the relevant diff.                                                                                                                            |
-| `npm run test:browser`     | 29 current Chromium regressions against a production build, not the dev server.                                                                             |
+| `npm run test:browser`     | 35 current Chromium regressions against a production build, not the dev server.                                                                             |
 | `npm run test:cms:browser` | Isolated GitHub CMS production build and Chromium workflow; replaces `.next` with a fixture build. Rebuild normally afterward.                              |
 
 `.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, ESLint, CSS lint, typechecking, unit tests, a dummy-CAPTCHA production build, Chromium installation, and browser tests on pull requests. This describes the current workflow definition; inspect an actual run before claiming remote CI passed.
 
 ### Browser suite coverage
 
-| Spec in `tests/browser`  | Cases | Coverage                                                                                                                                                                |
-| ------------------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `contact.spec.ts`        | 3     | Pending CAPTCHA/read-only fields, one submission snapshot, draft retention on failure, clearing on mocked success.                                                      |
-| `contact-api.spec.ts`    | 2     | Permitted Unicode requests above the old cap, 64 KiB limit, origin, and honeypot checks.                                                                                |
-| `project-routes.spec.ts` | 3     | Known project rendering, unknown-project recovery, and snapshot category ordering without JavaScript.                                                                   |
-| `cursor.spec.ts`         | 9     | Raw pointer/frame geometry, clearance and shape changes, rendered contrast, nested targets, reflow/removal, native fallbacks, reduced motion, touch, and no JavaScript. |
-| `parallax.spec.ts`       | 9     | Hero crossfade/reverse scroll, fixed target geometry, travel/coverage, focus hold, reduced motion, coarse pointers, oversized/narrow/short contexts, and no JavaScript. |
-| `theme.spec.ts`          | 1     | Theme destination label and persisted selection across public navigation.                                                                                               |
-| `blog.spec.ts`           | 2     | Empty snapshot blog, canonical/sitemap URLs, and complete post 404 recovery without JavaScript.                                                                         |
+| Spec in `tests/browser`  | Cases | Coverage                                                                                                                                                                   |
+| ------------------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contact.spec.ts`        | 3     | Pending CAPTCHA/read-only fields, one submission snapshot, draft retention on failure, clearing on mocked success.                                                         |
+| `contact-api.spec.ts`    | 2     | Permitted Unicode requests above the old cap, 64 KiB limit, origin, and honeypot checks.                                                                                   |
+| `project-routes.spec.ts` | 3     | Known project rendering, unknown-project recovery, and snapshot category ordering without JavaScript.                                                                      |
+| `cursor.spec.ts`         | 9     | Raw pointer/frame geometry, clearance and shape changes, rendered contrast, nested targets, reflow/removal, native fallbacks, reduced motion, touch, and no JavaScript.    |
+| `parallax.spec.ts`       | 9     | Hero crossfade/reverse scroll, fixed target geometry, travel/coverage, focus hold, reduced motion, coarse pointers, oversized/narrow/short contexts, and no JavaScript.    |
+| `mobile-hero.spec.ts`    | 6     | Preview-only sticky crossfade, native touch swipe, copy flow, accessible slide switching, both themes/widths, focus hold, fit/reduced-motion fallbacks, and no JavaScript. |
+| `theme.spec.ts`          | 1     | Theme destination label and persisted selection across public navigation.                                                                                                  |
+| `blog.spec.ts`           | 2     | Empty snapshot blog, canonical/sitemap URLs, and complete post 404 recovery without JavaScript.                                                                            |
 
 The browser server uses `127.0.0.1:3103`, clears provider secrets, and does not reuse an existing server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. These tests do not send real email. The public dummy CAPTCHA key must be present at build time; rebuild with the real public key before any deployment that needs live CAPTCHA.
 
