@@ -235,37 +235,31 @@ test('limits stronger image travel to selected projects and keeps their frames c
   await scrollInstantly(page, lastEndpoint);
   await expectPlaneCoversFrame(frame, plane);
 
+  const imageOffset = () =>
+    plane.evaluate((element) => {
+      const frameBounds = element.parentElement!.getBoundingClientRect();
+      return element.getBoundingClientRect().top - frameBounds.top;
+    });
+  const middleOffset = await plane.evaluate(
+    (element) =>
+      -(
+        element.getBoundingClientRect().height -
+        element.parentElement!.getBoundingClientRect().height
+      ) / 2,
+  );
   await scrollInstantly(page, (firstEndpoint + lastEndpoint) / 2);
+  // Native scroll animations can paint after scrollY has already changed.
+  await expect.poll(imageOffset).toBeCloseTo(middleOffset, 0);
   const beforeScroll = await page.evaluate(() => window.scrollY);
-  const beforeOffset = await plane.evaluate((element) => {
-    const frameBounds = element.parentElement!.getBoundingClientRect();
-    return element.getBoundingClientRect().top - frameBounds.top;
-  });
+  const beforeOffset = await imageOffset();
 
   await page.mouse.wheel(0, 140);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(beforeScroll + 20);
-  await expect
-    .poll(() =>
-      plane.evaluate((element) => {
-        const frameBounds = element.parentElement!.getBoundingClientRect();
-        return element.getBoundingClientRect().top - frameBounds.top;
-      }),
-    )
-    .toBeLessThan(beforeOffset - 1);
-  const downOffset = await plane.evaluate((element) => {
-    const frameBounds = element.parentElement!.getBoundingClientRect();
-    return element.getBoundingClientRect().top - frameBounds.top;
-  });
+  await expect.poll(imageOffset).toBeLessThan(beforeOffset - 1);
+  const downOffset = await imageOffset();
 
   await page.mouse.wheel(0, -100);
-  await expect
-    .poll(() =>
-      plane.evaluate((element) => {
-        const frameBounds = element.parentElement!.getBoundingClientRect();
-        return element.getBoundingClientRect().top - frameBounds.top;
-      }),
-    )
-    .toBeGreaterThan(downOffset + 1);
+  await expect.poll(imageOffset).toBeGreaterThan(downOffset + 1);
 
   await page.goto('/project');
   const archivePlane = page.locator('[data-parallax="image"]').first();

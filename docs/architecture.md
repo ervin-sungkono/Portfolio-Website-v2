@@ -21,7 +21,7 @@ The owner-only GitHub CMS lives inside this Next.js application. A separate publ
 | `src/lib/contact`        | Shared validation, bounded request parsing, and server-only provider integration.     |
 | `src/lib/image-sizes.ts` | Layout-specific image slot hints.                                                     |
 
-Components use PascalCase directories with `index.tsx`, a colocated style file, and `type.ts` when needed. Reusable public links, controls, cards, and motion wrappers live in `src/components/common`; page-specific components remain in their existing directories. The shared scroll hook is at `src/lib/motion/use-scroll-motion.ts`. Component styles use prefixed selectors and native nesting, while page styles remain CSS Modules. See [verification](verification.md) for dated check coverage and its limits.
+Components use PascalCase directories with `index.tsx`, a colocated style file, and `type.ts` when needed. Reusable public links, controls, cards, and motion wrappers live in `src/components/common`; page-specific components remain in their existing directories. The shared scroll hook is at `src/lib/hooks/use-scroll-motion.ts`. Component styles use prefixed selectors and native nesting, while page styles remain CSS Modules. See [verification](verification.md) for dated check coverage and its limits.
 
 Pages and content stay in Server Components. Header navigation, contact submission, and decorative motion use small Client Components. Server-rendered content passes into motion wrappers and remains visible without JavaScript. Continuous pointer and scroll coordinates use Motion values rather than React state on each frame. Media subscriptions, observers, event listeners, and animation frames clean up when their scope ends.
 

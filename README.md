@@ -30,7 +30,7 @@ Run `npm start` after a production build to serve it locally. GitHub Actions run
 
 ### Browser regressions
 
-The Playwright suite covers contact/API boundaries, project recovery without JavaScript, the desktop cursor, and hero/parallax behavior. It runs against a production build. Install Chromium once:
+The Playwright suite covers contact/API boundaries, project recovery without JavaScript, the desktop cursor, and desktop/mobile hero behavior. It runs against a production build. Install Chromium once:
 
 ```sh
 npx playwright install chromium
