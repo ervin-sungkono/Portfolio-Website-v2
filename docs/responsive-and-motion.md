@@ -1,6 +1,6 @@
 # Visual system, responsive layout, and motion
 
-Reviewed against the PR #5 working tree on **25 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual system and implemented parallax behavior. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
+Reviewed against the blog feature on **28 October 2026 (Asia/Jakarta)**. This is the current UI reference for the visual system, responsive layout, accessibility, and motion behavior. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
 
 ## Visual system
 
@@ -24,19 +24,22 @@ Modular screenshots use proportional cover cropping without inset padding or let
 
 ## Page composition and layout
 
-| Surface         | Current composition                                                                                            |
-| --------------- | -------------------------------------------------------------------------------------------------------------- |
-| Home            | Sticky project-preview hero, selected project grid, experience timeline, curated artwork, and contact close.   |
-| Projects        | Three featured entries plus the remaining archive; GET filters search the whole collection without duplicates. |
-| Project details | Natural-ratio screenshot, overview, documented implementation/tradeoffs, attribution, and related projects.    |
-| About           | Profile introduction, experience timeline, and grouped existing skills.                                        |
-| Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                           |
-| Contact         | Editorial introduction and the labelled form with validation and status feedback.                              |
-| Not found       | Standalone viewport-height recovery page.                                                                      |
+| Surface         | Current composition                                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Home            | Sticky project-preview hero, selected project grid, experience timeline, curated artwork, and contact close.                  |
+| Projects        | Three featured entries plus the remaining archive; GET filters search the whole collection without duplicates.                |
+| Project details | Natural-ratio screenshot, overview, documented implementation/tradeoffs, attribution, and related projects.                   |
+| About           | Profile introduction, experience timeline, and grouped existing skills.                                                       |
+| Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                                          |
+| Contact         | Editorial introduction and the labelled form with validation and status feedback.                                             |
+| Blog            | Published article cards, one column on narrow screens and two columns from 48rem; an empty state when no posts are published. |
+| Blog post       | Article title, summary, author, date, and readable Markdown in a centered 70ch body column.                                   |
+| Not found       | Standalone viewport-height recovery page.                                                                                     |
 
 The container caps at **75rem**. Layout starts stacked and uses content-fit thresholds:
 
 - At **48rem**, galleries have room for two columns. Tablet featured projects use a full-width lead above the supporting pair.
+- At **48rem**, the blog archive switches from one column to two; smaller screens retain the single-column reading order.
 - At **64rem**, galleries use three columns and the hero, full navigation, and contact layout can use wider compositions. Tablet portrait keeps the hero stacked.
 - The homepage's asymmetric selected-work composition starts at **70rem** so compact panels retain usable width.
 - In the desktop Design grid, a remainder of two fills a wider pair; a remainder of one redistributes the last four entries into two pair rows. DOM order remains intact, without dense packing or fixed caption heights.
@@ -57,7 +60,7 @@ For UI changes, exercise both themes and keyboard navigation at **320, 390, 820,
 
 ## CMS editor
 
-The owner workspace uses the existing rem tokens and themes, native labelled controls, wrapping navigation buttons, and content-fit grids. Projects, site profile, categories, technologies, and images are structured forms with shared Zod validation. Invalid fields expose associated messages and receive first-error focus; publish/upload operations prevent duplicates and retain drafts after failure. Dirty drafts retain their originally loaded blob SHA across refreshes. Explicit conflict reload discards only the selected editor section. The workspace adds no decorative motion, modal focus trap, or wheel handling. Check the dated [verification](verification.md#github-cms-implementation--25-october-2026) before inferring responsive/accessibility coverage.
+The owner workspace uses the existing rem tokens and themes, native labelled controls, wrapping navigation buttons, and content-fit grids. Projects, blog posts, site profile, categories, technologies, and images are structured forms with shared Zod validation. Blog body text is Markdown in a labelled textarea. Invalid fields expose associated messages and receive first-error focus; publish/upload operations prevent duplicates and retain drafts after failure. Dirty drafts retain their originally loaded blob SHA across refreshes. Explicit conflict reload discards only the selected editor section. The workspace adds no decorative motion, modal focus trap, or wheel handling. Check [blog verification](verification.md#blog-feature--28-october-2026) before inferring coverage for the new editor section.
 
 ## Motion boundaries
 

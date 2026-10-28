@@ -11,7 +11,7 @@
   background: var(--background);
 }
 
-/* Match the original standalone 404, including without JavaScript. */
+/* Preserve standalone recovery, including without JavaScript. */
 :global(body:has([data-not-found]) > header),
 :global(body:has([data-not-found]) > footer) {
   display: none;

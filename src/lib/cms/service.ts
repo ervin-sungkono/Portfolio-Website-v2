@@ -18,6 +18,7 @@ import {
 } from './repository.ts';
 import {
   categoriesSchema,
+  postSchema,
   publishMutationSchema,
   siteSchema,
   technologiesSchema,
@@ -56,6 +57,9 @@ function unsupported(message: string): CmsError {
 function pathForMutation(mutation: PublishMutation): string {
   if (mutation.kind === 'project') {
     return `content/projects/${mutation.slug}.json`;
+  }
+  if (mutation.kind === 'post') {
+    return `content/posts/${mutation.slug}.json`;
   }
   if (mutation.kind === 'site') {
     return 'content/site.json';
@@ -202,6 +206,7 @@ async function inspectStorage(
         'categories.json': 'file',
         'technologies.json': 'file',
         projects: 'dir',
+        posts: 'dir',
       },
       'content',
     );
@@ -216,6 +221,19 @@ async function inspectStorage(
       for (const [name, type] of projects) {
         if (type !== 'file' || !/^[a-z0-9]+(?:-[a-z0-9]+)*\.json$/.test(name)) {
           throw unsupported('The project directory contains an unsupported file.');
+        }
+      }
+    }
+    if (content.has('posts')) {
+      onlySeedPaths = false;
+      const posts = await directoryMap(repository, 'content/posts', token);
+      for (const [name, type] of posts) {
+        if (
+          type !== 'file' ||
+          name.length > 105 ||
+          !/^[a-z0-9]+(?:-[a-z0-9]+)*\.json$/.test(name)
+        ) {
+          throw unsupported('The post directory contains an unsupported file.');
         }
       }
     }
@@ -378,14 +396,20 @@ export async function publishContent(
   const mutation = parsed.data;
   const snapshot = await getSnapshot(token);
   const currentSha =
-    mutation.kind === 'project'
-      ? (snapshot.projects.find(({ slug }) => slug === mutation.slug)?.sha ?? null)
+    mutation.kind === 'project' || mutation.kind === 'post'
+      ? (snapshot[mutation.kind === 'project' ? 'projects' : 'posts'].find(
+          ({ slug }) => slug === mutation.slug,
+        )?.sha ?? null)
       : snapshot[mutation.kind].sha;
   if (currentSha !== mutation.expectedSha) {
     throw conflict('This content changed after you opened it. Reload the CMS before saving again.');
   }
 
-  if (mutation.kind !== 'site') {
+  if (
+    mutation.kind === 'project' ||
+    mutation.kind === 'categories' ||
+    mutation.kind === 'technologies'
+  ) {
     await checkSnapshotReferences(snapshot, mutation);
   }
 
@@ -395,16 +419,44 @@ export async function publishContent(
       ? mutation.data
       : mutation.kind === 'site'
         ? siteSchema.parse(mutation.data)
-        : mutation.kind === 'categories'
-          ? categoriesSchema.parse(mutation.data)
-          : technologiesSchema.parse(mutation.data);
-  const label = mutation.kind === 'project' ? mutation.slug : mutation.kind;
+        : mutation.kind === 'post'
+          ? postSchema.parse(mutation.data)
+          : mutation.kind === 'categories'
+            ? categoriesSchema.parse(mutation.data)
+            : technologiesSchema.parse(mutation.data);
+  const label =
+    mutation.kind === 'project' || mutation.kind === 'post' ? mutation.slug : mutation.kind;
   return writeContentFile(
     snapshot.repository,
     path,
     `${JSON.stringify(data, null, 2)}\n`,
     mutation.expectedSha,
     `cms: publish ${label}`,
+    token,
+  );
+}
+
+export async function deletePost(
+  token: string,
+  slug: string,
+  expectedSha: string,
+): Promise<{ commitUrl: string; sha: string }> {
+  await assertCmsOwner(token);
+  if (!isValidProjectSlug(slug) || !/^[a-f0-9]{40}$/i.test(expectedSha)) {
+    throw validationError('Provide a valid post slug and the version loaded by the CMS.');
+  }
+  const snapshot = await getSnapshot(token);
+  const post = snapshot.posts.find((item) => item.slug === slug);
+  if (!post || post.sha !== expectedSha) {
+    throw conflict(
+      'This post changed or was removed after you opened it. Reload the CMS before deleting it.',
+    );
+  }
+  return deleteContentFile(
+    snapshot.repository,
+    `content/posts/${slug}.json`,
+    expectedSha,
+    `cms: delete ${slug}`,
     token,
   );
 }

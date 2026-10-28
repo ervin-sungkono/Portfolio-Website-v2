@@ -1,6 +1,6 @@
 # Verification and remaining work
 
-Documentation reconciled on **25 October 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+Updated **28 October 2026 (Asia/Jakarta)**. This document separates current repository observations from dated application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
 
 ## GitHub CMS implementation — 25 October 2026
 
@@ -102,6 +102,18 @@ Documentation validation passed for all five edited Markdown files: Prettier, 22
 - Both commit author and committer are `Portfolio CMS <cms@portfolio.local>`. Direct raw-host GETs returned HTTP 200 for the sampled PNG-to-WebP pairs: WeTrack 127,411→79,308 bytes; ChatGPT 142,732→70,624; Next Pokedex 1,042,142→103,864; Frontend Mentor 225,309→93,456. These are raw payload sizes, not full-page or Vercel transfer measurements; destination-link currency and visual/pixel review were not assessed.
 - Hosted OAuth and publishing remain pending. The content audit and browser results do not establish a hosted write, cache propagation, production image transfer, or production cutover.
 
+## Blog feature — 28 October 2026
+
+Blog implementation is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`. PR #6 remains draft/open, and the follow-up PR will target its branch. The PR #6 checks above predate the blog changes and do not validate them.
+
+The feature adds server-rendered `/blog` and `/blog/[slug]` pages, safe Markdown rendering, and a Blog Posts panel inside the existing CMS. Post storage, schema, ordering, cache invalidation, sitemap, and missing/unavailable-content behavior are described in [architecture](architecture.md#blog-posts). No sample posts, remote content writes, hosted OAuth attempts, or release changes were made for this feature.
+
+Node.js 24.19.0/npm 11.9.0 checks passed: clean `npm ci`, zero-vulnerability `npm audit`, **38 unit tests**, TypeScript, production build, CSS lint, and ESLint with zero errors and two existing warnings. The public browser suite passed **29/29**, including the empty blog and complete post 404 recovery without JavaScript. The CMS suite passed **8/8**, covering drafts, Markdown safety, publication/recovery/sitemap without rebuilding, date/slug ordering, unpublish/delete, post refresh retry without republishing, and SHA conflicts preserving drafts across unrelated refreshes and section reloads. A label locator was corrected before the passing run.
+
+The ordinary snapshot production build was restored after the CMS fixture suite. Hosted OAuth, actual repository publishing, and production promotion were not performed.
+
+Blog archive/detail and all six CMS panels were exercised at 320, 390, 820, 1024, and 1440px in both themes. The tests also covered keyboard navigation, a root-font enlargement sample, and no page runtime errors in the blog samples. Mobile light and desktop dark article screenshots were inspected. These checks do not replace actual browser zoom, screen-reader testing, hosted OAuth, or real content-repository writes.
+
 ## Public component split — 25 October 2026
 
 From refreshed `origin/dev` at `87ca9cd`, reusable public links, cards, motion wrappers, and the theme control were organized under `src/components/common`. This was checked locally with Node.js 22.14: `npm ci`, typecheck, CSS lint, all 11 unit tests, whole-repository formatting, a production build using the documented dummy CAPTCHA key, the 25 existing Chromium browser tests, one new theme persistence/navigation browser test, and `git diff --check`. The first build paused after route generation with Next.js's security upgrade notice; an unchanged retry passed. CI's Node.js 24 run and deployed behavior remain separate evidence.
@@ -118,17 +130,17 @@ Installing ESLint 10 emitted peer-dependency override warnings because some plug
 
 Use Node.js 24 and the committed lockfile. Setup and browser commands are in [README](../README.md#development).
 
-| Command                    | Scope                                                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run lint`             | ESLint with Next.js Core Web Vitals and TypeScript recommendations, LF/final-newline, and empty-line checks.                   |
-| `npm run typecheck`        | Strict application TypeScript. The application tsconfig excludes `tests`.                                                      |
-| `npm run lint:css`         | Stylelint across `src/**/*.css`, using `stylelint-config-standard` plus LF and final-newline rules from `@stylistic`.          |
-| `npm test`                 | 32 unit/service tests covering contact, authentication, GitHub storage, and publishing/cache boundaries. Use Node.js 24.       |
-| `npm run build`            | Production build and static route generation.                                                                                  |
-| `npm run format:check`     | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                    |
-| `git diff --check`         | Whitespace in the relevant diff.                                                                                               |
-| `npm run test:browser`     | 26 current Chromium regressions against a production build, not the dev server.                                                |
-| `npm run test:cms:browser` | Isolated GitHub CMS production build and Chromium workflow; replaces `.next` with a fixture build. Rebuild normally afterward. |
+| Command                    | Scope                                                                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run lint`             | ESLint with Next.js Core Web Vitals and TypeScript recommendations, LF/final-newline, and empty-line checks.                                                |
+| `npm run typecheck`        | Strict application TypeScript. The application tsconfig excludes `tests`.                                                                                   |
+| `npm run lint:css`         | Stylelint across `src/**/*.css`, using `stylelint-config-standard` plus LF and final-newline rules from `@stylistic`.                                       |
+| `npm test`                 | 38 unit/service tests covering contact, authentication, GitHub storage, blog schemas, existence responses, and publishing/cache boundaries. Use Node.js 24. |
+| `npm run build`            | Production build and static route generation.                                                                                                               |
+| `npm run format:check`     | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                                                 |
+| `git diff --check`         | Whitespace in the relevant diff.                                                                                                                            |
+| `npm run test:browser`     | 29 current Chromium regressions against a production build, not the dev server.                                                                             |
+| `npm run test:cms:browser` | Isolated GitHub CMS production build and Chromium workflow; replaces `.next` with a fixture build. Rebuild normally afterward.                              |
 
 `.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, ESLint, CSS lint, typechecking, unit tests, a dummy-CAPTCHA production build, Chromium installation, and browser tests on pull requests. This describes the current workflow definition; inspect an actual run before claiming remote CI passed.
 
@@ -138,10 +150,11 @@ Use Node.js 24 and the committed lockfile. Setup and browser commands are in [RE
 | ------------------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `contact.spec.ts`        | 3     | Pending CAPTCHA/read-only fields, one submission snapshot, draft retention on failure, clearing on mocked success.                                                      |
 | `contact-api.spec.ts`    | 2     | Permitted Unicode requests above the old cap, 64 KiB limit, origin, and honeypot checks.                                                                                |
-| `project-routes.spec.ts` | 2     | Known project rendering and unknown-project 404/noindex recovery without JavaScript.                                                                                    |
+| `project-routes.spec.ts` | 3     | Known project rendering, unknown-project recovery, and snapshot category ordering without JavaScript.                                                                   |
 | `cursor.spec.ts`         | 9     | Raw pointer/frame geometry, clearance and shape changes, rendered contrast, nested targets, reflow/removal, native fallbacks, reduced motion, touch, and no JavaScript. |
 | `parallax.spec.ts`       | 9     | Hero crossfade/reverse scroll, fixed target geometry, travel/coverage, focus hold, reduced motion, coarse pointers, oversized/narrow/short contexts, and no JavaScript. |
 | `theme.spec.ts`          | 1     | Theme destination label and persisted selection across public navigation.                                                                                               |
+| `blog.spec.ts`           | 2     | Empty snapshot blog, canonical/sitemap URLs, and complete post 404 recovery without JavaScript.                                                                         |
 
 The browser server uses `127.0.0.1:3103`, clears provider secrets, and does not reuse an existing server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. These tests do not send real email. The public dummy CAPTCHA key must be present at build time; rebuild with the real public key before any deployment that needs live CAPTCHA.
 
@@ -201,6 +214,7 @@ These observations establish only that earlier local optimizer baseline. `images
 
 ## Remaining work
 
+- **Blog hosted acceptance:** verify owner OAuth and real post publication/cache propagation against the configured preview before release. Local blog workflow coverage uses simulated GitHub storage; PR #6's older baseline does not validate this follow-up feature.
 - **Hosted CMS acceptance:** complete the isolated preview OAuth, owner access, publish/unpublish/delete, stale-tab conflict, media, route-recovery, and observed cache-propagation checks in the [hosted release checklist](architecture.md#hosted-release-checklist). No hosted OAuth exchange, repository write, or Vercel cache propagation has been verified.
 - **Application cutover:** the `web-assets/master` migration is complete at `ce10d45`, with `legacy` preserving `3a62ce0`; hosted application cutover remains outstanding. Do not rerun the removed converter. Keep compatibility paths and `legacy` until the cutover is accepted.
 - **Images:** investigate the temporary optimizer bypass and revalidate before enabling transformations again. Check actual hosted delivery, original download sizes, cache behavior, and usage separately. Review the ChatGPT Clone hero crop when its image is supplied.

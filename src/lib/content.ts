@@ -23,6 +23,14 @@ export type Project = {
 };
 export type Design = (typeof designData)[number];
 
+export type BlogPost = {
+  slug: string;
+  title: string;
+  summary: string;
+  body: string;
+  publishedAt: string;
+};
+
 export const designs: readonly Design[] = designData;
 
 export async function getProjects(): Promise<readonly Project[]> {
@@ -37,6 +45,17 @@ export async function getProjectCategories(): Promise<readonly string[]> {
   }
   const projects: readonly Project[] = projectData;
   return [...new Set(projects.flatMap((project) => project.categories ?? [project.category]))];
+}
+
+export async function getBlogPosts(): Promise<readonly BlogPost[]> {
+  return (await getPublicContent())?.posts ?? [];
+}
+
+export async function findBlogPost(slug: string) {
+  'use cache';
+  cacheTag(`post:${slug}`, 'posts');
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 });
+  return (await getBlogPosts()).find((post) => post.slug === slug);
 }
 
 export function selectFeaturedProjects(projects: readonly Project[]) {
