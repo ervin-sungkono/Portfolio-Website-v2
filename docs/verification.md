@@ -126,6 +126,8 @@ Six new mobile browser cases cover a native touch swipe, reversible fade over th
 
 An additional Home sweep checked keyboard focus and both themes at 320, 390, 820, 1024, and 1440px: all ten samples had no horizontal overflow or page runtime errors, with focus visible and outside inert slides. Mobile top/first/next screenshots were inspected at 390px using the existing WeTrack image bytes as a fixture; other external images were blocked. Whole-repository formatting, whitespace, and all 45 local Markdown file/fragment references passed. These are local layout checks, not hosted asset-delivery measurements.
 
+[Initial CI run 40637907406](https://github.com/ervin-sungkono/Portfolio-Website-v2/actions/runs/40637907406) passed for implementation head `920b6e9`, tested as merge candidate `6d8b20a`, with zero audit vulnerabilities. Its public suite recorded 34 immediate passes and one desktop image-parallax test passing on retry. That test read a stale animation position immediately after scrolling; a follow-up now waits for the midpoint geometry before comparing wheel movement. Ten consecutive local runs passed after this test correction. The PR checks track the resulting head.
+
 Physical iOS Safari and Android Chrome, dynamic browser-toolbar behavior, actual browser zoom, and screen-reader acceptance remain unverified. A Playwright WebKit launch was blocked by missing host libraries; no WebKit pass is claimed. No content-repository write, email, merge, or production change was performed.
 
 ## Public component split — 25 October 2026
