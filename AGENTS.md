@@ -1,6 +1,6 @@
 # Portfolio agent handoff
 
-Updated **28 October 2026 (Asia/Jakarta)**. PR #5 (`codex/github-portfolio-cms` → `dev`) is the base for PR #6 (`codex/pr5-release-readiness` → `codex/github-portfolio-cms`), which remains draft/open. Current blog work is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`; its follow-up PR will target the PR #6 branch. Inspect live repository and PR state before continuing.
+Updated **28 October 2026 (Asia/Jakarta)**. PR #5 (`codex/github-portfolio-cms` → `dev`) is the base for PR #6 (`codex/pr5-release-readiness` → `codex/github-portfolio-cms`), which remains draft/open. Current blog work is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`; [PR #7](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/7) targets the PR #6 branch. Inspect live repository and PR state before continuing.
 
 ## Repository and branch
 

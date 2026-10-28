@@ -2,7 +2,7 @@
 
 Portfolio built with Next.js 16.4 App Router, React, and strict TypeScript. Public pages render on the server with focused client components for navigation, contact, and decorative motion. The owner can manage published projects, blog posts, homepage copy, taxonomy, and images through a GitHub-backed `/admin` workspace without a database or separate backend.
 
-The blog feature is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`. PR #6 remains draft/open, and the follow-up PR will target its branch. See [verification](docs/verification.md) for the dated PR #5/6 evidence and blog verification results and remaining hosted checks. The owner-managed CMS uses the existing public GitHub content repository; hosted OAuth and application cutover checks remain pending.
+The blog feature is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`. [PR #7](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/7) targets PR #6’s branch; PR #6 remains draft/open. See [verification](docs/verification.md) for the dated PR #5/6 evidence and blog verification results and remaining hosted checks. The owner-managed CMS uses the existing public GitHub content repository; hosted OAuth and application cutover checks remain pending.
 
 ## Development
 

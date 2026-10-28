@@ -104,13 +104,15 @@ Documentation validation passed for all five edited Markdown files: Prettier, 22
 
 ## Blog feature — 28 October 2026
 
-Blog implementation is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`. PR #6 remains draft/open, and the follow-up PR will target its branch. The PR #6 checks above predate the blog changes and do not validate them.
+Blog implementation is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`. [PR #7](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/7) targets PR #6’s branch; PR #6 remains draft/open. The PR #6 checks above predate the blog changes and do not validate them.
 
 The feature adds server-rendered `/blog` and `/blog/[slug]` pages, safe Markdown rendering, and a Blog Posts panel inside the existing CMS. Post storage, schema, ordering, cache invalidation, sitemap, and missing/unavailable-content behavior are described in [architecture](architecture.md#blog-posts). No sample posts, remote content writes, hosted OAuth attempts, or release changes were made for this feature.
 
 Node.js 24.19.0/npm 11.9.0 checks passed: clean `npm ci`, zero-vulnerability `npm audit`, **38 unit tests**, TypeScript, production build, CSS lint, and ESLint with zero errors and two existing warnings. The public browser suite passed **29/29**, including the empty blog and complete post 404 recovery without JavaScript. The CMS suite passed **8/8**, covering drafts, Markdown safety, publication/recovery/sitemap without rebuilding, date/slug ordering, unpublish/delete, post refresh retry without republishing, and SHA conflicts preserving drafts across unrelated refreshes and section reloads. A label locator was corrected before the passing run.
 
 The ordinary snapshot production build was restored after the CMS fixture suite. Hosted OAuth, actual repository publishing, and production promotion were not performed.
+
+[CI run 40626914051](https://github.com/ervin-sungkono/Portfolio-Website-v2/actions/runs/40626914051) passed for implementation head `9a3e3185b45f13dd0742e31ea73e9a6cf8e903dd`, tested as merge candidate `e8d5d197d490f30084a4ceed968968f8b67cd875` against PR #6’s `cffbfec`. Its logs confirm 38 unit, 29 public browser, and 8 CMS browser tests, with zero audit vulnerabilities. The [snapshot-mode preview](https://ervin-sungkono-5jgt64a0q-ervinsungkonos-projects.vercel.app/blog) was READY: `/blog` returned 200 with the canonical origin and preview noindex, `/blog/review-missing` returned complete 404/no-store recovery, and the sitemap included `/blog`. A component-stylesheet follow-up passed the production build, CSS lint, and five focused project/blog browser checks; the PR checks track the final head.
 
 Blog archive/detail and all six CMS panels were exercised at 320, 390, 820, 1024, and 1440px in both themes. The tests also covered keyboard navigation, a root-font enlargement sample, and no page runtime errors in the blog samples. Mobile light and desktop dark article screenshots were inspected. These checks do not replace actual browser zoom, screen-reader testing, hosted OAuth, or real content-repository writes.
 

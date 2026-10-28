@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { NotFoundContentProps } from './type';
-import styles from './style.module.css';
+import './style.css';
 
 export function NotFoundContent({
   description = 'Explore the projects or return to the homepage.',
@@ -8,15 +8,15 @@ export function NotFoundContent({
   linkLabel = 'Explore Projects',
 }: NotFoundContentProps) {
   return (
-    <section className={styles.page} data-not-found aria-labelledby="not-found-heading">
-      <div className={styles.copy}>
-        <p className={styles.code} aria-hidden="true">
+    <section className="not-found-content" data-not-found aria-labelledby="not-found-heading">
+      <div className="not-found-content-copy">
+        <p className="not-found-content-code" aria-hidden="true">
           404
         </p>
         <p className="eyebrow">404 / Page Not Found</p>
         <h1 id="not-found-heading">This Page Isn’t Here.</h1>
-        <p className={styles.description}>{description}</p>
-        <div className={styles.actions}>
+        <p className="not-found-content-description">{description}</p>
+        <div className="not-found-content-actions">
           <Link href="/" className="button">
             Back to Home
           </Link>
