@@ -1,4 +1,4 @@
-.page {
+.not-found-content {
   position: relative;
   isolation: isolate;
   display: grid;
@@ -11,13 +11,13 @@
   background: var(--background);
 }
 
-/* Match the original standalone 404, including without JavaScript. */
-:global(body:has([data-not-found]) > header),
-:global(body:has([data-not-found]) > footer) {
+/* Preserve standalone recovery, including without JavaScript. */
+body:has([data-not-found]) > header,
+body:has([data-not-found]) > footer {
   display: none;
 }
 
-.copy {
+.not-found-content-copy {
   position: relative;
   z-index: 1;
   width: min(100%, 42rem);
@@ -34,7 +34,7 @@
   }
 }
 
-.code {
+.not-found-content-code {
   margin: 0 0 var(--space-5);
   color: var(--accent);
   font-size: clamp(5rem, 18vw, 10rem);
@@ -43,14 +43,14 @@
   letter-spacing: -0.075em;
 }
 
-.description {
+.not-found-content-description {
   color: var(--muted);
   font-size: var(--text-body);
   margin: 0 auto var(--space-8);
   max-width: 35ch;
 }
 
-.actions {
+.not-found-content-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

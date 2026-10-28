@@ -1,11 +1,12 @@
-import { encode } from 'next-auth/jwt';
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-
-const baseURL = 'http://localhost:3104';
-const cookieName = '__Secure-authjs.session-token';
-const adminId = '42424242';
-const ownerToken = 'fixture-owner-token';
-const authSecret = 'cms-browser-fixture-secret-with-at-least-thirty-two-characters';
+import { expect, test, type Page } from '@playwright/test';
+import {
+  addOwnerCookie,
+  adminId,
+  baseURL,
+  ownerToken,
+  selectTheme,
+  waitForStatus,
+} from './helpers';
 const projectSlug = 'browser-cms-project';
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/L8kAAAAASUVORK5CYII=',
@@ -14,65 +15,9 @@ const png = Buffer.from(
 
 async function expectUniqueEditorPanels(page: Page) {
   await expect(page.locator('.cms-editor')).toHaveCount(1);
-  for (const id of ['projects', 'site', 'categories', 'technologies', 'images']) {
+  for (const id of ['projects', 'posts', 'site', 'categories', 'technologies', 'images']) {
     await expect(page.locator(`#cms-editor-${id}-panel`)).toHaveCount(1);
   }
-}
-
-async function sessionCookie(githubId = adminId, accessToken = ownerToken) {
-  return encode({
-    secret: authSecret,
-    salt: cookieName,
-    maxAge: 60 * 60,
-    token: {
-      sub: githubId,
-      githubId,
-      githubAccessToken: accessToken,
-      githubExpiresAt: Math.floor(Date.now() / 1000) + 60 * 60,
-      name: 'Fixture Owner',
-    },
-  });
-}
-
-async function addOwnerCookie(
-  context: BrowserContext,
-  githubId = adminId,
-  accessToken = ownerToken,
-) {
-  await context.addCookies([
-    {
-      name: cookieName,
-      value: await sessionCookie(githubId, accessToken),
-      domain: 'localhost',
-      path: '/',
-      httpOnly: true,
-      secure: true,
-      sameSite: 'Lax',
-    },
-  ]);
-}
-
-async function waitForStatus(context: BrowserContext, path: string, status: number) {
-  await expect
-    .poll(async () => (await context.request.get(new URL(path, baseURL).href)).status(), {
-      timeout: 30_000,
-      intervals: [250, 500, 1_000, 2_000],
-    })
-    .toBe(status);
-}
-
-async function selectTheme(page: import('@playwright/test').Page, theme: 'light' | 'dark') {
-  const root = page.locator('html');
-  if ((await root.getAttribute('data-theme')) === theme) {
-    return;
-  }
-  const current = await root.getAttribute('data-theme');
-  await page
-    .getByRole('button', {
-      name: current === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
-    })
-    .click();
-  await expect(root).toHaveAttribute('data-theme', theme);
 }
 
 test('owner publishes content and a prior project 404 recovers without a new build', async ({
@@ -103,14 +48,23 @@ test('owner publishes content and a prior project 404 recovers without a new bui
 
   await page.getByLabel('Choose a project').selectOption('');
   await page.getByLabel('Project URL slug').fill(projectSlug);
-  await page.getByLabel('Title', { exact: true }).fill('Browser CMS Project');
-  await page.getByLabel('Summary', { exact: true }).fill('Created through the owner editor.');
+  await page
+    .locator('#cms-editor-projects-panel')
+    .getByLabel('Title', { exact: true })
+    .fill('Browser CMS Project');
+  await page
+    .locator('#cms-editor-projects-panel')
+    .getByLabel('Summary', { exact: true })
+    .fill('Created through the owner editor.');
   await page
     .getByLabel('Description', { exact: true })
     .fill('This page appeared after a GitHub content commit, with no application rebuild.');
   await page.getByLabel('Year', { exact: true }).fill('2026');
   await page.locator('input[name="sortOrder"]').fill('20');
-  await page.getByLabel('Published on the public site').check();
+  await page
+    .locator('#cms-editor-projects-panel')
+    .getByLabel('Published on the public site')
+    .check();
   await page.getByLabel('Featured project').check();
   await page.getByLabel('Website', { exact: true }).check();
   await page.getByLabel('Next.js', { exact: true }).check();
@@ -162,7 +116,10 @@ test('owner publishes content and a prior project 404 recovers without a new bui
   await page.getByRole('button', { name: 'Projects', exact: true }).click();
   await expectUniqueEditorPanels(page);
   await page.getByLabel('Choose a project').selectOption(projectSlug);
-  await page.getByLabel('Published on the public site').uncheck();
+  await page
+    .locator('#cms-editor-projects-panel')
+    .getByLabel('Published on the public site')
+    .uncheck();
   await page.getByRole('button', { name: 'Save project' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Project saved.' })).toBeVisible();
   await waitForStatus(context, `/project/${projectSlug}`, 404);
@@ -205,15 +162,22 @@ test('explicit upload destinations preserve drafts and publish a project named t
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
   await page.getByLabel('Choose a project').selectOption('');
   await page.getByLabel('Project URL slug').fill('technologies');
-  await page.getByLabel('Title', { exact: true }).fill('Technologies Project');
   await page
+    .locator('#cms-editor-projects-panel')
+    .getByLabel('Title', { exact: true })
+    .fill('Technologies Project');
+  await page
+    .locator('#cms-editor-projects-panel')
     .getByLabel('Summary', { exact: true })
     .fill('A valid project slug, not an icon destination.');
   await page
     .getByLabel('Description', { exact: true })
     .fill('Published using its uploaded project cover.');
   await page.getByLabel('Year', { exact: true }).fill('2026');
-  await page.getByLabel('Published on the public site').check();
+  await page
+    .locator('#cms-editor-projects-panel')
+    .getByLabel('Published on the public site')
+    .check();
   await page.getByLabel('Website', { exact: true }).check();
   await page.getByLabel('Next.js', { exact: true }).check();
   await expectUniqueEditorPanels(page);
@@ -239,7 +203,9 @@ test('explicit upload destinations preserve drafts and publish a project named t
   expect((await rejectedUpload).status()).toBe(400);
   await expect(page.locator('#cms-editor-images-panel').getByRole('alert')).toContainText('scope');
   await page.getByRole('button', { name: 'Projects', exact: true }).click();
-  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Technologies Project');
+  await expect(
+    page.locator('#cms-editor-projects-panel').getByLabel('Title', { exact: true }),
+  ).toHaveValue('Technologies Project');
   await expect(page.getByLabel('Project URL slug')).toHaveValue('technologies');
   await page.getByRole('button', { name: 'Images', exact: true }).click();
   await page.getByRole('button', { name: 'Upload image' }).click();
@@ -402,6 +368,9 @@ test('private CMS APIs reject missing/wrong-owner sessions, bad tokens, cross-or
   expect(unavailable.headers()['cache-control']).toBe('no-store');
   expect(await unavailable.text()).toContain('temporarily unavailable');
   expect(await unavailable.text()).not.toContain('This Page Isn’t Here.');
+  const unavailablePost = await context.request.get('/blog/fixture-upstream-unavailable');
+  expect(unavailablePost.status()).toBe(503);
+  expect(unavailablePost.headers()['cache-control']).toBe('no-store');
 
   await context.close();
 });
@@ -418,6 +387,7 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
   const widths = [320, 390, 820, 1024, 1440];
   const sections = [
     { button: 'Projects', heading: 'Projects', id: 'projects', control: 'Title' },
+    { button: 'Blog Posts', heading: 'Blog Posts', id: 'posts', control: 'Body' },
     { button: 'Site Profile', heading: 'Site Profile', id: 'site', control: 'Site title' },
     { button: 'Categories', heading: 'Categories', id: 'categories', control: 'New category ID' },
     {
@@ -503,8 +473,11 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
   await page.setViewportSize({ width: 390, height: 900 });
   await page.evaluate(() => document.documentElement.style.removeProperty('font-size'));
   const projectsTab = page.getByRole('button', { name: 'Projects', exact: true });
+  const postsTab = page.getByRole('button', { name: 'Blog Posts', exact: true });
   const siteTab = page.getByRole('button', { name: 'Site Profile', exact: true });
   await projectsTab.focus();
+  await page.keyboard.press('Tab');
+  await expect(postsTab).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(siteTab).toBeFocused();
   const focusStyle = await siteTab.evaluate((element) => {

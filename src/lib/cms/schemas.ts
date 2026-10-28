@@ -50,6 +50,19 @@ export const projectSchema = z.strictObject({
   }),
 });
 
+export const postSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  title: text(120),
+  summary: text(240),
+  body: z
+    .string()
+    .min(1)
+    .max(30_000)
+    .refine((value) => Boolean(value.trim()), 'Write a post body.'),
+  published: z.boolean(),
+  publishedAt: z.iso.date(),
+});
+
 export const siteSchema = z.strictObject({
   schemaVersion: z.literal(1),
   siteTitle: text(120),
@@ -81,6 +94,7 @@ const expectedSha = z
 
 export const publishMutationSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('project'), slug: idSchema, expectedSha, data: projectSchema }),
+  z.strictObject({ kind: z.literal('post'), slug: idSchema, expectedSha, data: postSchema }),
   z.strictObject({ kind: z.literal('site'), expectedSha, data: siteSchema }),
   z.strictObject({ kind: z.literal('categories'), expectedSha, data: categoriesSchema }),
   z.strictObject({ kind: z.literal('technologies'), expectedSha, data: technologiesSchema }),
@@ -95,6 +109,7 @@ export const uploadMediaSchema = z.strictObject({
 });
 
 export type ProjectDocument = z.infer<typeof projectSchema>;
+export type PostDocument = z.infer<typeof postSchema>;
 export type SiteDocument = z.infer<typeof siteSchema>;
 export type Categories = z.infer<typeof categoriesSchema>;
 export type Technologies = z.infer<typeof technologiesSchema>;

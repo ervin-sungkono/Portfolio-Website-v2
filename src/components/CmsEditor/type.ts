@@ -1,6 +1,12 @@
-import type { Categories, ProjectDocument, SiteDocument, Technologies } from '@/lib/cms/schemas';
+import type {
+  Categories,
+  PostDocument,
+  ProjectDocument,
+  SiteDocument,
+  Technologies,
+} from '@/lib/cms/schemas';
 
-export type CmsSection = 'projects' | 'site' | 'categories' | 'technologies' | 'images';
+export type CmsSection = 'projects' | 'posts' | 'site' | 'categories' | 'technologies' | 'images';
 
 export type FieldErrorProps = { id: string; message?: string };
 
@@ -10,15 +16,18 @@ export type CmsSnapshot = {
   categories: { data: Categories; sha: string };
   technologies: { data: Technologies; sha: string };
   projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
+  posts: Array<{ slug: string; data: PostDocument; sha: string }>;
 };
 
 export type CmsWriteRequest =
   | { kind: 'project'; slug: string; expectedSha: string | null; data: ProjectDocument }
+  | { kind: 'post'; slug: string; expectedSha: string | null; data: PostDocument }
   | { kind: 'site'; expectedSha: string; data: SiteDocument }
   | { kind: 'categories'; expectedSha: string; data: Categories }
   | { kind: 'technologies'; expectedSha: string; data: Technologies }
   | { kind: 'delete-project'; slug: string; expectedSha: string }
-  | { kind: 'revalidate'; target: 'project' | 'site' | 'taxonomy'; slug?: string };
+  | { kind: 'delete-post'; slug: string; expectedSha: string }
+  | { kind: 'revalidate'; target: 'project' | 'post' | 'site' | 'taxonomy'; slug?: string };
 
 export type EditorMessage = {
   tone: 'success' | 'error' | 'conflict';
@@ -26,7 +35,7 @@ export type EditorMessage = {
   commitUrl?: string;
   cache?: 'refreshed' | 'pending';
   conflictSlug?: string;
-  revalidateTarget?: 'project' | 'site' | 'taxonomy';
+  revalidateTarget?: 'project' | 'post' | 'site' | 'taxonomy';
   revalidateSlug?: string;
 };
 

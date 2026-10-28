@@ -13,10 +13,12 @@ import {
 } from './github.ts';
 import {
   categoriesSchema,
+  postSchema,
   projectSchema,
   siteSchema,
   technologiesSchema,
   type Categories,
+  type PostDocument,
   type ProjectDocument,
   type SiteDocument,
   type Technologies,
@@ -38,6 +40,7 @@ export type CmsSnapshot = {
   categories: { data: Categories; sha: string };
   technologies: { data: Technologies; sha: string };
   projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
+  posts: Array<{ slug: string; data: PostDocument; sha: string }>;
 };
 
 export type ContentFile = { text: string; sha: string; size: number };
@@ -300,7 +303,10 @@ export async function getSnapshot(token?: string): Promise<CmsSnapshot> {
     requiredDocument(repository, 'content/categories.json', categoriesSchema, token),
     requiredDocument(repository, 'content/technologies.json', technologiesSchema, token),
   ]);
-  const projectFiles = await listContentDirectory(repository, 'content/projects', token);
+  const [projectFiles, postFiles] = await Promise.all([
+    listContentDirectory(repository, 'content/projects', token),
+    listContentDirectory(repository, 'content/posts', token),
+  ]);
   const projects = await Promise.all(
     (projectFiles ?? []).map(async (entry) => {
       const match = /^([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(entry.name);
@@ -318,8 +324,28 @@ export async function getSnapshot(token?: string): Promise<CmsSnapshot> {
     }),
   );
   projects.sort((a, b) => a.slug.localeCompare(b.slug));
+  const posts = await Promise.all(
+    (postFiles ?? []).map(async (entry) => {
+      const match = /^([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(entry.name);
+      if (
+        entry.type !== 'file' ||
+        !match ||
+        match[1].length > 100 ||
+        entry.path !== `content/posts/${entry.name}`
+      ) {
+        throw unsupported('The post directory contains a file with an unsupported name or type.');
+      }
+      const slug = match[1];
+      const file = await readContentFile(repository, entry.path, token);
+      if (!file) {
+        throw new CmsError('not_found', `Post ${slug} changed while the CMS was loading.`, 404);
+      }
+      return { slug, data: jsonDocument(file, postSchema, entry.path), sha: file.sha };
+    }),
+  );
+  posts.sort((a, b) => a.slug.localeCompare(b.slug));
   await validateReferences(repository, projects, categories.data, technologies.data);
-  return { repository, site, categories, technologies, projects };
+  return { repository, site, categories, technologies, projects, posts };
 }
 
 export async function readProjectMedia(

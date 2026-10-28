@@ -1,25 +1,25 @@
 # Portfolio architecture and operations
 
-Reviewed for component organization on **25 October 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
+Reviewed for the blog feature on **28 October 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
 
 ## Scope and stack
 
-The portfolio preserves verified project facts, artwork, CV, social links, and team credits through server-rendered pages. The stack is Next.js 16.4.3 App Router, React 19.2, strict TypeScript, native CSS, next-themes, Motion 14, Nodemailer 10.2, Auth.js 5 beta, Zod 4, and React Hook Form. Install with the committed lockfile using Node.js 24; the package requires Node.js 22 or newer, while the isolated test loader requires Node.js 24.
+The portfolio preserves verified project facts, artwork, CV, social links, and team credits through server-rendered pages, with an owner-authored Markdown blog. The stack is Next.js 16.4.3 App Router, React 19.2, strict TypeScript, native CSS, next-themes, Motion 14, Nodemailer 10.2, Auth.js 5 beta, Zod 4, React Hook Form, and React Markdown 10.1.0. Install with the committed lockfile using Node.js 24; the package requires Node.js 22 or newer, while the isolated test loader requires Node.js 24.
 
 The owner-only GitHub CMS lives inside this Next.js application. A separate public repository stores JSON and modest images; there is no database, separate backend, or object-storage provider. The GitHub-backed CMS is the current implementation; the earlier Neon proposal is historical and is not part of this release. Professional content expansion remains deferred: do not infer new responsibilities, contributions, seniority, or measured outcomes from the implementation.
 
 ## Code boundaries
 
-| Location                 | Responsibility                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| `src/app`                | Routes, layouts, metadata endpoints, page composition, and the contact API.        |
-| `src/components`         | Reusable UI and focused browser interactions.                                      |
-| `src/styles/globals.css` | Shared theme, typography, spacing, layout utilities, and accessibility primitives. |
-| `src/content`            | Profile facts, engineering walkthroughs, projects, and design snapshots.           |
-| `src/lib/content.ts`     | Collection exports, project lookup, filtering, and related-project selection.      |
-| `src/lib/metadata.ts`    | Public origin and shared page/social metadata.                                     |
-| `src/lib/contact`        | Shared validation, bounded request parsing, and server-only provider integration.  |
-| `src/lib/image-sizes.ts` | Layout-specific image slot hints.                                                  |
+| Location                 | Responsibility                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `src/app`                | Routes, layouts, metadata endpoints, page composition, and the contact API.           |
+| `src/components`         | Reusable UI and focused browser interactions.                                         |
+| `src/styles/globals.css` | Shared theme, typography, spacing, layout utilities, and accessibility primitives.    |
+| `src/content`            | Profile facts, engineering walkthroughs, projects, and design snapshots.              |
+| `src/lib/content.ts`     | Project and blog collection access, lookup, filtering, and related-project selection. |
+| `src/lib/metadata.ts`    | Public origin and shared page/social metadata.                                        |
+| `src/lib/contact`        | Shared validation, bounded request parsing, and server-only provider integration.     |
+| `src/lib/image-sizes.ts` | Layout-specific image slot hints.                                                     |
 
 Components use PascalCase directories with `index.tsx`, a colocated style file, and `type.ts` when needed. Reusable public links, controls, cards, and motion wrappers live in `src/components/common`; page-specific components remain in their existing directories. The shared scroll hook is at `src/lib/motion/use-scroll-motion.ts`. Component styles use prefixed selectors and native nesting, while page styles remain CSS Modules. See [verification](verification.md) for dated check coverage and its limits.
 
@@ -29,12 +29,13 @@ Keep functions and boundaries small. Add abstractions or dependencies only when 
 
 ## Routes and collections
 
-Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, and `/contact`. The content snapshot has 17 project detail pages, for 22 public pages in total, and 16 design entries.
+Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, `/contact`, `/blog`, and `/blog/[slug]`. The snapshot includes 17 project detail pages and 16 design entries; the blog routes serve only published CMS posts.
 
 - Project search/category filters and design categories use shareable GET URLs with server rendering.
 - Snapshot mode features the first three projects in snapshot order. GitHub mode uses explicit `featured` flags and sorts projects by `sortOrder`, then stable slug; unfiltered archives exclude featured entries. Filtering searches the complete published collection.
 - GitHub category filters include labels referenced by published projects only. They sort by category `sortOrder`, then stable category ID, and deduplicate repeated labels after sorting. Snapshot category filters preserve first appearance in project order.
 - Project details can render newly published slugs after deployment. Their content is cached and invalidated after publication. Unknown/unpublished slugs use 404/noindex recovery; the current checks and any no-JavaScript limits are recorded in [verification](verification.md).
+- The blog archive and detail pages read published posts through the same cached public catalog. Posts sort by `publishedAt` descending, then slug ascending; a post's `published` flag controls visibility, while its date is editorial and does not schedule publication. With no published posts, the archive shows an empty state.
 - Related projects prioritize shared technologies, then category, through a small pure function.
   Preserve public slugs, destinations, assets, and attribution during maintenance. Framework route filenames retain their required names.
 
@@ -42,7 +43,7 @@ Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, and `/
 
 `profile.name` in `src/content/profile.ts` is authoritative: **Ervin Cahyadinata Sungkono**. Use the full name in visible identity, accessible alternatives, metadata, and structured data. Existing account URLs remain unchanged.
 
-Edit profile facts in `profile.ts`, collection entries in `projects.json` and `designs.json`, and walkthroughs/capability links in `engineering.ts`. Access project/design collections through `src/lib/content.ts`. The homepage selects the first three projects, so ordering is editorial. WeTrack, ChatGPT Clone, and Next Pokedex have walkthroughs with documented features, tradeoff analysis, original sources, and explicitly proposed validation steps. WeTrack's team credits remain visible.
+Edit profile facts in `profile.ts`, collection entries in `projects.json` and `designs.json`, and walkthroughs/capability links in `engineering.ts`. Access projects, designs, and blog posts through their existing public content boundaries. The homepage selects the first three projects, so ordering is editorial. WeTrack, ChatGPT Clone, and Next Pokedex have walkthroughs with documented features, tradeoff analysis, original sources, and explicitly proposed validation steps. WeTrack's team credits remain visible.
 
 The inherited content was reviewed on **7 October 2026**; the documentation date does not refresh those external facts:
 
@@ -55,7 +56,7 @@ The inherited content was reviewed on **7 October 2026**; the documentation date
 | Experience and education                             | The owner's public [LinkedIn profile](https://www.linkedin.com/in/ervin-cahyadinata-sungkono), recorded in `profile.ts`; it is not polled at runtime.           |
 | CV                                                   | Original link retained; its currency has not been independently verified.                                                                                       |
 
-`src/lib/content.ts` is the public content boundary in both modes. GitHub configuration replaces project collection reads and homepage copy; artwork, verified identity/experience, CV, and engineering/team-credit content remain in the application. An unset GitHub source retains the existing snapshots; invalid or unavailable configured storage is never silently replaced with snapshots.
+`src/lib/content.ts` is the public content boundary in both modes. GitHub configuration replaces project and published-post reads and homepage copy; project/design snapshots, artwork, verified identity/experience, CV, and engineering/team-credit content remain in the application. There are no bundled sample posts. An unset GitHub source yields an empty blog; invalid or unavailable configured storage is never silently replaced with snapshots.
 
 ## GitHub CMS
 
@@ -84,10 +85,20 @@ Opening `/admin` shows setup or GitHub sign-in. Sign-in accepts only the configu
 - `service.ts`, `media.ts`: initialization, optimistic JSON publishing/deletion, and immutable image uploads.
 - `auth.ts`, `auth-policy.ts`, `http.ts`: trusted credential retrieval, owner policy, same-origin mutations, bounded JSON requests, and private responses.
 - `public.ts`, `cache.ts`, `cache-policy.ts`, `publishing.ts`: public cached projection, invalidation, and separation of commit success from cache failures.
-- `src/components/CmsEditor`: structured project, site-profile, category, technology, and image forms; no GitHub API calls or credentials in components. Each panel and `CmsMessage` has a nested PascalCase directory with `index.tsx`, `type.ts`, and component-specific `style.css`. The editor's own `style.css` keeps shared form primitives, avoiding duplicated control styles.
-- `src/proxy.ts` and `/api/content/project`: publication checks before project rendering, using the same cached public content boundary. Missing projects return a buffered recovery document with HTTP 404/noindex/no-store. This avoids Next.js PPR's blank no-JavaScript recovery and status replacement during rewrites. Internal requests use the platform's `VERCEL_URL` or local `127.0.0.1:PORT` (default 3000), never a visitor-supplied Host. Set `PORT` when running the app locally on another port.
+- `src/components/CmsEditor`: structured project, blog post, site-profile, category, technology, and image forms; no GitHub API calls or credentials in components. Each panel and `CmsMessage` has a nested PascalCase directory with `index.tsx`, `type.ts`, and component-specific `style.css`. The editor's own `style.css` keeps shared form primitives, avoiding duplicated control styles.
+- `src/proxy.ts` and `/api/content/project`, `/api/content/post`: publication checks before project/post rendering, using the same cached public content boundary and shared existence-response helper. Missing content returns a buffered recovery document with HTTP 404/noindex/no-store; unavailable content returns HTTP 503/no-store instead of a false 404. This avoids Next.js PPR's blank no-JavaScript recovery and status replacement during rewrites. Internal requests use the platform's `VERCEL_URL` or local `127.0.0.1:PORT` (default 3000), never a visitor-supplied Host. Set `PORT` when running the app locally on another port.
 
-Storage uses `content/site.json`, `content/categories.json`, `content/technologies.json`, and `content/projects/<slug>.json`. The filename is the URL identity; project JSON has no duplicate ID/slug. Registries use stable IDs, projects refer to those IDs, and images use repository-relative paths under `media/projects/<slug>/` or `media/technologies/`. No project index is committed. The application's existing route remains `/project/<slug>`.
+Storage uses `content/site.json`, `content/categories.json`, `content/technologies.json`, `content/projects/<slug>.json`, and optional `content/posts/<slug>.json`. The filename is the URL identity; project/post JSON has no duplicate ID/slug. Registries use stable IDs, projects refer to those IDs, and images use repository-relative paths under `media/projects/<slug>/` or `media/technologies/`. No project index is committed. Public routes remain `/project/<slug>` and `/blog/<slug>`.
+
+### Blog posts
+
+Posts use the existing `CmsEditor` orchestrator, shared snapshot reader, and `/api/cms` mutation boundary. The `PostsPanel` creates, edits, publishes/unpublishes, and deletes posts with the same owner-session, expected-SHA, custom author/committer, commit-before-invalidation, draft-retention, and cache-retry behavior as other CMS sections.
+
+The optional `content/posts/` directory may be absent; the reader then returns an empty post list. Existing repositories need no new initialization or migration. Each filename supplies a permanent lowercase slug of at most 100 characters. Its strict `PostDocument` schema version 1 contains title (120 characters), summary (240), Markdown `body` (30,000), `published` boolean, and ISO calendar date `publishedAt`. Body whitespace is preserved for Markdown indentation; blank bodies are rejected. Only `published: true` posts appear publicly. The date controls display and descending order (slug ascending breaks ties); it does not schedule publication. There are no bundled sample posts.
+
+`getBlogPosts()` and `findBlogPost()` in `src/lib/content.ts` expose the published, slug-stable projection from the existing cached catalog; no OAuth token enters the public cache. Article metadata uses the title, summary, canonical `/blog/<slug>`, author, and publication date. `src/app/sitemap.ts` includes `/blog` and published post URLs under `https://ervincs.com`.
+
+Post bodies render through `react-markdown` with `skipHtml`; there is no raw-HTML plugin, unsafe URL transform, or rich-text editor. The page maps Markdown `h1` to `h2` beneath its article `h1`. Blog posts have no media-upload flow, search, taxonomy, comments, RSS, or autosave. The shared CMS JSON reader allows up to 196,608 bytes for the 30,000-character Markdown payload; this does not change the contact API's 64 KiB limit or CMS image-upload limit.
 
 ### Initialization and editing
 
@@ -99,11 +110,11 @@ Images accept PNG, JPEG, and WebP only, at most 1 MiB, with matching MIME, exten
 
 ### Publishing and ISR
 
-Next.js Cache Components uses `cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })` for the validated public catalog/site/taxonomy. These cache-profile values do not promise a hosted propagation time. The small portfolio shares one catalog loader rather than fetching each project per visitor; individual project lookups also carry `project:<slug>` tags. Cache keys include the configured numeric ID/repository and never session credentials. Owner lookup is cached for one day. Authenticated editor reads bypass the public content cache. Unauthenticated REST limits still apply on cold reads; an upstream failure during background refresh can retain the prior good cached result, while an expired/cold cache can fail visibly.
+Next.js Cache Components uses `cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })` for the validated public catalog, including site, taxonomy, projects, and posts. These cache-profile values do not promise a hosted propagation time. The small portfolio shares one catalog loader rather than fetching each item per visitor; individual project and post lookups also carry `project:<slug>` or `post:<slug>` tags. Cache keys include the configured numeric ID/repository and never session credentials. Owner lookup is cached for one day. Authenticated editor reads bypass the public content cache. Unauthenticated REST limits still apply on cold reads; an upstream failure during background refresh can retain the prior good cached result, while an expired/cold cache can fail visibly.
 
-Only after GitHub confirms a content commit does the API invalidate `projects`, `project:<slug>`, `site`, or `taxonomy` and the affected `/`, `/project`, detail, and sitemap paths. `revalidateTag(tag, 'max')` marks data stale; visitors may briefly receive the previous version while regeneration runs. “Cache refreshed” in the editor means invalidation was accepted, not instant global delivery. If invalidation fails after a commit, the saved result and commit link are retained with a **Retry public refresh** operation that does not write another Git commit.
+Only after GitHub confirms a content commit does the API invalidate `projects`, `project:<slug>`, `posts`, `post:<slug>`, `site`, or `taxonomy` and the affected `/`, `/project`, detail, `/blog`, post, and sitemap paths. `revalidateTag(tag, 'max')` marks data stale; visitors may briefly receive the previous version while regeneration runs. “Cache refreshed” in the editor means invalidation was accepted, not instant global delivery. If invalidation fails after a commit, the saved result and commit link are retained with a **Retry public refresh** operation that does not write another Git commit.
 
-`partialPrefetching` is explicitly disabled while migrating the existing portfolio to Cache Components. Project details render on request with cached content; collection GET filters use blocking server rendering so native navigation remains usable. There is no build-time slug allowlist. Public regression checks own the compatibility evidence. Direct GitHub edits appear after cache expiry or an authorized refresh, not via a webhook. Content commits never call a deploy hook or Vercel deployment API. `images.unoptimized: true` still serves original hashed GitHub assets; the CMS does not enable image transformations.
+`partialPrefetching` is explicitly disabled while migrating the existing portfolio to Cache Components. Project and blog detail routes render on request with cached content; collection GET filters use blocking server rendering so native navigation remains usable. There is no build-time slug allowlist. Public regression checks own the compatibility evidence. Direct GitHub edits appear after cache expiry or an authorized refresh, not via a webhook. Content commits never call a deploy hook or Vercel deployment API. `images.unoptimized: true` still serves original hashed GitHub assets; the CMS does not enable image transformations.
 
 ### Legacy content mapping and rollback
 
@@ -117,7 +128,7 @@ Before a hosted cutover, capture the current deployment identity, application co
 
 The public origin is **https://ervincs.com**, defined in `src/lib/metadata.ts`. A `SITE_URL` environment variable does not control it. Canonicals, social URLs, sitemap, robots, and structured data must use this origin in both local and preview builds.
 
-Routes have distinct descriptions and matching Open Graph/Twitter metadata. Filtered collection URLs canonicalize to the unfiltered collection. About renders ProfilePage/Person structured data using visible profile facts; serialization escapes `<`. Project shares use the project's title and screenshot. These are discovery foundations, without a promise of indexing or search rank.
+Routes have distinct descriptions and matching Open Graph/Twitter metadata. Filtered collection URLs canonicalize to the unfiltered collection. About renders ProfilePage/Person structured data using visible profile facts; serialization escapes `<`. Project shares use the project's title and screenshot. Blog articles use their title, summary, author, publication date, and canonical slug in article metadata. These are discovery foundations, without a promise of indexing or search rank.
 
 `src/app/robots.ts` and `src/app/sitemap.ts` own discovery endpoints. An old checkout may contain ignored generated `public/robots.txt`, `public/sitemap.xml`, or `public/sitemap-0.xml`; remove those obsolete files if present so they do not shadow the routes. Preview `noindex` is expected; actual deployment headers and production indexing require separate checks.
 
@@ -179,14 +190,14 @@ These are required acceptance steps, not claims that hosted work has been comple
 
 - [ ] Sign in as the configured owner, sign out, and sign in again. Confirm unauthenticated reads/writes are rejected, wrong-owner access is rejected, session JSON contains no OAuth token, and admin/API responses are private and no-store.
 - [ ] Confirm the existing repository points to the expected default branch and that CMS commits record the configured custom author and committer. Add a uniquely named `cms-release-check-<utc-timestamp>` project with an existing taxonomy entry and a harmless uploaded image in the existing repository. These public test commits remain in Git history after the project is unpublished/deleted; record their commit and test slug.
-- [ ] Visit the detail URL while it is missing, then publish through `/admin`. Confirm the project page, archive, and sitemap update without a deployment, the prior 404 recovers with JavaScript disabled, and the uploaded media loads from its original host. Check both the preview hostname and its Vercel alias, including the internal content-request origin.
+- [ ] Visit missing project and blog-post URLs, then use `/admin` to publish a project and post. Confirm each detail page, archive, and sitemap update without a deployment; confirm each prior 404 recovers with JavaScript disabled. For the project, confirm uploaded media loads from its original host. Check both the preview hostname and its Vercel alias, including the internal content-request origin.
 - [ ] Record the content commit time, cache-invalidation result, and when each public route first shows the update. Invalidation marks cached data stale; it does not promise instant global delivery. The cache profile uses `stale: 300`, `revalidate: 3600`, and `expire: 86400`; these are cache parameters, not a hosted propagation SLA. Do not infer one from a single request.
-- [ ] Unpublish and then delete the test project through the CMS. Record when the detail route returns 404/noindex and the sitemap drops it. Record any remaining public uploaded-media path as an orphan; deletion of the project does not delete uploaded media or Git history.
+- [ ] Unpublish and then delete the test project and blog post through the CMS. Record when each detail route returns 404/noindex and the sitemap drops it. Record any remaining public project-media path as an orphan; deleting a post has no media cleanup, and unpublish/delete do not erase repository history.
 - [ ] Check an unavailable-upstream case using test fixtures only. Never inject failure into the hosted preview or production source. Confirm the application returns a temporary failure, not a false 404; a background refresh can retain a prior good result, while a cold/expired read can fail visibly.
 
 ### Public acceptance and production gate
 
-- [ ] Validate the 17 expected project slugs, shared CMS schemas, published references, every referenced media file, source/demo/CV links, and team credit. Review public pages in both themes with keyboard navigation at 320, 390, 820, 1024, and 1440px. Also check actual browser zoom, reduced motion, no JavaScript, Windows forced colors, and a screen reader; root-font enlargement is not browser zoom.
+- [ ] Validate the 17 expected project slugs, published blog posts and article metadata, shared CMS schemas, published references, every referenced media file, source/demo/CV links, and team credit. Review public pages in both themes with keyboard navigation at 320, 390, 820, 1024, and 1440px. Also check actual browser zoom, reduced motion, no JavaScript, Windows forced colors, and a screen reader; root-font enlargement is not browser zoom.
 - [ ] Confirm public canonicals stay on `https://ervincs.com`, preview responses remain noindex, authenticated responses remain private/no-store, and hosted images still serve original unoptimized files. Record actual image transfer sizes. Do not send email or perform a live contact test.
 - [ ] Before any separately authorized production promotion, verify the actual Vercel project/team, production domain and alias, Git branch/commit, Node.js runtime, and environment-variable targets. Build and smoke-test a fresh production-target candidate from the tested `dev` source with the intended production configuration. Never promote a CMS fixture build or a preview build.
 - [ ] Capture the known-good production deployment, configuration targets, application commit, and content branch/commit before release. For application rollback, restore that deployment with its matching configuration. For content rollback, make a reviewed change on the actual current content branch that preserves later publications; do not reset a branch or discard `legacy`. Keep the `legacy` branch and compatibility paths until hosted cutover is accepted.

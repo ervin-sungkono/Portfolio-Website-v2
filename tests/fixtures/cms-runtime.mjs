@@ -70,6 +70,28 @@ store('content/technologies.json', jsonBytes(technologies));
 store('content/projects/fixture-project.json', jsonBytes(fixtureProject));
 store(fixtureProject.media.cover, png);
 store('media/projects/browser-cms-project/cover.png', png);
+const fixturePost = {
+  schemaVersion: 1,
+  title: 'Last Fixture Post',
+  summary: 'A published post from the isolated CMS fixture.',
+  body: '## Fixture article\n\nA paragraph with **emphasis** and `inline code`.\n\n```js\nconst example = true;\n```',
+  published: true,
+  publishedAt: '2026-10-01',
+};
+store('content/posts/z-fixture-post.json', jsonBytes(fixturePost));
+store(
+  'content/posts/a-fixture-post.json',
+  jsonBytes({ ...fixturePost, title: 'First Fixture Post' }),
+);
+store(
+  'content/posts/fixture-draft-post.json',
+  jsonBytes({
+    ...fixturePost,
+    title: 'Unpublished Fixture Post',
+    published: false,
+    publishedAt: '2026-12-31',
+  }),
+);
 
 function jsonResponse(value, status = 200, headers = {}) {
   return new Response(value === null ? null : JSON.stringify(value), {
@@ -155,7 +177,7 @@ globalThis.fetch = async (input, init = {}) => {
     requestUrl.port === '3104'
   ) {
     if (
-      requestUrl.pathname === '/api/content/project' &&
+      ['/api/content/project', '/api/content/post'].includes(requestUrl.pathname) &&
       requestUrl.searchParams.get('slug') === 'fixture-upstream-unavailable'
     ) {
       return jsonResponse({ error: 'Published content is temporarily unavailable.' }, 503);

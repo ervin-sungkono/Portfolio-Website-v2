@@ -56,8 +56,8 @@ export default function AdminPage() {
     <div className="container section">
       <h1>Portfolio CMS</h1>
       <p>
-        Committed content and images are public, including unpublished projects and their history.
-        Keep sensitive drafts local.
+        Committed content and images are public, including unpublished projects, blog posts, and
+        their history. Keep sensitive drafts local.
       </p>
       <Suspense fallback={<p role="status">Loading owner workspace…</p>}>
         <AdminWorkspace />

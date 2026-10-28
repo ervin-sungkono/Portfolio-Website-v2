@@ -1,11 +1,11 @@
 # Portfolio agent handoff
 
-Updated **25 October 2026 (Asia/Jakarta)**. PR #5 has head `codex/github-portfolio-cms` at `23c876e` and targets `dev`. Current release-readiness work is on `codex/pr5-release-readiness`, based on that head and targeting `codex/github-portfolio-cms`, not `dev`; inspect live repository and PR state before continuing.
+Updated **28 October 2026 (Asia/Jakarta)**. PR #5 (`codex/github-portfolio-cms` → `dev`) is the base for PR #6 (`codex/pr5-release-readiness` → `codex/github-portfolio-cms`), which remains draft/open. Current blog work is on `codex/portfolio-blog`, based on `origin/codex/pr5-release-readiness`; [PR #7](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/7) targets the PR #6 branch. Inspect live repository and PR state before continuing.
 
 ## Repository and branch
 
 - Repository: https://github.com/ervin-sungkono/Portfolio-Website-v2.
-- Start public component work from `dev`. The GitHub-backed CMS is the current implementation; the earlier Neon proposal is historical and is not part of this release. See [verification](docs/verification.md) for the PR #5 candidate and the current CI baseline.
+- Start ordinary public component work from `dev`. For the blog feature, continue from `codex/portfolio-blog` and target `codex/pr5-release-readiness` so the reviewed work can flow through PR #6 before its `dev` release. The GitHub-backed CMS is the current implementation; the earlier Neon proposal is historical. See [verification](docs/verification.md) for dated PR #5/6 evidence and the blog verification results and remaining hosted checks.
 - Check Git status, active branch, and remote head before editing. Preserve unrelated or concurrent work. Components use the directory and nested CSS organization described in the architecture and responsive/motion references; don't mistake historical checks for validation of later edits.
 - Existing explicit user instructions take precedence over project defaults. A dated document is not fresh Git, CI, deployment, or provider evidence.
 
@@ -45,7 +45,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - `src/app` owns routes/layouts/metadata/API handlers. Prefer Server Components for pages/content and focused client islands for browser interaction.
 - `src/components` uses PascalCase component directories with `index.tsx`, a colocated style file, and `type.ts` when types are needed. Put reusable public links, controls, cards, and motion wrappers in `src/components/common`. `src/styles/globals.css` owns shared tokens/primitives; pages retain CSS Modules.
 - Use PascalCase for standalone React `.tsx`/`.jsx` filenames and component directories. Preserve established `index.tsx` directory entry points and framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx`.
-- `src/content` owns profile/engineering facts and JSON snapshots. Access project/design collections through `src/lib/content.ts`; do not duplicate lookups. Shared motion helpers currently live in `src/lib/motion`.
+- `src/content` owns profile/engineering facts and project/design snapshots. Access project/design/blog collections through `src/lib/content.ts`; do not duplicate lookups. Blog posts are GitHub-only with no bundled samples; use the existing `PostsPanel` and optional `content/posts` collection. Shared motion helpers currently live in `src/lib/motion`.
 - `src/lib/metadata.ts` owns public metadata; `src/lib/contact` owns validation and server-only providers. Preserve routes, slugs, assets, CV/social/source links, team credits, GET filters, and unknown-project 404/noindex behavior.
 - Preserve `portfolioSourceRef` in `src/content/engineering.ts` during public UI changes. Update source links in a separately reviewed change.
 - `next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Describe image delivery accordingly. Re-enabling transformations needs fresh validation; historical cache/source-selection results do not apply to current rendering.
@@ -54,11 +54,12 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 
 - The full name is **Ervin Cahyadinata Sungkono**; `profile.name` in `src/content/profile.ts` is authoritative. Use it in visible identity, accessible alternatives, metadata, and structured data.
 - The public origin is **https://ervincs.com** in `src/lib/metadata.ts`. Preview hosts must not enter canonicals, sitemap, robots, or structured data. `SITE_URL` does not control the origin.
+- Blog archive/article metadata and sitemap URLs use that canonical origin. Keep `published` as the visibility control and `publishedAt` as the editorial date/order; there is no scheduled publishing. Render Markdown with the existing `BlogBody` safe defaults (`skipHtml`), without raw-HTML plugins.
 - Preserve distinct route descriptions and matching social metadata. Filtered URLs canonicalize to the unfiltered collection. Structured data must match visible verified facts and be serialized safely.
 - Write specific, natural descriptions without invented metrics, seniority, personal team contributions, or ranking promises. Professional content expansion remains deferred until requested.
 - The single-owner CMS uses GitHub OAuth and a separate public content repository, with shared schemas and server-only credential access. `src/lib/cms` owns auth/storage/publishing/cache boundaries; UI never calls GitHub directly. There is no explicit `server-only` npm dependency; Next.js resolves the marker. Do not add a database, separate backend, object-storage provider, multi-user roles, or speculative layers.
 - `web-assets/master` contains the completed migration at `ce10d45`; `legacy` preserves the original `3a62ce0` tree. The hosted application cutover remains outstanding. Keep compatibility `images/` and `icons/` URLs through acceptance; do not rerun the removed converter. Refs and checks are in [verification](docs/verification.md); [LLM mapping instructions](docs/web-assets-migration-agent.md) describe future audits.
-- Preserve the project response boundary in `src/proxy.ts`: Proxy uses the cached public reader via `/api/content/project`, and missing projects return complete 404/noindex/no-store HTML. Replacing it with a runtime `notFound()` or PPR rewrite alone regresses JavaScript-disabled recovery. Internal origin comes from trusted platform configuration, not a request Host header.
+- Preserve the project/post response boundary in `src/proxy.ts`: Proxy uses the cached public reader via `/api/content/project` and `/api/content/post`; missing content returns complete 404/noindex/no-store HTML, while unavailable content returns 503 rather than a false 404. Keep the shared response helper and recovery UI. Replacing it with a runtime `notFound()` or PPR rewrite alone can regress JavaScript-disabled recovery. Internal origin comes from trusted platform configuration, not a request Host header.
 
 ## Responsive behavior, motion, and accessibility
 

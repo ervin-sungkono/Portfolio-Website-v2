@@ -5,10 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import {
   categoriesSchema,
+  postSchema,
   projectSchema,
   siteSchema,
   technologiesSchema,
   type Categories,
+  type PostDocument,
   type ProjectDocument,
   type SiteDocument,
   type Technologies,
@@ -16,6 +18,7 @@ import {
 import { CategoriesPanel } from './CategoriesPanel';
 import { ImagesPanel } from './ImagesPanel';
 import { ProjectPanel } from './ProjectPanel';
+import { PostsPanel } from './PostsPanel';
 import { SiteProfilePanel } from './SiteProfilePanel';
 import { TechnologiesPanel } from './TechnologiesPanel';
 import type {
@@ -32,6 +35,7 @@ import './style.css';
 
 const sectionLabels: Record<CmsSection, string> = {
   projects: 'Projects',
+  posts: 'Blog Posts',
   site: 'Site Profile',
   categories: 'Categories',
   technologies: 'Technologies',
@@ -53,6 +57,22 @@ function emptyProject(): ProjectDocument {
     tags: [],
     links: { demo: undefined, source: undefined },
     media: { cover: '', gallery: [] },
+  };
+}
+
+function emptyPost(): PostDocument {
+  const today = new Date();
+  return {
+    schemaVersion: 1,
+    title: '',
+    summary: '',
+    body: '',
+    published: false,
+    publishedAt: [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, '0'),
+      String(today.getDate()).padStart(2, '0'),
+    ].join('-'),
   };
 }
 
@@ -86,6 +106,7 @@ function parseSnapshot(value: Record<string, unknown>): CmsSnapshot {
   const categories = value.categories;
   const technologies = value.technologies;
   const projects = value.projects;
+  const posts = value.posts;
 
   if (
     !isRecord(repository) ||
@@ -98,7 +119,8 @@ function parseSnapshot(value: Record<string, unknown>): CmsSnapshot {
     typeof categories.sha !== 'string' ||
     !isRecord(technologies) ||
     typeof technologies.sha !== 'string' ||
-    !Array.isArray(projects)
+    !Array.isArray(projects) ||
+    !Array.isArray(posts)
   ) {
     throw new Error('The CMS returned an incomplete content snapshot.');
   }
@@ -122,6 +144,17 @@ function parseSnapshot(value: Record<string, unknown>): CmsSnapshot {
         throw new Error('The CMS returned an invalid project entry.');
       }
       return { slug: entry.slug, data: projectSchema.parse(entry.data), sha: entry.sha };
+    }),
+    posts: posts.map((entry) => {
+      if (
+        !isRecord(entry) ||
+        typeof entry.slug !== 'string' ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.slug) ||
+        typeof entry.sha !== 'string'
+      ) {
+        throw new Error('The CMS returned an invalid blog post entry.');
+      }
+      return { slug: entry.slug, data: postSchema.parse(entry.data), sha: entry.sha };
     }),
   };
 }
@@ -166,6 +199,11 @@ export function CmsEditor() {
     defaultValues: emptyProject(),
     shouldFocusError: true,
   });
+  const postForm = useForm<PostDocument>({
+    resolver: zodResolver(postSchema),
+    defaultValues: emptyPost(),
+    shouldFocusError: true,
+  });
   const siteForm = useForm<SiteDocument>({
     resolver: zodResolver(siteSchema),
     defaultValues: emptySite(),
@@ -189,12 +227,15 @@ export function CmsEditor() {
   const [activeSection, setActiveSection] = useState<CmsSection>('projects');
   const [selectedProjectSlug, setSelectedProjectSlug] = useState('');
   const [newProjectSlug, setNewProjectSlug] = useState('');
+  const [selectedPostSlug, setSelectedPostSlug] = useState('');
+  const [newPostSlug, setNewPostSlug] = useState('');
   const [busySection, setBusySection] = useState<BusySection>(null);
   const [messages, setMessages] = useState<Partial<Record<CmsSection, EditorMessage>>>({});
   const [uploadResult, setUploadResult] = useState<ImageUploadResult>();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [discardVersions, setDiscardVersions] = useState<Record<CmsSection, number>>({
     projects: 0,
+    posts: 0,
     site: 0,
     categories: 0,
     technologies: 0,
@@ -212,14 +253,17 @@ export function CmsEditor() {
   >(async () => false);
 
   const projectIsDirty = projectForm.formState.isDirty;
+  const postIsDirty = postForm.formState.isDirty;
   const siteIsDirty = siteForm.formState.isDirty;
   const categoriesAreDirty = categoriesForm.formState.isDirty;
   const technologiesAreDirty = technologiesForm.formState.isDirty;
   const hasProjectDraft =
     projectIsDirty || (!selectedProjectSlug && Boolean(newProjectSlug.trim()));
+  const hasPostDraft = postIsDirty || (!selectedPostSlug && Boolean(newPostSlug.trim()));
   const hasUnsavedChanges =
-    hasProjectDraft || siteIsDirty || categoriesAreDirty || technologiesAreDirty;
+    hasProjectDraft || hasPostDraft || siteIsDirty || categoriesAreDirty || technologiesAreDirty;
   const resetProjectForm = projectForm.reset;
+  const resetPostForm = postForm.reset;
   const resetSiteForm = siteForm.reset;
   const resetCategoriesForm = categoriesForm.reset;
   const resetTechnologiesForm = technologiesForm.reset;
@@ -272,12 +316,15 @@ export function CmsEditor() {
         const forceCategories = options.discardSection === 'categories';
         const forceTechnologies = options.discardSection === 'technologies';
         const forceProjects = options.discardSection === 'projects';
+        const forcePosts = options.discardSection === 'posts';
         const preserveSite = !firstLoad && !forceSite && siteIsDirty;
         const preserveCategories = !firstLoad && !forceCategories && categoriesAreDirty;
         const preserveTechnologies = !firstLoad && !forceTechnologies && technologiesAreDirty;
         const preserveProjects = !firstLoad && !forceProjects && hasProjectDraft;
+        const preservePosts = !firstLoad && !forcePosts && hasPostDraft;
         const prior = snapshot;
         let projects = next.projects;
+        let posts = next.posts;
 
         if (preserveProjects && selectedProjectSlug && prior) {
           const priorSelected = prior.projects.find(
@@ -293,12 +340,23 @@ export function CmsEditor() {
           }
         }
 
+        if (preservePosts && selectedPostSlug && prior) {
+          const priorSelected = prior.posts.find((post) => post.slug === selectedPostSlug);
+          if (priorSelected) {
+            const refreshedEntry = posts.some((post) => post.slug === selectedPostSlug);
+            posts = refreshedEntry
+              ? posts.map((post) => (post.slug === selectedPostSlug ? priorSelected : post))
+              : [...posts, priorSelected];
+          }
+        }
+
         setSnapshot({
           ...next,
           site: preserveSite && prior ? prior.site : next.site,
           categories: preserveCategories && prior ? prior.categories : next.categories,
           technologies: preserveTechnologies && prior ? prior.technologies : next.technologies,
           projects,
+          posts,
         });
 
         if (firstLoad || forceSite || !siteIsDirty) {
@@ -311,12 +369,20 @@ export function CmsEditor() {
           resetTechnologiesForm(next.technologies.data);
         }
         if (firstLoad || forceProjects || !hasProjectDraft) {
-          const wantedSlug = options.preferredSlug ?? selectedProjectSlug;
+          const wantedSlug =
+            (forceProjects ? options.preferredSlug : undefined) ?? selectedProjectSlug;
           const selected =
             next.projects.find((project) => project.slug === wantedSlug) || next.projects[0];
           setSelectedProjectSlug(selected?.slug || '');
           setNewProjectSlug('');
           resetProjectForm(selected?.data || emptyProject());
+        }
+        if (firstLoad || forcePosts || !hasPostDraft) {
+          const wantedSlug = (forcePosts ? options.preferredSlug : undefined) ?? selectedPostSlug;
+          const selected = next.posts.find((post) => post.slug === wantedSlug) || next.posts[0];
+          setSelectedPostSlug(selected?.slug || '');
+          setNewPostSlug('');
+          resetPostForm(selected?.data || emptyPost());
         }
 
         loadedSnapshotRef.current = true;
@@ -335,12 +401,15 @@ export function CmsEditor() {
     },
     [
       categoriesAreDirty,
+      hasPostDraft,
       hasProjectDraft,
       resetCategoriesForm,
+      resetPostForm,
       resetProjectForm,
       resetSiteForm,
       resetTechnologiesForm,
       selectedProjectSlug,
+      selectedPostSlug,
       siteIsDirty,
       snapshot,
       technologiesAreDirty,
@@ -368,7 +437,7 @@ export function CmsEditor() {
     request: unknown,
     conflictSlug?: string,
     retryContext?: {
-      target: 'project' | 'site' | 'taxonomy';
+      target: 'project' | 'post' | 'site' | 'taxonomy';
       slug?: string;
       commitUrl?: string;
     },
@@ -454,6 +523,9 @@ export function CmsEditor() {
           projects: current.projects.filter((project) => project.slug !== request.slug),
         };
       }
+      if (request.kind === 'delete-post') {
+        return { ...current, posts: current.posts.filter((post) => post.slug !== request.slug) };
+      }
       if (!reply.sha) {
         return current;
       }
@@ -465,6 +537,16 @@ export function CmsEditor() {
           projects: exists
             ? current.projects.map((entry) => (entry.slug === request.slug ? project : entry))
             : [...current.projects, project],
+        };
+      }
+      if (request.kind === 'post') {
+        const post = { slug: request.slug, data: request.data, sha: reply.sha };
+        const exists = current.posts.some((entry) => entry.slug === request.slug);
+        return {
+          ...current,
+          posts: exists
+            ? current.posts.map((entry) => (entry.slug === request.slug ? post : entry))
+            : [...current.posts, post],
         };
       }
       if (request.kind === 'site') {
@@ -492,17 +574,23 @@ export function CmsEditor() {
       reflectCommittedWrite(request, reply);
       const refreshed = await refreshSnapshot({ discardSection: section, preferredSlug });
       const writeVerb =
-        request.kind === 'project' && request.expectedSha === null ? 'created' : 'saved';
+        (request.kind === 'project' || request.kind === 'post') && request.expectedSha === null
+          ? 'created'
+          : 'saved';
       const text =
         request.kind === 'delete-project'
           ? `Project “${request.slug}” was deleted.`
-          : section === 'projects'
-            ? `Project ${writeVerb}.`
-            : section === 'site'
-              ? 'Site profile saved.'
-              : section === 'categories'
-                ? 'Categories saved.'
-                : 'Technologies saved.';
+          : request.kind === 'delete-post'
+            ? `Blog post “${request.slug}” was deleted.`
+            : section === 'projects'
+              ? `Project ${writeVerb}.`
+              : section === 'posts'
+                ? `Blog post ${writeVerb}.`
+                : section === 'site'
+                  ? 'Site profile saved.'
+                  : section === 'categories'
+                    ? 'Categories saved.'
+                    : 'Technologies saved.';
       const refreshNote = !refreshed
         ? ' The commit succeeded, but the latest repository snapshot could not be loaded; refresh before editing again.'
         : reply.cache === 'pending'
@@ -522,8 +610,13 @@ export function CmsEditor() {
                   ? 'site'
                   : request.kind === 'categories' || request.kind === 'technologies'
                     ? 'taxonomy'
-                    : 'project',
-              ...(request.kind === 'project' || request.kind === 'delete-project'
+                    : request.kind === 'post' || request.kind === 'delete-post'
+                      ? 'post'
+                      : 'project',
+              ...(request.kind === 'project' ||
+              request.kind === 'delete-project' ||
+              request.kind === 'post' ||
+              request.kind === 'delete-post'
                 ? { revalidateSlug: request.slug }
                 : {}),
             }
@@ -566,6 +659,39 @@ export function CmsEditor() {
     setSelectedProjectSlug(slug);
     setNewProjectSlug('');
     await finishWrite('projects', request, reply, slug);
+  }
+
+  async function savePost(data: PostDocument) {
+    const slug = selectedPostSlug || newPostSlug.trim();
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      setSectionMessage('posts', {
+        tone: 'error',
+        text: 'Enter a post URL slug using lowercase letters, numbers, and single hyphens.',
+      });
+      return;
+    }
+    const current = snapshot?.posts.find((post) => post.slug === slug);
+    if (selectedPostSlug && !current) {
+      setSectionMessage('posts', {
+        tone: 'error',
+        text: 'This blog post is no longer in the loaded repository snapshot. Reload before editing it.',
+      });
+      return;
+    }
+    const request: CmsWriteRequest = {
+      kind: 'post',
+      slug,
+      expectedSha: selectedPostSlug ? (current?.sha ?? null) : null,
+      data,
+    };
+    const reply = await sendMutation('posts', request, slug);
+    if (!reply) {
+      return;
+    }
+    postForm.reset(data);
+    setSelectedPostSlug(slug);
+    setNewPostSlug('');
+    await finishWrite('posts', request, reply, slug);
   }
 
   async function saveSite(data: SiteDocument) {
@@ -642,6 +768,36 @@ export function CmsEditor() {
     setSelectedProjectSlug('');
     setNewProjectSlug('');
     await finishWrite('projects', request, reply, '');
+  }
+
+  async function deletePost() {
+    const current = snapshot?.posts.find((post) => post.slug === selectedPostSlug);
+    if (!current) {
+      return;
+    }
+    const detail = postForm.formState.isDirty
+      ? ' Unsaved edits to this post will also be discarded.'
+      : '';
+    if (
+      !window.confirm(
+        `Delete “${current.data.title}” (${current.slug}) from the content repository?${detail} This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    const request: CmsWriteRequest = {
+      kind: 'delete-post',
+      slug: current.slug,
+      expectedSha: current.sha,
+    };
+    const reply = await sendMutation('posts', request, current.slug);
+    if (!reply) {
+      return;
+    }
+    postForm.reset(emptyPost());
+    setSelectedPostSlug('');
+    setNewPostSlug('');
+    await finishWrite('posts', request, reply, '');
   }
 
   async function initializeRepository() {
@@ -741,11 +897,14 @@ export function CmsEditor() {
 
   async function retryRevalidation(section: CmsSection) {
     const prior = messages[section];
-    let target: 'project' | 'site' | 'taxonomy' | undefined = prior?.revalidateTarget;
+    let target: 'project' | 'post' | 'site' | 'taxonomy' | undefined = prior?.revalidateTarget;
     let slug = prior?.revalidateSlug;
     if (!target && section === 'projects') {
       target = 'project';
       slug = selectedProjectSlug || newProjectSlug.trim() || prior?.conflictSlug;
+    } else if (!target && section === 'posts') {
+      target = 'post';
+      slug = selectedPostSlug || newPostSlug.trim() || prior?.conflictSlug;
     } else if (!target && section === 'site') {
       target = 'site';
     } else if (!target && (section === 'categories' || section === 'technologies')) {
@@ -759,7 +918,7 @@ export function CmsEditor() {
       {
         kind: 'revalidate',
         target,
-        ...(target === 'project' && slug ? { slug } : {}),
+        ...((target === 'project' || target === 'post') && slug ? { slug } : {}),
       },
       undefined,
       { target, slug, commitUrl: prior?.commitUrl },
@@ -786,7 +945,12 @@ export function CmsEditor() {
     busyRef.current = true;
     setBusySection(section);
     try {
-      const preferredSlug = section === 'projects' ? messages.projects?.conflictSlug : undefined;
+      const preferredSlug =
+        section === 'projects'
+          ? messages.projects?.conflictSlug
+          : section === 'posts'
+            ? messages.posts?.conflictSlug
+            : undefined;
       const refreshed = await refreshSnapshot({ discardSection: section, preferredSlug });
       if (refreshed) {
         setSectionMessage(section, undefined);
@@ -812,6 +976,22 @@ export function CmsEditor() {
     const next = snapshot?.projects.find((project) => project.slug === slug);
     projectForm.reset(next?.data || emptyProject());
     clearSectionMessage('projects');
+  }
+
+  function selectPost(slug: string) {
+    if (slug === selectedPostSlug) {
+      return;
+    }
+    const hasDraft =
+      postForm.formState.isDirty || (!selectedPostSlug && Boolean(newPostSlug.trim()));
+    if (hasDraft && !window.confirm('Discard the unsaved blog post draft and switch posts?')) {
+      return;
+    }
+    setSelectedPostSlug(slug);
+    setNewPostSlug('');
+    const next = snapshot?.posts.find((post) => post.slug === slug);
+    postForm.reset(next?.data || emptyPost());
+    clearSectionMessage('posts');
   }
 
   async function retryLoad() {
@@ -948,6 +1128,26 @@ export function CmsEditor() {
             onClearMessage={() => clearSectionMessage('projects')}
             onReload={() => void reloadConflict('projects')}
             onRetry={() => void retryRevalidation('projects')}
+          />
+          <PostsPanel
+            key={`posts:${discardVersions.posts}`}
+            form={postForm}
+            snapshot={snapshot}
+            active={activeSection === 'posts'}
+            selectedSlug={selectedPostSlug}
+            newSlug={newPostSlug}
+            pending={pending}
+            message={messages.posts}
+            onSelectedSlugChange={selectPost}
+            onNewSlugChange={(slug) => {
+              setNewPostSlug(slug);
+              clearSectionMessage('posts');
+            }}
+            onSave={savePost}
+            onDelete={() => void deletePost()}
+            onClearMessage={() => clearSectionMessage('posts')}
+            onReload={() => void reloadConflict('posts')}
+            onRetry={() => void retryRevalidation('posts')}
           />
           <SiteProfilePanel
             key={`site:${discardVersions.site}`}

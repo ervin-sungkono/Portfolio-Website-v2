@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import projects from './content/projects.json';
 
 export async function proxy(request: NextRequest) {
-  const slug = request.nextUrl.pathname.slice('/project/'.length);
+  const isPost = request.nextUrl.pathname.startsWith('/blog/');
+  const slug = request.nextUrl.pathname.slice(isPost ? '/blog/'.length : '/project/'.length);
   // Use platform configuration, never an untrusted Host header, for internal requests.
   const origin = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
@@ -10,9 +11,9 @@ export async function proxy(request: NextRequest) {
   const headers = { cookie: request.headers.get('cookie') ?? '' };
   let exists = false;
   if (!process.env.GITHUB_ADMIN_ID && !process.env.GITHUB_REPO) {
-    exists = projects.some((project) => project.slug === slug);
+    exists = !isPost && projects.some((project) => project.slug === slug);
   } else if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 100) {
-    const url = new URL('/api/content/project', origin);
+    const url = new URL(isPost ? '/api/content/post' : '/api/content/project', origin);
     url.searchParams.set('slug', slug);
     try {
       const response = await fetch(url, {
@@ -38,11 +39,14 @@ export async function proxy(request: NextRequest) {
   }
   try {
     // Buffer the static recovery document: PPR rewrites can replace a supplied 404 with 200.
-    const recovery = await fetch(new URL('/project-not-found', origin), {
-      headers,
-      cache: 'no-store',
-      signal: AbortSignal.timeout(15_000),
-    });
+    const recovery = await fetch(
+      new URL(isPost ? '/blog-not-found' : '/project-not-found', origin),
+      {
+        headers,
+        cache: 'no-store',
+        signal: AbortSignal.timeout(15_000),
+      },
+    );
     if (!recovery.ok) {
       throw new Error('Recovery page unavailable.');
     }
@@ -56,7 +60,9 @@ export async function proxy(request: NextRequest) {
     });
   } catch {
     return new NextResponse(
-      'This project was not found. Visit /project to explore published work.',
+      isPost
+        ? 'This post was not found. Visit /blog to read published posts.'
+        : 'This project was not found. Visit /project to explore published work.',
       {
         status: 404,
         headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
@@ -65,4 +71,4 @@ export async function proxy(request: NextRequest) {
   }
 }
 
-export const config = { matcher: '/project/:slug' };
+export const config = { matcher: ['/project/:slug', '/blog/:slug'] };

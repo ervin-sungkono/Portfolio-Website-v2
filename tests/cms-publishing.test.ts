@@ -53,6 +53,16 @@ test('invalidation covers new/deleted project routes, catalog, homepage, and sit
   });
   assert.deepEqual(contentInvalidation('site'), { tags: ['site'], paths: ['/'] });
   assert.ok(contentInvalidation('taxonomy').paths.includes('/project/[slug]'));
+  assert.deepEqual(contentInvalidation('post', 'example-post'), {
+    tags: ['posts', 'post:example-post'],
+    paths: ['/blog', '/blog/example-post', '/sitemap.xml'],
+  });
+  assert.throws(() => contentInvalidation('post', '../escape'));
+  const all = contentInvalidation('all');
+  assert.ok(all.tags.includes('posts'));
+  assert.ok(all.paths.includes('/blog'));
+  assert.ok(all.paths.includes('/blog/[slug]'));
+  assert.ok(!contentInvalidation('taxonomy').paths.includes('/blog'));
   assert.throws(() => contentInvalidation('project', '../../api/auth'));
 });
 
@@ -105,4 +115,31 @@ test('bounded streaming rejects oversized bodies before JSON parsing', async () 
     (await cmsErrorResponse(new Error('secret provider details')).text()).includes('secret'),
     false,
   );
+});
+
+test('CMS post requests allow the escaped maximum Markdown body while the default reader stays bounded', async () => {
+  const escapedBody = '\\u0061'.repeat(30_000);
+  const body = `{"kind":"post","slug":"long-post","expectedSha":null,"data":{"schemaVersion":1,"title":"Long post","summary":"Long post summary","body":"${escapedBody}","published":false,"publishedAt":"2026-10-28"}}`;
+  assert.ok(Buffer.byteLength(body) > 65_536);
+  assert.ok(Buffer.byteLength(body) < 196_608);
+
+  await assert.rejects(
+    readCmsJson(
+      new Request('https://portfolio.example/api/cms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      }),
+    ),
+    { status: 413 },
+  );
+  const parsed = (await readCmsJson(
+    new Request('https://portfolio.example/api/cms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    }),
+    196_608,
+  )) as { data: { body: string } };
+  assert.equal(parsed.data.body.length, 30_000);
 });

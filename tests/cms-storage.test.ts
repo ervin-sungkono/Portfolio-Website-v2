@@ -6,9 +6,10 @@ import { CmsError } from '../src/lib/cms/errors.ts';
 import { githubJson } from '../src/lib/cms/github.ts';
 import { uploadMedia } from '../src/lib/cms/media.ts';
 import { getSnapshot } from '../src/lib/cms/repository.ts';
-import { initializeRepository, publishContent } from '../src/lib/cms/service.ts';
+import { deletePost, initializeRepository, publishContent } from '../src/lib/cms/service.ts';
 import {
   categoriesSchema,
+  postSchema,
   projectSchema,
   publishMutationSchema,
   siteSchema,
@@ -44,6 +45,14 @@ const project = {
   tags: ['example'],
   links: { source: 'https://github.com/example/project' },
   media: { cover: 'media/projects/example-project/cover.png', gallery: [] as string[] },
+};
+const post = {
+  schemaVersion: 1 as const,
+  title: 'Example post',
+  summary: 'A short post for CMS storage tests.',
+  body: '# A post\n\nMarkdown content.',
+  published: true,
+  publishedAt: '2026-10-27',
 };
 
 type StoredFile = { bytes: Uint8Array; sha: string };
@@ -249,6 +258,20 @@ function installGithub(state: FakeState): void {
           },
         });
       }
+      if (method === 'DELETE') {
+        const body = JSON.parse(String(init.body)) as { sha: string; branch: string };
+        const existing = state.files.get(path);
+        if (!existing || body.sha !== existing.sha || body.branch !== state.branch) {
+          return jsonResponse({ message: 'stale or missing file' }, 409);
+        }
+        state.files.delete(path);
+        return jsonResponse({
+          commit: {
+            sha: 'c'.repeat(40),
+            html_url: `https://github.com/owner/${process.env.GITHUB_REPO}/commit/${'c'.repeat(40)}`,
+          },
+        });
+      }
     }
     return jsonResponse({ message: `Unexpected ${method} ${url.pathname}` }, 500);
   }) as typeof fetch;
@@ -271,6 +294,10 @@ function addProject(state: FakeState, slug: string, data = project, sha = '4'.re
   state.files.set(data.media.cover, fileRecord(png));
 }
 
+function addPost(state: FakeState, slug: string, data = post, sha = '5'.repeat(40)) {
+  state.files.set(`content/posts/${slug}.json`, fileRecord(JSON.stringify(data), sha));
+}
+
 test('repository configuration accepts a repository name and rejects paths/source repositories', () => {
   setupEnvironment();
   assert.deepEqual(getCmsConfig(), { adminId: ownerId, repository: 'portfolio-content' });
@@ -286,6 +313,17 @@ test('shared schemas reject unknown fields, unsafe URLs, and future versions', (
   assert.equal(categoriesSchema.safeParse(categories).success, true);
   assert.equal(technologiesSchema.safeParse(technologies).success, true);
   assert.equal(projectSchema.safeParse(project).success, true);
+  assert.equal(postSchema.safeParse(post).success, true);
+  assert.equal(
+    postSchema.parse({ ...post, body: '    const indented = true;\n' }).body,
+    '    const indented = true;\n',
+  );
+  assert.equal(postSchema.parse({ ...post, title: '  Trimmed title  ' }).title, 'Trimmed title');
+  assert.equal(postSchema.safeParse({ ...post, publishedAt: '2026-02-30' }).success, false);
+  assert.equal(postSchema.safeParse({ ...post, publishedAt: '2026-2-03' }).success, false);
+  assert.equal(postSchema.safeParse({ ...post, body: '  ' }).success, false);
+  assert.equal(postSchema.safeParse({ ...post, body: 'x'.repeat(30_001) }).success, false);
+  assert.equal(postSchema.safeParse({ ...post, unexpected: true }).success, false);
   assert.equal(projectSchema.safeParse({ ...project, unexpected: true }).success, false);
   assert.equal(projectSchema.safeParse({ ...project, schemaVersion: 2 }).success, false);
   assert.equal(
@@ -298,6 +336,15 @@ test('shared schemas reject unknown fields, unsafe URLs, and future versions', (
       slug: '../secret',
       expectedSha: null,
       data: project,
+    }).success,
+    false,
+  );
+  assert.equal(
+    publishMutationSchema.safeParse({
+      kind: 'post',
+      slug: '../secret',
+      expectedSha: null,
+      data: post,
     }).success,
     false,
   );
@@ -349,6 +396,7 @@ test('public snapshot resolves numeric owner, honors the non-main default branch
     snapshot.projects.map(({ slug }) => slug),
     ['example-project'],
   );
+  assert.deepEqual(snapshot.posts, []);
   assert.ok(state.calls.some(({ url, init }) => url.pathname === `/user/${ownerId}` && init.next));
   assert.ok(
     state.calls
@@ -363,16 +411,42 @@ test('public snapshot resolves numeric owner, honors the non-main default branch
   );
 });
 
+test('optional post storage reads valid posts and reports malformed documents', async () => {
+  setupEnvironment();
+  const state = createState();
+  addSeedContent(state);
+  addPost(state, 'first-post');
+  installGithub(state);
+
+  const snapshot = await getSnapshot();
+  assert.deepEqual(snapshot.posts, [{ slug: 'first-post', data: post, sha: '5'.repeat(40) }]);
+
+  const malformed = createState();
+  addSeedContent(malformed);
+  addPost(malformed, 'bad-date', { ...post, publishedAt: '2026-02-30' });
+  installGithub(malformed);
+  await assert.rejects(getSnapshot(), { code: 'unsupported_repository' });
+
+  const longSlug = createState();
+  addSeedContent(longSlug);
+  addPost(longSlug, 'a'.repeat(101));
+  installGithub(longSlug);
+  await assert.rejects(getSnapshot(), { code: 'unsupported_repository' });
+  await assert.rejects(initializeRepository('owner-token'), { code: 'unsupported_repository' });
+});
+
 test('compatible migrated repositories retain legacy asset URLs without bootstrap writes', async () => {
   setupEnvironment();
   const state = createState();
   addSeedContent(state);
   addProject(state, 'example-project');
+  addPost(state, 'old-post');
   state.files.set('images/legacy.png', fileRecord(png));
   state.files.set('icons/legacy.svg', fileRecord('<svg xmlns="http://www.w3.org/2000/svg"/>'));
   installGithub(state);
   const snapshot = await initializeRepository('owner-token');
   assert.equal(snapshot.projects.length, 1);
+  assert.equal(snapshot.posts.length, 1);
   assert.equal(
     state.calls.some(({ init }) => init.method === 'PUT'),
     false,
@@ -537,6 +611,95 @@ test('project publish validates current registries and media, then writes the ma
     JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')).title,
     project.title,
   );
+});
+
+test('post publication creates, updates, unpublishes, and rejects stale or invalid versions', async () => {
+  setupEnvironment();
+  const state = createState();
+  addSeedContent(state);
+  installGithub(state);
+
+  await assert.rejects(
+    publishContent('owner-token', {
+      kind: 'post',
+      slug: 'sample-post',
+      expectedSha: null,
+      data: { ...post, publishedAt: '2026-02-30' },
+    }),
+    { code: 'validation' },
+  );
+  assert.equal(state.files.has('content/posts/sample-post.json'), false);
+
+  const created = await publishContent('owner-token', {
+    kind: 'post',
+    slug: 'sample-post',
+    expectedSha: null,
+    data: post,
+  });
+  assert.equal(state.files.get('content/posts/sample-post.json')?.sha, created.contentSha);
+  assert.deepEqual(
+    JSON.parse(Buffer.from(state.files.get('content/posts/sample-post.json')!.bytes).toString()),
+    post,
+  );
+
+  const updatedPost = { ...post, title: 'Updated post' };
+  const updated = await publishContent('owner-token', {
+    kind: 'post',
+    slug: 'sample-post',
+    expectedSha: created.contentSha,
+    data: updatedPost,
+  });
+  assert.equal(
+    JSON.parse(Buffer.from(state.files.get('content/posts/sample-post.json')!.bytes).toString())
+      .title,
+    'Updated post',
+  );
+
+  const unpublished = await publishContent('owner-token', {
+    kind: 'post',
+    slug: 'sample-post',
+    expectedSha: updated.contentSha,
+    data: { ...updatedPost, published: false },
+  });
+  assert.equal(
+    JSON.parse(Buffer.from(state.files.get('content/posts/sample-post.json')!.bytes).toString())
+      .published,
+    false,
+  );
+
+  await assert.rejects(
+    publishContent('owner-token', {
+      kind: 'post',
+      slug: 'sample-post',
+      expectedSha: updated.contentSha,
+      data: updatedPost,
+    }),
+    { code: 'conflict' },
+  );
+  assert.equal(state.files.get('content/posts/sample-post.json')?.sha, unpublished.contentSha);
+});
+
+test('post deletion validates the loaded SHA and removes only the selected file', async () => {
+  setupEnvironment();
+  const state = createState();
+  addSeedContent(state);
+  addPost(state, 'sample-post');
+  installGithub(state);
+
+  await assert.rejects(deletePost('owner-token', 'sample-post', 'f'.repeat(40)), {
+    code: 'conflict',
+  });
+  await assert.rejects(deletePost('owner-token', '../sample-post', '5'.repeat(40)), {
+    code: 'validation',
+  });
+  assert.equal(state.files.has('content/posts/sample-post.json'), true);
+
+  const result = await deletePost('owner-token', 'sample-post', '5'.repeat(40));
+  assert.equal(result.sha, 'c'.repeat(40));
+  assert.equal(state.files.has('content/posts/sample-post.json'), false);
+  await assert.rejects(deletePost('owner-token', 'sample-post', '5'.repeat(40)), {
+    code: 'conflict',
+  });
 });
 
 test('registry edits cannot orphan an existing project and concurrent writes return a conflict', async () => {

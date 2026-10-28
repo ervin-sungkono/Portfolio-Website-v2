@@ -3,7 +3,7 @@ import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { getSnapshot } from './repository.ts';
 import { getPublishedCategoryLabels } from './public-categories.ts';
-import type { Project } from '../content.ts';
+import type { BlogPost, Project } from '../content.ts';
 
 function mediaUrl(owner: string, name: string, branch: string, path: string) {
   return `https://raw.githubusercontent.com/${[owner, name, branch, ...path.split('/')].map(encodeURIComponent).join('/')}`;
@@ -14,7 +14,7 @@ async function readPublicContent(adminId: string, repositoryName: string) {
   // The source identifiers are explicit cache arguments; no cookies or OAuth tokens enter this scope.
   void adminId;
   void repositoryName;
-  cacheTag('projects', 'site', 'taxonomy');
+  cacheTag('projects', 'site', 'taxonomy', 'posts');
   cacheLife({ stale: 300, revalidate: 3600, expire: 86400 });
   const snapshot = await getSnapshot();
   const { owner, name, defaultBranch } = snapshot.repository;
@@ -37,8 +37,22 @@ async function readPublicContent(adminId: string, repositoryName: string) {
       demo: data.links.demo ?? null,
       featured: data.featured,
     }));
+  const posts: BlogPost[] = snapshot.posts
+    .filter(({ data }) => data.published)
+    .sort(
+      (a, b) =>
+        b.data.publishedAt.localeCompare(a.data.publishedAt) || a.slug.localeCompare(b.slug),
+    )
+    .map(({ slug, data }) => ({
+      slug,
+      title: data.title,
+      summary: data.summary,
+      body: data.body,
+      publishedAt: data.publishedAt,
+    }));
   return {
     projects,
+    posts,
     categories: getPublishedCategoryLabels(snapshot),
     site: snapshot.site.data,
   };

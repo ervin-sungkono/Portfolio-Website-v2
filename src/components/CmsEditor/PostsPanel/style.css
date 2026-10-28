@@ -1,0 +1,22 @@
+.cms-editor .cms-editor-posts-panel {
+  .cms-editor-post-picker {
+    width: min(100%, 28rem);
+  }
+
+  .cms-editor-slug-field {
+    max-width: 44rem;
+  }
+
+  .cms-editor-post-date {
+    max-width: 24rem;
+  }
+
+  .cms-editor-post-slug {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
