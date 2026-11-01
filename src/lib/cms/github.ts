@@ -1,10 +1,10 @@
 import 'server-only';
 
-import { getCmsConfig } from './config.ts';
 import { CmsError } from './errors.ts';
 
 const apiBase = 'https://api.github.com';
 const apiVersion = '2022-11-28';
+const requestTimeoutMs = 15_000;
 
 export type GitHubUser = { id: number; login: string };
 export type GitHubRepository = {
@@ -29,20 +29,45 @@ export type GitHubWriteResult = {
   commit: { sha: string; html_url: string };
 };
 
-export async function assertCmsOwner(token: string): Promise<GitHubUser> {
+export function getGitHubPat(): string {
+  const token = process.env.GITHUB_PAT?.trim();
   if (!token) {
-    throw new CmsError('unauthorized', 'Sign in with the configured GitHub owner account.', 401);
+    throw new CmsError('configuration', 'Set GITHUB_PAT to enable authenticated CMS access.', 500);
   }
-  const config = getCmsConfig();
-  const user = await githubJson<GitHubUser>('/user', { token });
-  if (!user || user.id !== config.adminId) {
+  return token;
+}
+
+export async function getGitHubUser(token = getGitHubPat()): Promise<GitHubUser> {
+  if (!token) {
+    throw new CmsError('configuration', 'Set GITHUB_PAT to resolve the CMS owner.', 500);
+  }
+  const user = await githubJson<unknown>('/user', { token });
+  if (
+    !user ||
+    typeof user !== 'object' ||
+    !('id' in user) ||
+    typeof user.id !== 'number' ||
+    !Number.isSafeInteger(user.id) ||
+    user.id < 1 ||
+    !('login' in user) ||
+    typeof user.login !== 'string' ||
+    !user.login
+  ) {
+    throw new CmsError('github', 'GitHub returned an invalid authenticated user.', 502);
+  }
+  return { id: user.id, login: user.login };
+}
+
+export async function assertCmsOwner(token: string): Promise<GitHubUser> {
+  const configuredToken = getGitHubPat();
+  if (!token || token !== configuredToken) {
     throw new CmsError(
       'unauthorized',
-      'Only the configured GitHub account can change CMS content.',
-      403,
+      'CMS requests must use the configured server credential.',
+      401,
     );
   }
-  return user;
+  return getGitHubUser(configuredToken);
 }
 
 function headers(token?: string): HeadersInit {
@@ -55,7 +80,11 @@ function headers(token?: string): HeadersInit {
 
 async function parseError(response: Response): Promise<CmsError> {
   if (response.status === 401) {
-    return new CmsError('unauthorized', 'GitHub rejected the CMS credentials. Sign in again.', 401);
+    return new CmsError(
+      'unauthorized',
+      'GitHub rejected GITHUB_PAT. Check the server credential and retry.',
+      401,
+    );
   }
   if (response.status === 403 || response.status === 429) {
     const remaining = response.headers.get('x-ratelimit-remaining');
@@ -64,7 +93,7 @@ async function parseError(response: Response): Promise<CmsError> {
       limited ? 'rate_limited' : 'forbidden',
       limited
         ? 'GitHub is rate-limiting CMS requests. Wait a while, then retry.'
-        : 'GitHub denied this CMS operation. Check that the account has repository access and the repo OAuth permission.',
+        : 'GitHub denied this CMS operation. Check that GITHUB_PAT has access and write permission for GITHUB_REPO.',
       limited ? 429 : 403,
     );
   }
@@ -103,6 +132,7 @@ export async function githubJson<T>(
       },
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
       ...(options.token ? { cache: 'no-store' as const } : {}),
+      signal: AbortSignal.timeout(requestTimeoutMs),
     };
     response = await fetch(`${apiBase}${path}`, requestInit);
   } catch {
@@ -145,6 +175,7 @@ export async function githubBytes(url: string, maxBytes = 1_048_576): Promise<Ui
   try {
     response = await fetch(parsedUrl, {
       cache: 'no-store',
+      signal: AbortSignal.timeout(requestTimeoutMs),
       headers: { Accept: 'application/octet-stream' },
     });
   } catch {
@@ -159,7 +190,12 @@ export async function githubBytes(url: string, maxBytes = 1_048_576): Promise<Ui
     throw new CmsError('validation', 'A referenced media file exceeds the size limit.', 400);
   }
   if (!response.body) {
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    let bytes: Uint8Array;
+    try {
+      bytes = new Uint8Array(await response.arrayBuffer());
+    } catch {
+      throw new CmsError('unavailable', 'Could not load a referenced media file from GitHub.', 503);
+    }
     if (bytes.byteLength > maxBytes) {
       throw new CmsError('validation', 'A referenced media file exceeds the size limit.', 400);
     }
@@ -169,17 +205,25 @@ export async function githubBytes(url: string, maxBytes = 1_048_576): Promise<Ui
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      size += value.byteLength;
+      if (size > maxBytes) {
+        await reader.cancel();
+        throw new CmsError('validation', 'A referenced media file exceeds the size limit.', 400);
+      }
+      chunks.push(value);
     }
-    size += value.byteLength;
-    if (size > maxBytes) {
-      await reader.cancel();
-      throw new CmsError('validation', 'A referenced media file exceeds the size limit.', 400);
+  } catch (error) {
+    await reader.cancel().catch(() => undefined);
+    if (error instanceof CmsError) {
+      throw error;
     }
-    chunks.push(value);
+    throw new CmsError('unavailable', 'Could not load a referenced media file from GitHub.', 503);
   }
   const result = new Uint8Array(size);
   let offset = 0;

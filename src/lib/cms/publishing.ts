@@ -1,4 +1,4 @@
-export type CacheTarget = 'project' | 'site' | 'taxonomy' | 'all';
+export type CacheTarget = 'project' | 'site' | 'taxonomy' | 'designs' | 'all';
 
 export function contentInvalidation(target: CacheTarget, slug?: string) {
   if (target === 'project') {
@@ -13,9 +13,14 @@ export function contentInvalidation(target: CacheTarget, slug?: string) {
   if (target === 'site') {
     return { tags: ['site'], paths: ['/'] };
   }
+  if (target === 'designs') {
+    return { tags: ['portfolio', 'designs'], paths: ['/', '/design'] };
+  }
   return {
     tags:
-      target === 'all' ? ['site', 'taxonomy', 'projects', 'portfolio'] : ['taxonomy', 'projects'],
+      target === 'all'
+        ? ['site', 'taxonomy', 'projects', 'portfolio', 'designs', 'content-source']
+        : ['taxonomy', 'projects'],
     paths:
       target === 'all'
         ? ['/', '/about', '/contact', '/design', '/project', '/sitemap.xml', '/project/[slug]']

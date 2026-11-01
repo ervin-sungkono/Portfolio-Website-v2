@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { encode, getToken } from 'next-auth/jwt';
-import { createAuthCallbacks, isOwnerId, ownerCredential } from '../../src/lib/cms/auth-policy.ts';
+import {
+  createAuthCallbacks,
+  isGitHubUserId,
+  ownerSessionId,
+} from '../../src/lib/cms/auth-policy.ts';
 
 const owner = '43065067';
-const callbacks = createAuthCallbacks(owner);
+const callbacks = createAuthCallbacks(async () => owner);
 const account = {
   provider: 'github',
   providerAccountId: owner,
@@ -12,10 +16,10 @@ const account = {
   type: 'oauth',
 };
 
-test('sign-in authorizes only the immutable GitHub ID and provider', async () => {
+test('sign-in matches the OAuth account to the live PAT identity', async () => {
   for (const [candidate, allowed] of [
     [account, true],
-    [{ ...account, providerAccountId: 'other' }, false],
+    [{ ...account, providerAccountId: '99999999' }, false],
     [{ ...account, provider: 'credentials' }, false],
     [null, false],
   ] as const) {
@@ -26,27 +30,56 @@ test('sign-in authorizes only the immutable GitHub ID and provider', async () =>
       allowed,
     );
   }
-  assert.equal(isOwnerId(owner, undefined), false);
-  assert.equal(isOwnerId(owner, '043065067'), false);
+  assert.equal(isGitHubUserId(owner), true);
+  assert.equal(isGitHubUserId('043065067'), false);
+  assert.equal(isGitHubUserId('not-a-user-id'), false);
+
+  const unavailable = createAuthCallbacks(async () => {
+    throw new Error('PAT unavailable');
+  });
+  assert.equal(
+    await unavailable.signIn!({ account } as Parameters<NonNullable<typeof unavailable.signIn>>[0]),
+    false,
+  );
 });
 
-test('JWT callback accepts credentials only from the OAuth account, never a session update', async () => {
+test('JWT callback stores only the GitHub ID and ignores session updates', async () => {
   const token = await callbacks.jwt!({ token: {}, account } as Parameters<
     NonNullable<typeof callbacks.jwt>
   >[0]);
-  assert.equal(token?.githubAccessToken, account.access_token);
+  assert.equal(token?.githubId, owner);
+  assert.equal(token?.githubAccessToken, undefined);
+  assert.equal(token?.githubExpiresAt, undefined);
+
   const updated = await callbacks.jwt!({
     token,
+    user: { id: owner },
     trigger: 'update',
-    session: { githubId: 'other', githubAccessToken: 'injected' },
+    session: { githubId: '99999999', githubAccessToken: 'injected' },
   } as Parameters<NonNullable<typeof callbacks.jwt>>[0]);
   assert.equal(updated?.githubId, owner);
-  assert.equal(updated?.githubAccessToken, account.access_token);
+  assert.equal(updated?.githubAccessToken, undefined);
+  assert.equal(
+    await callbacks.jwt!({
+      token: { ...token, githubAccessToken: 'legacy-oauth-token' },
+      user: { id: owner },
+    } as Parameters<NonNullable<typeof callbacks.jwt>>[0]),
+    null,
+  );
+
   assert.equal(
     await callbacks.jwt!({
       token: {},
-      account: { ...account, providerAccountId: 'other' },
+      account: { ...account, provider: 'credentials' },
     } as Parameters<NonNullable<typeof callbacks.jwt>>[0]),
+    null,
+  );
+
+  const mismatchedPat = createAuthCallbacks(async () => '99999999');
+  assert.equal(
+    await mismatchedPat.jwt!({ token: {}, account } as Parameters<
+      NonNullable<typeof mismatchedPat.jwt>
+    >[0]),
     null,
   );
 });
@@ -72,27 +105,21 @@ test('session JSON never exposes GitHub tokens or arbitrary JWT/session fields',
   assert.equal(JSON.stringify(session).includes(account.access_token), false);
 });
 
-test('owner guard rejects missing, expired, and wrong-owner sessions', () => {
-  assert.throws(() => ownerCredential(null, owner), { status: 401 });
-  assert.throws(() => ownerCredential({ githubId: 'other', githubAccessToken: 'fixture' }, owner), {
-    status: 403,
+test('owner guard reads only the authenticated GitHub ID from the session', () => {
+  assert.throws(() => ownerSessionId(null), { status: 401 });
+  assert.throws(() => ownerSessionId({}), { status: 401 });
+  assert.throws(() => ownerSessionId({ githubId: owner, githubAccessToken: 'legacy' }), {
+    status: 401,
   });
-  assert.throws(
-    () =>
-      ownerCredential({ githubId: owner, githubAccessToken: 'fixture', githubExpiresAt: 1 }, owner),
-    { status: 401 },
-  );
-  assert.equal(
-    ownerCredential({ githubId: owner, githubAccessToken: 'fixture' }, owner),
-    'fixture',
-  );
+  assert.throws(() => ownerSessionId({ githubId: owner, githubExpiresAt: 123 }), { status: 401 });
+  assert.equal(ownerSessionId({ githubId: owner }), owner);
 });
 
-test('Auth.js encrypts the OAuth token and supports server-only cookie retrieval', async () => {
+test('Auth.js encrypts a credential-free session and supports server-only cookie retrieval', async () => {
   const secret = 'isolated-test-secret-not-a-production-credential';
   const salt = 'authjs.session-token';
   const encrypted = await encode({
-    token: { githubId: owner, githubAccessToken: account.access_token },
+    token: { githubId: owner },
     secret,
     salt,
     maxAge: 60,
@@ -104,7 +131,21 @@ test('Auth.js encrypts the OAuth token and supports server-only cookie retrieval
     salt,
     cookieName: salt,
   });
-  assert.equal(ownerCredential(token, owner), account.access_token);
+  assert.equal(ownerSessionId(token), owner);
+
+  const legacyEncrypted = await encode({
+    token: { githubId: owner, githubAccessToken: account.access_token },
+    secret,
+    salt,
+    maxAge: 60,
+  });
+  const legacyToken = await getToken({
+    req: { headers: new Headers({ cookie: `${salt}=${legacyEncrypted}` }) },
+    secret,
+    salt,
+    cookieName: salt,
+  });
+  assert.throws(() => ownerSessionId(legacyToken), { status: 401 });
   assert.equal(
     await getToken({
       req: { headers: new Headers({ cookie: `${salt}=${encrypted}` }) },

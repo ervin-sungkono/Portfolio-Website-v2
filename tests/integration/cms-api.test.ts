@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { revalidateTag } from 'next/cache';
+import { encode } from 'next-auth/jwt';
 
 vi.mock('next-auth', () => ({
   default: () => ({ auth: vi.fn(), handlers: {}, signIn: vi.fn(), signOut: vi.fn() }),
@@ -10,10 +11,10 @@ vi.mock('next-auth', () => ({
 vi.mock('next-auth/providers/github', () => ({ default: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }));
 import {
-  cmsAdminId,
   cmsAuthSecret,
   cmsBaseUrl,
-  cmsOwnerToken,
+  cmsPat,
+  cmsPatUserId,
   cmsSessionCookie,
   fixturePng,
 } from '../support/cms-fixture';
@@ -24,7 +25,7 @@ let cookieName: string;
 const originalFetch = globalThis.fetch;
 
 beforeAll(async () => {
-  vi.stubEnv('GITHUB_ADMIN_ID', cmsAdminId);
+  vi.stubEnv('GITHUB_PAT', cmsPat);
   vi.stubEnv('GITHUB_REPO', 'portfolio-content-fixture');
   vi.stubEnv('AUTH_SECRET', cmsAuthSecret);
   vi.stubEnv('AUTH_GITHUB_ID', 'fixture-github-client-id');
@@ -44,14 +45,13 @@ async function request(
   path: string,
   options: {
     githubId?: string;
-    token?: string;
     origin?: string;
     data?: unknown;
   } = {},
 ) {
   const headers = new Headers();
   if (options.githubId) {
-    const encrypted = await cmsSessionCookie(cookieName, options.githubId, options.token);
+    const encrypted = await cmsSessionCookie(cookieName, options.githubId);
     headers.set('cookie', `${cookieName}=${encrypted}`);
   }
   if (options.origin) {
@@ -68,20 +68,41 @@ async function request(
 }
 
 describe('private CMS HTTP handlers', () => {
-  test('reject anonymous, wrong-owner, and revoked sessions without leaking tokens', async () => {
+  test('reject anonymous and wrong-owner sessions, and reject an invalid server PAT safely', async () => {
     expect((await cms.GET(await request('/api/cms'))).status).toBe(401);
     expect((await cms.GET(await request('/api/cms', { githubId: '99999999' }))).status).toBe(403);
-    const badToken = await cms.GET(
-      await request('/api/cms', { githubId: cmsAdminId, token: 'fixture-bad-token' }),
+    const badPat = 'fixture-bad-token';
+    vi.stubEnv('GITHUB_PAT', badPat);
+    try {
+      const response = await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }));
+      expect(response.status).toBe(401);
+      expect(await response.text()).not.toContain(badPat);
+    } finally {
+      vi.stubEnv('GITHUB_PAT', cmsPat);
+    }
+  });
+
+  test('rejects legacy session cookies that retained an OAuth access token', async () => {
+    const legacyCredential = 'fixture-legacy-oauth-token';
+    const encrypted = await encode({
+      secret: cmsAuthSecret,
+      salt: cookieName,
+      maxAge: 60 * 60,
+      token: { githubId: cmsPatUserId, githubAccessToken: legacyCredential },
+    });
+    const response = await cms.GET(
+      new Request(new URL('/api/cms', cmsBaseUrl), {
+        headers: { cookie: `${cookieName}=${encrypted}` },
+      }),
     );
-    expect(badToken.status).toBe(401);
-    expect(await badToken.text()).not.toContain('fixture-bad-token');
+    expect(response.status).toBe(401);
+    expect(await response.text()).not.toContain(legacyCredential);
   });
 
   test('reject cross-origin writes and malformed content', async () => {
     const crossOrigin = await cms.POST(
       await request('/api/cms', {
-        githubId: cmsAdminId,
+        githubId: cmsPatUserId,
         origin: 'https://attacker.example',
         data: { kind: 'initialize' },
       }),
@@ -89,7 +110,7 @@ describe('private CMS HTTP handlers', () => {
     expect(crossOrigin.status).toBe(403);
     const invalid = await cms.POST(
       await request('/api/cms', {
-        githubId: cmsAdminId,
+        githubId: cmsPatUserId,
         origin: cmsBaseUrl,
         data: { kind: 'project', slug: '../escape', expectedSha: null, data: {} },
       }),
@@ -100,8 +121,7 @@ describe('private CMS HTTP handlers', () => {
   test('owner can refresh all remote content, including portfolio documents', async () => {
     const response = await cms.POST(
       await request('/api/cms', {
-        githubId: cmsAdminId,
-        token: cmsOwnerToken,
+        githubId: cmsPatUserId,
         origin: cmsBaseUrl,
         data: { kind: 'revalidate', target: 'all' },
       }),
@@ -129,14 +149,13 @@ describe('private CMS HTTP handlers', () => {
     ]) {
       const response = await media.POST(
         await request('/api/cms/media', {
-          githubId: cmsAdminId,
-          token: cmsOwnerToken,
+          githubId: cmsPatUserId,
           origin: cmsBaseUrl,
           data,
         }),
       );
       expect(response.status).toBe(400);
-      expect(await response.text()).not.toContain(cmsOwnerToken);
+      expect(await response.text()).not.toContain(cmsPat);
     }
   });
 });

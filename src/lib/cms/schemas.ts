@@ -29,7 +29,8 @@ const httpsUrl = z
 const unique = <T extends string>(items: T[]) => new Set(items).size === items.length;
 
 export const projectSchema = z.strictObject({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
+  githubRepositoryId: z.number().int().safe().positive().nullable(),
   title: text(120),
   summary: text(240),
   description: text(10_000),
@@ -83,7 +84,7 @@ const projectStudySchema = z.strictObject({
 });
 
 export const portfolioSchema = z.strictObject({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   profile: z.strictObject({
     name: text(120),
     title: text(120),
@@ -118,16 +119,9 @@ export const portfolioSchema = z.strictObject({
     )
     .max(100),
   designs: z
-    .array(
-      z.strictObject({
-        title: text(200),
-        url: httpsUrl,
-        id: text(100),
-        image: httpsUrl,
-        category: text(100),
-      }),
-    )
-    .max(500),
+    .array(z.string().regex(/^[1-9]\d*$/))
+    .max(500)
+    .refine(unique, 'Design IDs must be unique.'),
   projectStudies: z.record(idSchema, projectStudySchema),
   portfolioSource: httpsUrl,
   portfolioSourceRef: text(200),
