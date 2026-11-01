@@ -4,13 +4,24 @@ import { ArrowRightIcon, ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr
 import { ExternalLink } from '@/components/common/ExternalLink';
 import { ParallaxImage } from '@/components/common/ParallaxImage';
 import { Reveal } from '@/components/common/Reveal';
-import { getPortfolio } from '@/lib/content';
+import { getDesigns, type Design } from '@/lib/content';
 import { imageSizes } from '@/lib/image-sizes';
 import styles from './style.module.css';
 
 export async function DesignPreview() {
-  const { designs } = await getPortfolio();
-  const previews = [designs[3], designs[1]].filter((design) => design !== undefined);
+  let designs: readonly Design[] = [];
+  let unavailable = false;
+  try {
+    designs = await getDesigns();
+  } catch {
+    designs = [];
+    unavailable = true;
+  }
+  const previews = designs.slice(0, 2);
+  if (!previews.length && !unavailable) {
+    return null;
+  }
+
   return (
     <section
       className={`design-preview section ${styles.designSection}`}
@@ -19,8 +30,9 @@ export async function DesignPreview() {
       <Reveal className={`section-heading ${styles.sectionHeading}`}>
         <h2 id="design-heading">A Feel for the Interface.</h2>
         <p>
-          Exploring visual hierarchy, interaction, and the details that make an interface feel
-          considered.
+          {unavailable
+            ? 'Selected design work is temporarily unavailable. Please check back soon.'
+            : 'Exploring visual hierarchy, interaction, and the details that make an interface feel considered.'}
         </p>
       </Reveal>
       <div className={`design-preview-grid ${styles.designGallery}`}>
@@ -36,7 +48,7 @@ export async function DesignPreview() {
                   <ParallaxImage travel={1.5}>
                     <Image
                       src={design.image}
-                      alt={design.title}
+                      alt=""
                       width={1200}
                       height={900}
                       sizes={imageSizes.homeArtworkPrimary}
@@ -45,7 +57,7 @@ export async function DesignPreview() {
                 ) : (
                   <Image
                     src={design.image}
-                    alt={design.title}
+                    alt=""
                     width={1200}
                     height={900}
                     sizes={imageSizes.homeArtworkSecondary}

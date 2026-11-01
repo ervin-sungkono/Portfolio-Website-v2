@@ -1,7 +1,6 @@
 import type { Design } from '@/lib/content';
 
 export type DesignCollectionProps = {
-  activeCategory: string;
-  categories: string[];
-  filtered: readonly Design[];
+  designs: readonly Design[];
+  unavailable?: boolean;
 };

@@ -3,12 +3,18 @@ import Link from 'next/link';
 import { ArrowRightIcon, ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { ProjectCard } from '@/components/common/ProjectCard';
 import { Reveal } from '@/components/common/Reveal';
-import { getPortfolio, type Project } from '@/lib/content';
+import { getDesigns, type Design, type Project } from '@/lib/content';
 import { imageSizes } from '@/lib/image-sizes';
 import styles from './style.module.css';
 
 export async function SelectedProjects({ projects }: { projects: readonly Project[] }) {
-  const { designs } = await getPortfolio();
+  let designs: readonly Design[] = [];
+  try {
+    designs = await getDesigns();
+  } catch {
+    designs = [];
+  }
+  const design = designs[0];
   const [mainProject, secondaryProject, additionalProject] = projects;
   return (
     <section
@@ -54,11 +60,11 @@ export async function SelectedProjects({ projects }: { projects: readonly Projec
         </div>
         <Link href="/design" className={styles.designTeaser} data-cursor="link">
           <span className={styles.teaserKicker}>Interface studies</span>
-          {designs[0] && (
+          {design && (
             <div className={styles.teaserImage}>
               <Image
-                src={designs[0].image}
-                alt={designs[0].title}
+                src={design.image}
+                alt=""
                 width={1200}
                 height={900}
                 sizes={imageSizes.homeTeaser}

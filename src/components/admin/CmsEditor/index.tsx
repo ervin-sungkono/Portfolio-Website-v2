@@ -15,6 +15,7 @@ import {
 } from '@/lib/cms/schemas';
 import { CategoriesPanel } from './CategoriesPanel';
 import { CmsMessage } from './CmsMessage';
+import { DesignsPanel } from './DesignsPanel';
 import { ImagesPanel } from './ImagesPanel';
 import { ProjectPanel } from './ProjectPanel';
 import { SiteProfilePanel } from './SiteProfilePanel';
@@ -38,18 +39,20 @@ const sectionLabels: Record<CmsSection, string> = {
   site: 'Site Profile',
   categories: 'Categories',
   technologies: 'Technologies',
+  designs: 'Designs',
   images: 'Images',
 };
 
 function emptyProject(): ProjectDocument {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     title: '',
     summary: '',
     description: '',
     published: false,
     featured: false,
     sortOrder: 0,
+    githubRepositoryId: null,
     year: new Date().getFullYear(),
     categories: [],
     technologies: [],
@@ -115,11 +118,13 @@ export function CmsEditor() {
   const [uploadResult, setUploadResult] = useState<ImageUploadResult>();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [publicRefreshMessage, setPublicRefreshMessage] = useState('');
+  const [designsDirty, setDesignsDirty] = useState(false);
   const [discardVersions, setDiscardVersions] = useState<Record<CmsSection, number>>({
     projects: 0,
     site: 0,
     categories: 0,
     technologies: 0,
+    designs: 0,
     images: 0,
   });
 
@@ -140,7 +145,7 @@ export function CmsEditor() {
   const hasProjectDraft =
     projectIsDirty || (!selectedProjectSlug && Boolean(newProjectSlug.trim()));
   const hasUnsavedChanges =
-    hasProjectDraft || siteIsDirty || categoriesAreDirty || technologiesAreDirty;
+    hasProjectDraft || siteIsDirty || categoriesAreDirty || technologiesAreDirty || designsDirty;
   const resetProjectForm = projectForm.reset;
   const resetSiteForm = siteForm.reset;
   const resetCategoriesForm = categoriesForm.reset;
@@ -290,7 +295,7 @@ export function CmsEditor() {
     request: unknown,
     conflictSlug?: string,
     retryContext?: {
-      target: 'project' | 'site' | 'taxonomy';
+      target: 'project' | 'site' | 'taxonomy' | 'designs';
       slug?: string;
       commitUrl?: string;
     },
@@ -424,7 +429,9 @@ export function CmsEditor() {
               ? 'Site profile saved.'
               : section === 'categories'
                 ? 'Categories saved.'
-                : 'Technologies saved.';
+                : section === 'technologies'
+                  ? 'Technologies saved.'
+                  : 'Design selection saved.';
       const refreshNote = !refreshed
         ? ' The commit succeeded, but the latest repository snapshot could not be loaded; refresh before editing again.'
         : reply.cache === 'pending'
@@ -442,9 +449,11 @@ export function CmsEditor() {
               revalidateTarget:
                 request.kind === 'site'
                   ? 'site'
-                  : request.kind === 'categories' || request.kind === 'technologies'
-                    ? 'taxonomy'
-                    : 'project',
+                  : request.kind === 'designs'
+                    ? 'designs'
+                    : request.kind === 'categories' || request.kind === 'technologies'
+                      ? 'taxonomy'
+                      : 'project',
               ...(request.kind === 'project' || request.kind === 'delete-project'
                 ? { revalidateSlug: request.slug }
                 : {}),
@@ -535,6 +544,16 @@ export function CmsEditor() {
     }
     technologiesForm.reset(data);
     await finishWrite('technologies', request, reply);
+  }
+
+  async function saveDesigns(selection: { expectedSha: string; designs: string[] }) {
+    const request: CmsWriteRequest = { kind: 'designs', ...selection };
+    const reply = await sendMutation('designs', request);
+    if (!reply) {
+      return null;
+    }
+    await finishWrite('designs', request, reply);
+    return reply;
   }
 
   async function deleteProject() {
@@ -663,7 +682,7 @@ export function CmsEditor() {
 
   async function retryRevalidation(section: CmsSection) {
     const prior = messages[section];
-    let target: 'project' | 'site' | 'taxonomy' | undefined = prior?.revalidateTarget;
+    let target: 'project' | 'site' | 'taxonomy' | 'designs' | undefined = prior?.revalidateTarget;
     let slug = prior?.revalidateSlug;
     if (!target && section === 'projects') {
       target = 'project';
@@ -672,6 +691,8 @@ export function CmsEditor() {
       target = 'site';
     } else if (!target && (section === 'categories' || section === 'technologies')) {
       target = 'taxonomy';
+    } else if (!target && section === 'designs') {
+      target = 'designs';
     }
     if (!target) {
       return;
@@ -708,6 +729,11 @@ export function CmsEditor() {
     busyRef.current = true;
     setBusySection(section);
     try {
+      if (section === 'designs') {
+        setSectionMessage(section, undefined);
+        setDiscardVersions((current) => ({ ...current, [section]: current[section] + 1 }));
+        return;
+      }
       const preferredSlug = section === 'projects' ? messages.projects?.conflictSlug : undefined;
       const refreshed = await refreshSnapshot({ discardSection: section, preferredSlug });
       if (refreshed) {
@@ -941,6 +967,22 @@ export function CmsEditor() {
             }
             onSave={saveTechnologies}
             onClearMessage={() => clearSectionMessage('technologies')}
+          />
+          <DesignsPanel
+            key={`designs:${discardVersions.designs}`}
+            active={activeSection === 'designs'}
+            pending={pending}
+            feedback={
+              <CmsMessage
+                message={messages.designs}
+                onReload={() => void reloadConflict('designs')}
+                onRetry={() => void retryRevalidation('designs')}
+                pending={pending}
+              />
+            }
+            onSave={saveDesigns}
+            onClearMessage={() => clearSectionMessage('designs')}
+            onDirtyChange={setDesignsDirty}
           />
           <ImagesPanel
             key={`images:${discardVersions.images}`}
