@@ -1,9 +1,9 @@
 import { expect, test } from 'vitest';
 import {
-  cmsAdminId,
   cmsBaseUrl,
   cmsCookieName,
-  cmsOwnerToken,
+  cmsPat,
+  cmsPatUserId,
   cmsSessionCookie,
   fixturePng,
 } from '../support/cms-fixture';
@@ -22,7 +22,6 @@ async function request(
   path: string,
   options: {
     githubId?: string;
-    token?: string;
     origin?: string;
     data?: unknown;
   } = {},
@@ -31,7 +30,7 @@ async function request(
   if (options.githubId) {
     headers.set(
       'cookie',
-      `${cmsCookieName}=${await cmsSessionCookie(cmsCookieName, options.githubId, options.token)}`,
+      `${cmsCookieName}=${await cmsSessionCookie(cmsCookieName, options.githubId)}`,
     );
   }
   if (options.origin) {
@@ -80,17 +79,14 @@ test('contact route accepts a large valid Unicode body and rejects abuse', async
 test('CMS routes enforce owner sessions, origin and media validation over HTTP', async () => {
   expect((await request('/api/cms')).status).toBe(401);
   expect((await request('/api/cms', { githubId: '99999999' })).status).toBe(403);
-  const badToken = await request('/api/cms', { githubId: cmsAdminId, token: 'fixture-bad-token' });
-  expect(badToken.status).toBe(401);
-  expect(await badToken.text()).not.toContain('fixture-bad-token');
 
-  const session = await request('/api/auth/session', { githubId: cmsAdminId });
+  const session = await request('/api/auth/session', { githubId: cmsPatUserId });
   expect(session.status).toBe(200);
-  expect(await session.text()).not.toContain(cmsOwnerToken);
+  expect(await session.text()).not.toContain(cmsPat);
   expect(
     (
       await request('/api/cms', {
-        githubId: cmsAdminId,
+        githubId: cmsPatUserId,
         origin: 'https://attacker.example',
         data: { kind: 'initialize' },
       })
@@ -99,7 +95,7 @@ test('CMS routes enforce owner sessions, origin and media validation over HTTP',
   expect(
     (
       await request('/api/cms', {
-        githubId: cmsAdminId,
+        githubId: cmsPatUserId,
         origin: base,
         data: { kind: 'project', slug: '../escape', expectedSha: null, data: {} },
       })
@@ -121,8 +117,12 @@ test('CMS routes enforce owner sessions, origin and media validation over HTTP',
       content: Buffer.from('not an image').toString('base64'),
     },
   ]) {
-    const response = await request('/api/cms/media', { githubId: cmsAdminId, origin: base, data });
+    const response = await request('/api/cms/media', {
+      githubId: cmsPatUserId,
+      origin: base,
+      data,
+    });
     expect(response.status).toBe(400);
-    expect(await response.text()).not.toContain(cmsOwnerToken);
+    expect(await response.text()).not.toContain(cmsPat);
   }
 });
