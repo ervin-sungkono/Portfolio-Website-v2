@@ -9,23 +9,10 @@ const sourceRepositories = new Set([
   'portofolio-website-v2',
 ]);
 
-export type CmsConfig = { adminId: number; repository: string };
+export type CmsConfig = { repository: string };
 
 export function getCmsConfig(): CmsConfig {
-  const configuredId = process.env.GITHUB_ADMIN_ID?.trim();
-  const configuredRepository = process.env.GITHUB_REPO?.trim();
-  // The public portfolio has a known content repository; paired overrides support fixtures.
-  const adminIdValue = configuredId || (!configuredRepository ? '43065067' : undefined);
-  const repository = configuredRepository || (!configuredId ? 'web-assets' : undefined);
-
-  if (
-    !adminIdValue ||
-    !/^\d+$/.test(adminIdValue) ||
-    !Number.isSafeInteger(Number(adminIdValue)) ||
-    Number(adminIdValue) < 1
-  ) {
-    throw new CmsError('configuration', 'Set GITHUB_ADMIN_ID to the numeric GitHub user ID.', 500);
-  }
+  const repository = process.env.GITHUB_REPO?.trim();
   if (
     !repository ||
     repository.length > 100 ||
@@ -47,20 +34,5 @@ export function getCmsConfig(): CmsConfig {
     );
   }
 
-  return { adminId: Number(adminIdValue), repository };
-}
-
-export function getPublicSource() {
-  const { adminId, repository } = getCmsConfig();
-  const isDefault = adminId === 43065067 && repository.toLowerCase() === 'web-assets';
-  const owner = process.env.GITHUB_CONTENT_OWNER?.trim() || (isDefault ? 'ervin-sungkono' : '');
-  const branch = process.env.GITHUB_CONTENT_BRANCH?.trim() || (isDefault ? 'master' : '');
-  if (!/^[A-Za-z0-9-]+$/.test(owner) || !branch || branch.length > 255) {
-    throw new CmsError(
-      'configuration',
-      'Set GITHUB_CONTENT_OWNER and GITHUB_CONTENT_BRANCH for the public content repository.',
-      500,
-    );
-  }
-  return { owner, name: repository, branch };
+  return { repository };
 }

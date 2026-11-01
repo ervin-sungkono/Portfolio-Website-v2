@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { portfolioSchema } from '../../src/lib/cms/schemas';
 
 const portfolio = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   profile: {
     name: 'Example Owner',
     title: 'Engineer',
@@ -28,7 +28,7 @@ describe('published portfolio content', () => {
   });
 
   it('rejects unsupported versions and unsafe URLs', () => {
-    expect(portfolioSchema.safeParse({ ...portfolio, schemaVersion: 2 }).success).toBe(false);
+    expect(portfolioSchema.safeParse({ ...portfolio, schemaVersion: 1 }).success).toBe(false);
     expect(
       portfolioSchema.safeParse({
         ...portfolio,

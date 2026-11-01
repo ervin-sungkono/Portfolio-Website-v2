@@ -1,17 +1,21 @@
 import 'server-only';
 
+import { getDribbbleShots } from '../dribbble.ts';
 import { CmsError, validationError } from './errors.ts';
 import { assertCmsOwner } from './github.ts';
+import { getOwnerRepository } from './github-repositories.ts';
 import {
   deleteContentFile,
   getSnapshot,
   isValidProjectSlug,
+  readPortfolio,
   type CmsSnapshot,
   validateReferences,
   writeContentFile,
 } from './repository.ts';
 import {
   categoriesSchema,
+  portfolioSchema,
   publishMutationSchema,
   siteSchema,
   technologiesSchema,
@@ -20,6 +24,36 @@ import {
 
 function conflict(message: string): CmsError {
   return new CmsError('conflict', message, 409);
+}
+
+export async function saveDesignSelection(
+  token: string,
+  expectedSha: string,
+  designs: string[],
+): Promise<{ commitUrl: string; sha: string; contentSha: string }> {
+  await assertCmsOwner(token);
+  const portfolio = await readPortfolio(token);
+  if (portfolio.sha !== expectedSha) {
+    throw conflict(
+      'The portfolio changed after you opened it. Reload the CMS before saving again.',
+    );
+  }
+  const available = new Set([
+    ...portfolio.data.designs,
+    ...(await getDribbbleShots()).map((shot) => shot.id),
+  ]);
+  if (designs.some((id) => !available.has(id))) {
+    throw validationError('Select only shots from the connected Dribbble account.');
+  }
+  const data = portfolioSchema.parse({ ...portfolio.data, designs });
+  return writeContentFile(
+    portfolio.repository,
+    'content/portfolio.json',
+    `${JSON.stringify(data, null, 2)}\n`,
+    expectedSha,
+    'cms: publish design selection',
+    token,
+  );
 }
 
 function pathForMutation(mutation: PublishMutation): string {
@@ -71,6 +105,13 @@ export async function publishContent(
       : snapshot[mutation.kind].sha;
   if (currentSha !== mutation.expectedSha) {
     throw conflict('This content changed after you opened it. Reload the CMS before saving again.');
+  }
+
+  if (mutation.kind === 'project' && mutation.data.githubRepositoryId !== null) {
+    const existing = snapshot.projects.find(({ slug }) => slug === mutation.slug);
+    if (existing?.data.githubRepositoryId !== mutation.data.githubRepositoryId) {
+      await getOwnerRepository(token, mutation.data.githubRepositoryId);
+    }
   }
 
   if (mutation.kind !== 'site') {

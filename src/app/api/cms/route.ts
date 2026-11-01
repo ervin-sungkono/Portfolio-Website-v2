@@ -7,8 +7,8 @@ import { invalidateContent } from '@/lib/cms/cache';
 import { publishAndRevalidate } from '@/lib/cms/publishing';
 import { getSnapshot } from '@/lib/cms/repository';
 import { initializeRepository } from '@/lib/cms/initialization';
-import { deleteProject, publishContent } from '@/lib/cms/content-mutations';
-import { publishMutationSchema } from '@/lib/cms/schemas';
+import { deleteProject, publishContent, saveDesignSelection } from '@/lib/cms/content-mutations';
+import { portfolioSchema, publishMutationSchema } from '@/lib/cms/schemas';
 import { synchronizeProjectIndex } from '@/lib/cms/project-index';
 
 const slug = z
@@ -19,6 +19,11 @@ const operationSchema = z.union([
   publishMutationSchema,
   z.strictObject({ kind: z.literal('initialize') }),
   z.strictObject({
+    kind: z.literal('designs'),
+    expectedSha: z.string().regex(/^[a-f0-9]{40}$/i),
+    designs: portfolioSchema.shape.designs,
+  }),
+  z.strictObject({
     kind: z.literal('delete-project'),
     slug,
     expectedSha: z.string().regex(/^[a-f0-9]{40}$/i),
@@ -26,7 +31,7 @@ const operationSchema = z.union([
   z
     .strictObject({
       kind: z.literal('revalidate'),
-      target: z.enum(['project', 'site', 'taxonomy', 'all']),
+      target: z.enum(['project', 'site', 'taxonomy', 'designs', 'all']),
       slug: slug.optional(),
     })
     .refine(
@@ -86,6 +91,21 @@ export async function POST(request: Request) {
             await synchronizeProjectIndex(token);
             invalidateContent('project', operation.slug);
           },
+        ),
+      );
+    }
+    if (operation.kind === 'designs') {
+      return cmsResponse(
+        await publishAndRevalidate(
+          async () => {
+            const result = await saveDesignSelection(
+              token,
+              operation.expectedSha,
+              operation.designs,
+            );
+            return { ...result, commitSha: result.sha, sha: result.contentSha };
+          },
+          () => invalidateContent('designs'),
         ),
       );
     }

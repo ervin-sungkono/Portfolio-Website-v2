@@ -1,25 +1,11 @@
 import 'server-only';
 
-import { getPublicSource } from './config.ts';
-import { CmsError } from './errors.ts';
 import { getSnapshot, readContentFile, writeContentFile } from './repository.ts';
 import { projectIndexSchema } from './schemas.ts';
 
 // The public raw-content reader cannot list directories, so the CMS maintains this index.
 export async function synchronizeProjectIndex(token: string) {
   const snapshot = await getSnapshot(token);
-  const source = getPublicSource();
-  if (
-    snapshot.repository.owner.toLowerCase() !== source.owner.toLowerCase() ||
-    snapshot.repository.name.toLowerCase() !== source.name.toLowerCase() ||
-    snapshot.repository.defaultBranch !== source.branch
-  ) {
-    throw new CmsError(
-      'configuration',
-      'The public content source does not match the CMS repository.',
-      500,
-    );
-  }
   const path = 'content/project-index.json';
   const existing = await readContentFile(snapshot.repository, path, token);
   const projects = snapshot.projects.map(({ slug }) => slug).sort();

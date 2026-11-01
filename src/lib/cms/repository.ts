@@ -6,6 +6,7 @@ import {
   contentsPath,
   githubBytes,
   githubJson,
+  getGitHubUser,
   repoPath,
   type GitHubContent,
   type GitHubDirectoryEntry,
@@ -13,10 +14,12 @@ import {
 } from './github.ts';
 import {
   categoriesSchema,
+  portfolioSchema,
   projectSchema,
   siteSchema,
   technologiesSchema,
   type Categories,
+  type PortfolioDocument,
   type ProjectDocument,
   type SiteDocument,
   type Technologies,
@@ -67,10 +70,9 @@ function jsonDocument<T>(
 }
 
 export async function resolveOwner(token?: string): Promise<string> {
-  const { adminId } = getCmsConfig();
-  const user = await githubJson<{ id: number; login: string }>(`/user/${adminId}`, { token });
-  if (!user || user.id !== adminId || !/^[A-Za-z0-9-]+$/.test(user.login)) {
-    throw new CmsError('configuration', 'GITHUB_ADMIN_ID does not identify a GitHub user.', 500);
+  const user = await getGitHubUser(token);
+  if (!/^[A-Za-z0-9-]+$/.test(user.login)) {
+    throw new CmsError('configuration', 'The GitHub PAT owner login is invalid.', 500);
   }
   return user.login;
 }
@@ -173,6 +175,21 @@ async function requiredDocument<T>(
   return { data: jsonDocument(file, schema, path), sha: file.sha };
 }
 
+export async function readPortfolio(token: string): Promise<{
+  repository: RepositoryContext;
+  data: PortfolioDocument;
+  sha: string;
+}> {
+  const repository = await resolveRepository(token);
+  const portfolio = await requiredDocument(
+    repository,
+    'content/portfolio.json',
+    portfolioSchema,
+    token,
+  );
+  return { repository, ...portfolio };
+}
+
 function hasPngSignature(bytes: Uint8Array): boolean {
   return (
     bytes.length >= 8 &&
@@ -257,7 +274,18 @@ export async function validateReferences(
   errorCode: CmsErrorCode = 'unsupported_repository',
 ): Promise<void> {
   const paths = new Set<string>();
+  const repositoryIds = new Set<number>();
   for (const { slug, data } of projects) {
+    if (data.githubRepositoryId !== null) {
+      if (repositoryIds.has(data.githubRepositoryId)) {
+        throw new CmsError(
+          errorCode,
+          'A GitHub repository can only be mapped to one project.',
+          errorCode === 'validation' ? 400 : 409,
+        );
+      }
+      repositoryIds.add(data.githubRepositoryId);
+    }
     if (data.categories.some((id) => !Object.hasOwn(categories, id))) {
       throw new CmsError(
         errorCode,

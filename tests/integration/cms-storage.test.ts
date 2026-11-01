@@ -7,7 +7,7 @@ import { githubJson } from '../../src/lib/cms/github.ts';
 import { uploadMedia } from '../../src/lib/cms/media.ts';
 import { getSnapshot } from '../../src/lib/cms/repository.ts';
 import { initializeRepository } from '../../src/lib/cms/initialization.ts';
-import { publishContent } from '../../src/lib/cms/content-mutations.ts';
+import { publishContent, saveDesignSelection } from '../../src/lib/cms/content-mutations.ts';
 import {
   categoriesSchema,
   projectSchema,
@@ -15,10 +15,12 @@ import {
   siteSchema,
   technologiesSchema,
   uploadMediaSchema,
+  type ProjectDocument,
 } from '../../src/lib/cms/schemas.ts';
 
 const originalFetch = globalThis.fetch;
-const originalAdmin = process.env.GITHUB_ADMIN_ID;
+const originalPat = process.env.GITHUB_PAT;
+const originalDribbble = process.env.DRIBBBLE_TOKEN;
 const originalRepository = process.env.GITHUB_REPO;
 const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 const ownerId = 12345;
@@ -32,7 +34,8 @@ const site = {
 const categories = { web: { label: 'Website', sortOrder: 10 } };
 const technologies = { nextjs: { label: 'Next.js' } };
 const project = {
-  schemaVersion: 1 as const,
+  schemaVersion: 2 as const,
+  githubRepositoryId: null,
   title: 'Example project',
   summary: 'A small example.',
   description: 'An example project used to verify the CMS content repository.',
@@ -45,6 +48,26 @@ const project = {
   tags: ['example'],
   links: { source: 'https://github.com/example/project' },
   media: { cover: 'media/projects/example-project/cover.png', gallery: [] as string[] },
+};
+const portfolio = {
+  schemaVersion: 2,
+  profile: {
+    name: 'Example Owner',
+    title: 'Engineer',
+    intro: 'Example profile',
+    linkedin: 'https://example.com/linkedin',
+    github: 'https://example.com/github',
+    dribbble: 'https://example.com/dribbble',
+    instagram: 'https://example.com/instagram',
+    cv: 'https://example.com/cv',
+    experiences: [],
+    education: { school: 'Example School', degree: 'Computing', years: '2020-2024' },
+  },
+  skills: [],
+  designs: ['1', '3'],
+  projectStudies: {},
+  portfolioSource: 'https://example.com/source',
+  portfolioSourceRef: 'example-ref',
 };
 
 type StoredFile = { bytes: Uint8Array; sha: string };
@@ -60,15 +83,20 @@ type FakeState = {
 };
 
 function restoreEnvironment() {
-  if (originalAdmin === undefined) {
-    delete process.env.GITHUB_ADMIN_ID;
+  if (originalPat === undefined) {
+    delete process.env.GITHUB_PAT;
   } else {
-    process.env.GITHUB_ADMIN_ID = originalAdmin;
+    process.env.GITHUB_PAT = originalPat;
   }
   if (originalRepository === undefined) {
     delete process.env.GITHUB_REPO;
   } else {
     process.env.GITHUB_REPO = originalRepository;
+  }
+  if (originalDribbble === undefined) {
+    delete process.env.DRIBBBLE_TOKEN;
+  } else {
+    process.env.DRIBBBLE_TOKEN = originalDribbble;
   }
   globalThis.fetch = originalFetch;
 }
@@ -76,7 +104,8 @@ function restoreEnvironment() {
 afterEach(restoreEnvironment);
 
 function setupEnvironment(repo = 'portfolio-content') {
-  process.env.GITHUB_ADMIN_ID = String(ownerId);
+  process.env.GITHUB_PAT = 'owner-token';
+  process.env.DRIBBBLE_TOKEN = 'fixture-dribbble-token';
   process.env.GITHUB_REPO = repo;
 }
 
@@ -126,6 +155,16 @@ function installGithub(state: FakeState): void {
     state.calls.push({ url, init: requestInit });
     const method = init.method ?? 'GET';
 
+    if (url.hostname === 'api.dribbble.com' && url.pathname === '/v2/user/shots') {
+      return jsonResponse(
+        [1, 2].map((id) => ({
+          id,
+          title: `Design ${id}`,
+          html_url: `https://dribbble.com/shots/${id}`,
+          images: { normal: `https://cdn.dribbble.com/${id}.png`, hidpi: null },
+        })),
+      );
+    }
     if (url.hostname === 'raw.githubusercontent.com') {
       const parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
       const path = parts.slice(3).join('/');
@@ -157,6 +196,27 @@ function installGithub(state: FakeState): void {
         default_branch: state.branch,
         private: false,
       });
+    }
+    if (url.pathname === '/user/repos' && method === 'GET') {
+      return jsonResponse([
+        {
+          id: 310001,
+          name: 'example',
+          full_name: 'owner/example',
+          private: false,
+          html_url: 'https://github.com/owner/example',
+          description: 'Example',
+          homepage: null,
+          topics: [],
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+          default_branch: 'main',
+          language: null,
+          archived: false,
+          fork: false,
+          owner: { id: state.userId, login: 'owner' },
+        },
+      ]);
     }
 
     const repoPath = `/repos/owner/${process.env.GITHUB_REPO}`;
@@ -267,14 +327,19 @@ function addSeedContent(state: FakeState) {
   );
 }
 
-function addProject(state: FakeState, slug: string, data = project, sha = '4'.repeat(40)) {
+function addProject(
+  state: FakeState,
+  slug: string,
+  data: ProjectDocument = project,
+  sha = '4'.repeat(40),
+) {
   state.files.set(`content/projects/${slug}.json`, fileRecord(JSON.stringify(data), sha));
   state.files.set(data.media.cover, fileRecord(png));
 }
 
 test('repository configuration accepts a repository name and rejects paths/source repositories', () => {
   setupEnvironment();
-  assert.deepEqual(getCmsConfig(), { adminId: ownerId, repository: 'portfolio-content' });
+  assert.deepEqual(getCmsConfig(), { repository: 'portfolio-content' });
   process.env.GITHUB_REPO = 'owner/content';
   assert.throws(getCmsConfig, /repository name without an owner or path/);
   process.env.GITHUB_REPO = 'Portofolio-Website-v2';
@@ -288,7 +353,7 @@ test('shared schemas reject unknown fields, unsafe URLs, and future versions', (
   assert.equal(technologiesSchema.safeParse(technologies).success, true);
   assert.equal(projectSchema.safeParse(project).success, true);
   assert.equal(projectSchema.safeParse({ ...project, unexpected: true }).success, false);
-  assert.equal(projectSchema.safeParse({ ...project, schemaVersion: 2 }).success, false);
+  assert.equal(projectSchema.safeParse({ ...project, schemaVersion: 1 }).success, false);
   assert.equal(
     projectSchema.safeParse({ ...project, links: { demo: 'javascript:alert(1)' } }).success,
     false,
@@ -330,7 +395,7 @@ test('public snapshot resolves numeric owner, honors the non-main default branch
     snapshot.projects.map(({ slug }) => slug),
     ['example-project'],
   );
-  assert.ok(state.calls.some(({ url }) => url.pathname === `/user/${ownerId}`));
+  assert.ok(state.calls.some(({ url }) => url.pathname === '/user'));
   assert.ok(
     state.calls
       .filter(({ url }) => url.pathname.includes('/contents'))
@@ -338,8 +403,11 @@ test('public snapshot resolves numeric owner, honors the non-main default branch
   );
   assert.ok(state.calls.some(({ url }) => url.hostname === 'raw.githubusercontent.com'));
   assert.ok(
-    state.calls.every(
-      ({ init }) => !(init.headers as Record<string, string> | undefined)?.Authorization,
+    state.calls.some(
+      ({ url, init }) =>
+        url.pathname === '/user' &&
+        (init.headers as Record<string, string> | undefined)?.Authorization ===
+          'Bearer owner-token',
     ),
   );
 });
@@ -351,12 +419,12 @@ test('authenticated snapshots use the owner token when resolving the repository 
   addProject(state, 'example-project');
   installGithub(state);
 
-  await getSnapshot('fixture-owner-token');
+  await getSnapshot('owner-token');
 
-  const ownerRequest = state.calls.find(({ url }) => url.pathname === `/user/${ownerId}`);
+  const ownerRequest = state.calls.find(({ url }) => url.pathname === '/user');
   assert.equal(
     (ownerRequest?.init.headers as Record<string, string>).Authorization,
-    'Bearer fixture-owner-token',
+    'Bearer owner-token',
   );
 });
 
@@ -574,6 +642,67 @@ test('registry edits cannot orphan an existing project and concurrent writes ret
       assert.equal(error.code, 'conflict');
       return true;
     },
+  );
+});
+
+test('design selection preserves portfolio facts and rejects stale or unknown selections', async () => {
+  setupEnvironment();
+  const state = createState();
+  state.files.set('content/portfolio.json', fileRecord(JSON.stringify(portfolio), '9'.repeat(40)));
+  installGithub(state);
+
+  const saved = await saveDesignSelection('owner-token', '9'.repeat(40), ['2', '3']);
+  const stored = state.files.get('content/portfolio.json');
+  assert.ok(stored);
+  const actual = JSON.parse(Buffer.from(stored.bytes).toString('utf8'));
+  assert.deepEqual(actual, { ...portfolio, designs: ['2', '3'] });
+  assert.equal(saved.contentSha, stored.sha);
+
+  await assert.rejects(saveDesignSelection('owner-token', '9'.repeat(40), ['1']), {
+    code: 'conflict',
+  });
+  await assert.rejects(saveDesignSelection('owner-token', stored.sha, ['99']), {
+    code: 'validation',
+  });
+  assert.equal(state.calls.filter(({ init }) => init.method === 'PUT').length, 1);
+});
+
+test('project mappings must be accessible and cannot be assigned twice', async () => {
+  setupEnvironment();
+  const state = createState();
+  addSeedContent(state);
+  addProject(state, 'example-project', { ...project, githubRepositoryId: 310001 });
+  installGithub(state);
+
+  await assert.rejects(
+    publishContent('owner-token', {
+      kind: 'project',
+      slug: 'new-project',
+      expectedSha: null,
+      data: {
+        ...project,
+        githubRepositoryId: 999,
+        media: { cover: 'media/projects/new-project/cover.png', gallery: [] },
+      },
+    }),
+    { code: 'forbidden' },
+  );
+  await assert.rejects(
+    publishContent('owner-token', {
+      kind: 'project',
+      slug: 'new-project',
+      expectedSha: null,
+      data: {
+        ...project,
+        githubRepositoryId: 310001,
+        media: { cover: 'media/projects/new-project/cover.png', gallery: [] },
+      },
+    }),
+    { code: 'validation' },
+  );
+  assert.equal(
+    state.calls.some(({ init }) => init.method === 'PUT'),
+    false,
   );
 });
 

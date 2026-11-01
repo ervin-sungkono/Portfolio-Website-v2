@@ -2,9 +2,9 @@ import 'server-only';
 
 import { cacheLife, cacheTag } from 'next/cache';
 import type { Project } from '../content.ts';
-import { getPublicSource } from './config.ts';
 import { CmsError } from './errors.ts';
-import { githubBytes } from './github.ts';
+import { getGitHubPat, githubBytes } from './github.ts';
+import { resolveRepository } from './repository.ts';
 import {
   categoriesSchema,
   portfolioSchema,
@@ -115,7 +115,14 @@ async function readPublicContent(owner: string, name: string, branch: string) {
   return { projects, site, portfolio };
 }
 
+async function publicRepository() {
+  'use cache';
+  cacheTag('content-source');
+  cacheLife({ stale: 300, revalidate: Infinity, expire: Infinity });
+  return resolveRepository(getGitHubPat());
+}
+
 export async function getPublicContent() {
-  const { owner, name, branch } = getPublicSource();
-  return readPublicContent(owner, name, branch);
+  const { owner, name, defaultBranch } = await publicRepository();
+  return readPublicContent(owner, name, defaultBranch);
 }

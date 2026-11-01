@@ -3,10 +3,9 @@ import { readFileSync } from 'node:fs';
 
 const nativeFetch = globalThis.fetch;
 
-process.env.GITHUB_ADMIN_ID = '42424242';
+process.env.GITHUB_PAT = 'fixture-owner-token';
 process.env.GITHUB_REPO = 'portfolio-content-fixture';
-process.env.GITHUB_CONTENT_OWNER = 'fixture-owner';
-process.env.GITHUB_CONTENT_BRANCH = 'published';
+process.env.DRIBBBLE_TOKEN = 'fixture-dribbble-token';
 process.env.AUTH_SECRET = 'cms-browser-fixture-secret-with-at-least-thirty-two-characters';
 process.env.AUTH_GITHUB_ID = 'fixture-github-client-id';
 process.env.AUTH_GITHUB_SECRET = 'fixture-github-client-secret';
@@ -14,7 +13,7 @@ process.env.AUTH_GITHUB_SECRET = 'fixture-github-client-secret';
 const owner = 'fixture-owner';
 const repository = process.env.GITHUB_REPO;
 const defaultBranch = 'published';
-const adminId = Number(process.env.GITHUB_ADMIN_ID);
+const adminId = 42424242;
 const ownerToken = 'fixture-owner-token';
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/L8kAAAAASUVORK5CYII=',
@@ -31,7 +30,7 @@ const site = {
 const categories = { web: { label: 'Website', sortOrder: 10 } };
 const technologies = { nextjs: { label: 'Next.js' } };
 const portfolio = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   profile: {
     name: 'Fixture Portfolio Owner',
     title: 'Software Engineer',
@@ -45,19 +44,14 @@ const portfolio = {
     education: { school: 'Fixture University', degree: 'Computer Science', years: '2020–2024' },
   },
   skills: [{ label: 'React', icon: 'react' }],
-  designs: Array.from({ length: 4 }, (_, index) => ({
-    title: `Fixture Design ${index + 1}`,
-    url: `https://example.com/design/${index + 1}`,
-    id: String(index + 1),
-    image: `https://example.com/image/${index + 1}.png`,
-    category: 'Web',
-  })),
+  designs: ['1', '2', '3', '4'],
   projectStudies: {},
   portfolioSource: 'https://github.com/fixture-owner/portfolio',
   portfolioSourceRef: 'fixture-ref',
 };
 const fixtureProject = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  githubRepositoryId: null,
   title: 'Fixture Portfolio Project',
   summary: 'A project served by the isolated CMS browser fixture.',
   description: 'This project verifies the production CMS editor and GitHub-backed public reads.',
@@ -211,6 +205,20 @@ globalThis.fetch = async (input, init = {}) => {
     init.headers ?? (input instanceof Request ? input.headers : undefined),
   );
 
+  if (requestUrl.hostname === 'api.dribbble.com' && requestUrl.pathname === '/v2/user/shots') {
+    if (headers.get('authorization') !== 'Bearer fixture-dribbble-token') {
+      return jsonResponse({ message: 'bad credentials' }, 401);
+    }
+    return jsonResponse(
+      Array.from({ length: 4 }, (_, index) => ({
+        id: index + 1,
+        title: `Fixture Design ${index + 1}`,
+        html_url: `https://dribbble.com/shots/${index + 1}`,
+        images: { hidpi: null, normal: `https://example.com/image/${index + 1}.png` },
+      })),
+    );
+  }
+
   if (
     requestUrl.hostname === 'github.com' &&
     requestUrl.pathname === `/${owner}/${repository}/commits/${defaultBranch}.atom`
@@ -262,6 +270,28 @@ globalThis.fetch = async (input, init = {}) => {
   }
   if (method !== 'GET' && headers.get('authorization') !== `Bearer ${ownerToken}`) {
     return jsonResponse({ message: 'bad credentials' }, 401);
+  }
+
+  if (requestUrl.pathname === '/user/repos' && method === 'GET') {
+    return jsonResponse(
+      [false, true].map((isPrivate, index) => ({
+        id: 310001 + index,
+        name: isPrivate ? 'private-app' : 'sample-app',
+        full_name: `${owner}/${isPrivate ? 'private-app' : 'sample-app'}`,
+        private: isPrivate,
+        html_url: `https://github.com/${owner}/${isPrivate ? 'private-app' : 'sample-app'}`,
+        description: 'A repository available to the fixture owner.',
+        homepage: null,
+        topics: ['nextjs'],
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-02-01T00:00:00Z',
+        default_branch: 'main',
+        language: 'TypeScript',
+        archived: false,
+        fork: false,
+        owner: { id: adminId, login: owner },
+      })),
+    );
   }
 
   const repoPath = `/repos/${owner}/${repository}`;
