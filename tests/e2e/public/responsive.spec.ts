@@ -7,6 +7,25 @@ for (const theme of ['light', 'dark'] as const) {
   test(`public routes reflow and expose keyboard focus in ${theme} theme`, async ({ page }) => {
     test.setTimeout(180_000);
     await page.addInitScript((value) => localStorage.setItem('portfolio-theme', value), theme);
+    await page.route('https://www.google.com/recaptcha/api.js**', (route) =>
+      route.fulfill({
+        contentType: 'application/javascript',
+        body: `window.grecaptcha = {
+          render: function(container) {
+            const badge = document.createElement('div');
+            badge.className = 'grecaptcha-badge';
+            badge.style.width = '256px';
+            badge.style.height = '60px';
+            const inner = document.createElement('div');
+            inner.style.width = '256px';
+            badge.appendChild(inner);
+            container.appendChild(badge);
+            return 0;
+          }
+        };
+        window.portfolioCaptchaReady?.();`,
+      }),
+    );
 
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
@@ -15,6 +34,9 @@ for (const theme of ['light', 'dark'] as const) {
         expect(response?.status(), `${theme} ${width}px ${route}`).toBe(200);
         await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+        if (route === '/contact') {
+          await expect(page.locator('.grecaptcha-badge')).toBeVisible();
+        }
         await page.keyboard.press('Tab');
         const skip = page.getByRole('link', { name: 'Skip to Content' });
         await expect(skip).toBeFocused();
@@ -35,6 +57,12 @@ for (const theme of ['light', 'dark'] as const) {
           await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
           const enlarged = await documentWidth();
           expect(enlarged.actual, `${theme} ${width}px ${route} enlarged text overflow`).toBeLessThanOrEqual(enlarged.viewport + 1);
+          if (route === '/contact') {
+            const badge = await page.locator('.grecaptcha-badge').boundingBox();
+            expect(badge).not.toBeNull();
+            expect(badge!.x).toBeGreaterThanOrEqual(0);
+            expect(badge!.x + badge!.width).toBeLessThanOrEqual(width);
+          }
         }
       }
     }
