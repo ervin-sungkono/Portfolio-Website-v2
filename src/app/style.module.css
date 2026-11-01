@@ -1,0 +1,17 @@
+.home {
+  position: relative;
+  min-width: 0;
+
+  > [data-scroll-scene] > section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--layout-gap);
+    align-items: center;
+  }
+}
+
+@media (width >= 64rem) {
+  .home > [data-scroll-scene] > section {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+    gap: var(--layout-gap);
+  }
+}

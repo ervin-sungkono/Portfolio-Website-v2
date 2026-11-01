@@ -91,12 +91,11 @@ export async function githubJson<T>(
     method?: string;
     body?: unknown;
     allowNotFound?: boolean;
-    next?: { revalidate: number; tags: string[] };
   } = {},
 ): Promise<T | null> {
   let response: Response;
   try {
-    const requestInit: RequestInit & { next?: { revalidate: number; tags: string[] } } = {
+    const requestInit: RequestInit = {
       method: options.method ?? 'GET',
       headers: {
         ...headers(options.token),
@@ -104,7 +103,6 @@ export async function githubJson<T>(
       },
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
       ...(options.token ? { cache: 'no-store' as const } : {}),
-      ...(options.next ? { next: options.next } : {}),
     };
     response = await fetch(`${apiBase}${path}`, requestInit);
   } catch {

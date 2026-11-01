@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { contentInvalidation, type CacheTarget } from './cache-policy.ts';
+import { contentInvalidation, type CacheTarget } from './publishing.ts';
 
 export function invalidateContent(target: CacheTarget, slug?: string) {
   const { tags, paths } = contentInvalidation(target, slug);

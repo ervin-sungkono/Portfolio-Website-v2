@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { auth, cmsAuthConfigured, signIn, signOut } from '@/lib/cms/auth';
 import { isOwnerId } from '@/lib/cms/auth-policy';
-import { CmsEditor } from '@/components/CmsEditor';
+import { CmsEditor } from '@/components/admin/CmsEditor';
 
 export const metadata: Metadata = {
   title: 'Portfolio CMS',

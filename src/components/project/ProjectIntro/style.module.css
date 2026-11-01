@@ -1,0 +1,16 @@
+.collectionIntro {
+  max-width: 58rem;
+  padding-bottom: var(--space-10);
+
+  > :global(.editorial-label) {
+    margin: 0 0 var(--space-5);
+  }
+
+  h1 {
+    max-width: 15ch;
+  }
+
+  h1 span {
+    color: var(--muted);
+  }
+}

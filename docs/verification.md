@@ -1,6 +1,25 @@
 # Verification and remaining work
 
-Documentation reconciled on **25 October 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+Updated for CSS-module colocation on **1 November 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+
+## CSS-module colocation — 1 November 2026
+
+Component-specific CSS modules were moved beside their components and named `style.module.css`; route-owned modules remain beside their routes. The in-progress 404 folder move was retained, with the required Next.js boundary restored as a thin entry. The project proxy uses the same `/not-found` document, so no separate project-recovery page is required.
+
+- Node.js 24.22.1 app and test typechecks passed; the app check used `tsc --noEmit --incremental false`. Vitest passed **56/56**, CSS lint passed, and ESLint completed with the existing contact-form effect warning. The isolated production build fetched the public GitHub content and passed.
+- The previously stopped localhost server was started with a dummy CAPTCHA key. **27/27** existing Playwright checks passed against `localhost:3000` before the later recovery-route change. After that change, **5/5** focused checks passed: project and global 404s without JavaScript, the noindexed shared recovery page, a valid project, and JavaScript hydration without a route mismatch. The missing-project response retained HTTP 404, `noindex`, and `no-store`; a HEAD request returned the same headers. Contact requests were mocked.
+- After the recovery-route change, the isolated CMS fixture passed **3/3** browser workflows and **2/2** HTTP checks, including publishing a previously missing project without a rebuild.
+- Before the later recovery-route change, a reconstructed baseline repaired the already-renamed module imports and 404 entries in an isolated copy. A browser comparison of computed styles and geometry found no differences across **90** route, theme, and viewport combinations; **6** hero/artwork hover comparisons also matched. Images and CAPTCHA were stubbed for these comparisons. These checks are not real-device, assistive-technology, actual browser-zoom, or full visual-conformance testing.
+
+## Component, test, and remote content refactor — 31 October 2026
+
+The work used the existing `codex/github-portfolio-cms` working tree, retaining the already modified homepage, Experience content, and `next-env.d.ts`. After the owner clarified that `web-assets` is the content source, the temporary local data relocation was removed. Profile, skills, designs, walkthroughs, project records, and homepage data now come from the separate repository; project proxy recovery and the two-slide homepage presentation remain in place.
+
+- Added [`content/portfolio.json`](https://github.com/ervin-sungkono/web-assets/blob/master/content/portfolio.json) in commit [`27274d0`](https://github.com/ervin-sungkono/web-assets/commit/27274d0d864ca66866b326f5d48c26f3e9dcd692) and the 17-slug [`content/project-index.json`](https://github.com/ervin-sungkono/web-assets/blob/master/content/project-index.json) in commit [`3d29efd`](https://github.com/ervin-sungkono/web-assets/commit/3d29efddf7e7cc08b9f042d36d6639159f9d5b38). Existing content and compatibility assets were not overwritten. The previously documented `portfolioSourceRef` value and team credits were retained.
+- Node.js 24.22.1 application and test typechecks passed. Vitest passed **56/56** unit and handler integration checks. CSS lint passed; ESLint passed with one existing contact-effect warning. No fresh clean `npm ci` was run while the development server was using the installed dependencies.
+- Against the existing `localhost:3000` server, **27/27** public Chromium regressions passed using installed Chrome. These include both themes, six public routes at 320, 390, 820, 1024, and 1440px, keyboard focus, 200% root-font samples at 320 and 820px, short-screen navigation, reduced-motion and JavaScript-disabled cases. Contact/CAPTCHA requests were mocked. Root-font enlargement is not browser zoom.
+- An isolated production build fetched the real public repository and prerendered the homepage, about/contact pages, and existing project paths. A separate fixture production build passed **3/3** CMS browser journeys and **2/2** HTTP tests with simulated GitHub storage and encrypted fixture sessions. The browser flow verifies an external portfolio edit stays cached until owner refresh, then appears without rebuilding; it also covers project publication, index synchronization, prior 404 recovery, unpublish, and delete. Neither build replaced the running server's `.next` directory.
+- The unauthenticated GitHub REST core limit was exhausted during the local check; the public reader now uses the commit feed and immutable raw files instead. Real GitHub OAuth publishing and hosted cache propagation remain unverified. No remote CI, real email delivery, real-device, screen-reader, forced-colors, or actual browser-zoom verification is claimed.
 
 ## GitHub CMS implementation — 25 October 2026
 
@@ -37,7 +56,7 @@ Dry-run wrote neither a bundle nor a report file and did not mutate GitHub. At t
 
 The owner subsequently requested writing the migration to `web-assets/master` and preserving the old master tree on a new `legacy` branch, then explicitly chose to retain compatibility asset URLs during cutover. The final validated bundle was regenerated from a local clone of the captured source and repository creation metadata read through GitHub after unauthenticated REST requests hit the rate limit.
 
-- [`master`](https://github.com/ervin-sungkono/web-assets/tree/master) now points to migration commit [`ce10d45dc0200b5ff9c146a4f2c43e2b873171ad`](https://github.com/ervin-sungkono/web-assets/commit/ce10d45dc0200b5ff9c146a4f2c43e2b873171ad), whose parent is the original `3a62ce0` commit.
+- At that time [`master`](https://github.com/ervin-sungkono/web-assets/tree/master) pointed to migration commit [`ce10d45dc0200b5ff9c146a4f2c43e2b873171ad`](https://github.com/ervin-sungkono/web-assets/commit/ce10d45dc0200b5ff9c146a4f2c43e2b873171ad), whose parent is the original `3a62ce0` commit. Later content commits are recorded above.
 - [`legacy`](https://github.com/ervin-sungkono/web-assets/tree/legacy) points exactly to **`3a62ce04163dfdc8d6e328df385ba538762555b9`**, preserving the complete prior tree and history. Both refs were updated by one atomic push with explicit expected-head checks.
 - GitHub confirmed both author and committer as **`Portfolio CMS <cms@portfolio.local>`**. The old `data/` JSON is available on `legacy`; the 35 old `images/` and `icons/` files remain unchanged on `master`. Git object comparison confirmed no differences in either compatibility directory.
 - The new master tree has **81 files**: the 46 generated README/content/media files plus 35 compatibility assets. It includes 17 project JSON documents and 25 optimized raster images. README records the numeric-ID → slug audit mapping and rollback guidance.
@@ -90,32 +109,36 @@ Installing ESLint 10 emitted peer-dependency override warnings because some plug
 
 Use Node.js 24 and the committed lockfile. Setup and browser commands are in [README](../README.md#development).
 
-| Command                    | Scope                                                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run lint`             | ESLint with Next.js Core Web Vitals and TypeScript recommendations, LF/final-newline, and empty-line checks.                   |
-| `npm run typecheck`        | Strict application TypeScript. The application tsconfig excludes `tests`.                                                      |
-| `npm run lint:css`         | Stylelint across `src/**/*.css`, using `stylelint-config-standard` plus LF and final-newline rules from `@stylistic`.          |
-| `npm test`                 | 32 unit/service tests covering contact, authentication, GitHub storage, and publishing/cache boundaries. Use Node.js 24.       |
-| `npm run build`            | Production build and static route generation.                                                                                  |
-| `npm run format:check`     | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                    |
-| `git diff --check`         | Whitespace in the relevant diff.                                                                                               |
-| `npm run test:browser`     | 26 current Chromium regressions against a production build, not the dev server.                                                |
-| `npm run test:cms:browser` | Isolated GitHub CMS production build and Chromium workflow; replaces `.next` with a fixture build. Rebuild normally afterward. |
+| Command                     | Scope                                                                                                                 |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `npm run lint`              | ESLint with Next.js Core Web Vitals and TypeScript recommendations, LF/final-newline, and empty-line checks.          |
+| `npm run typecheck`         | Strict application TypeScript. The application tsconfig excludes `tests`.                                             |
+| `npm run typecheck:tests`   | Strict TypeScript for the test files.                                                                                 |
+| `npm run lint:css`          | Stylelint across `src/**/*.css`, using `stylelint-config-standard` plus LF and final-newline rules from `@stylistic`. |
+| `npm test`                  | Vitest unit and handler integration tests covering content, motion, contact, authentication, storage, and publishing. |
+| `npm run build`             | Production build and static route generation.                                                                         |
+| `npm run format:check`      | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.           |
+| `git diff --check`          | Whitespace in the relevant diff.                                                                                      |
+| `npm run test:browser`      | Public Chromium regressions against a production build.                                                               |
+| `npm run test:live`         | Public Chromium regressions against an existing localhost:3000 server; contact requests are mocked.                   |
+| `npm run test:cms:browser`  | Isolated GitHub CMS production build and browser workflow; replaces `.next` with a fixture build.                     |
+| `npm run test:http:fixture` | Production HTTP checks against the isolated fixture server; replaces `.next` with a fixture build.                    |
+| `npm run test:cms:fixture`  | Runs the CMS browser and HTTP fixture checks together.                                                                |
 
-`.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, ESLint, CSS lint, typechecking, unit tests, a dummy-CAPTCHA production build, Chromium installation, and browser tests on pull requests. This describes the current workflow definition; inspect an actual run before claiming remote CI passed.
+`.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, ESLint, CSS lint, application/test typechecking, Vitest, a dummy-CAPTCHA production build, Chromium installation, and the public and CMS fixture tests on pull requests. This describes the current workflow definition; inspect an actual run before claiming remote CI passed.
 
 ### Browser suite coverage
 
-| Spec in `tests/browser`  | Cases | Coverage                                                                                                                                                                |
-| ------------------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `contact.spec.ts`        | 3     | Pending CAPTCHA/read-only fields, one submission snapshot, draft retention on failure, clearing on mocked success.                                                      |
-| `contact-api.spec.ts`    | 2     | Permitted Unicode requests above the old cap, 64 KiB limit, origin, and honeypot checks.                                                                                |
-| `project-routes.spec.ts` | 2     | Known project rendering and unknown-project 404/noindex recovery without JavaScript.                                                                                    |
-| `cursor.spec.ts`         | 9     | Raw pointer/frame geometry, clearance and shape changes, rendered contrast, nested targets, reflow/removal, native fallbacks, reduced motion, touch, and no JavaScript. |
-| `parallax.spec.ts`       | 9     | Hero crossfade/reverse scroll, fixed target geometry, travel/coverage, focus hold, reduced motion, coarse pointers, oversized/narrow/short contexts, and no JavaScript. |
-| `theme.spec.ts`          | 1     | Theme destination label and persisted selection across public navigation.                                                                                               |
+| Spec in `tests/e2e/public` | Cases | Coverage                                                                                                                                                                |
+| -------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contact.spec.ts`          | 3     | Pending CAPTCHA/read-only fields, one submission snapshot, draft retention on failure, clearing on mocked success.                                                      |
+| `project-routes.spec.ts`   | 2     | Known project rendering and unknown-project 404/noindex recovery without JavaScript.                                                                                    |
+| `cursor.spec.ts`           | 9     | Raw pointer/frame geometry, clearance and shape changes, rendered contrast, nested targets, reflow/removal, native fallbacks, reduced motion, touch, and no JavaScript. |
+| `parallax.spec.ts`         | 9     | Hero crossfade/reverse scroll, fixed target geometry, travel/coverage, focus hold, reduced motion, coarse pointers, oversized/narrow/short contexts, and no JavaScript. |
+| `theme.spec.ts`            | 1     | Theme destination label and persisted selection across public navigation.                                                                                               |
+| `responsive.spec.ts`       | 3     | Both themes, five widths, keyboard focus, 200% root-font reflow, and short-screen mobile-menu access.                                                                   |
 
-The browser server uses `127.0.0.1:3103`, clears provider secrets, and does not reuse an existing server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. These tests do not send real email. The public dummy CAPTCHA key must be present at build time; rebuild with the real public key before any deployment that needs live CAPTCHA.
+The production browser server uses `127.0.0.1:3103`, clears provider secrets, and does not reuse an existing server. The live configuration targets an existing localhost server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. The fixture HTTP tests cover large Unicode payloads, request limits, origin checks, and CMS authorization. These tests do not send real email. The public dummy CAPTCHA key must be present at build time for the fixture suites; rebuild with the real public key before any deployment that needs live CAPTCHA.
 
 The suite is focused regression coverage. It is not a complete responsive, accessibility, particle, external-asset, or live-provider test suite. Broader checks below were separate dated reviews.
 
@@ -173,7 +196,7 @@ These observations establish only that earlier local optimizer baseline. `images
 
 ## Remaining work
 
-- **Browser coverage:** run the focused browser suite for the component-directory/import/CSS reorganization before merge; the checks above do not establish interactive or responsive behavior.
+- **Browser coverage:** repeat focused checks for later edits; the recorded local Chromium runs do not establish full accessibility conformance or real-device behavior.
 - **Images:** investigate the temporary optimizer bypass and revalidate before enabling transformations again. Check actual hosted delivery, original download sizes, cache behavior, and usage separately. Review the ChatGPT Clone hero crop when its image is supplied.
 - **Manual accessibility:** NVDA/VoiceOver, actual browser zoom, real devices, and Windows forced-colors focus visibility remain unverified. Root-font enlargement and axe scans do not replace them.
 - **Live contact:** a real CAPTCHA challenge, provider acceptance, and Gmail inbox receipt require an explicit user request and verified hostname/provider configuration. Automated tests must continue to avoid real email.

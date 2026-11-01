@@ -66,11 +66,9 @@ function jsonDocument<T>(
   return parsed.data;
 }
 
-export async function resolveOwner(): Promise<string> {
+export async function resolveOwner(token?: string): Promise<string> {
   const { adminId } = getCmsConfig();
-  const user = await githubJson<{ id: number; login: string }>(`/user/${adminId}`, {
-    next: { revalidate: 86_400, tags: ['cms-owner'] },
-  });
+  const user = await githubJson<{ id: number; login: string }>(`/user/${adminId}`, { token });
   if (!user || user.id !== adminId || !/^[A-Za-z0-9-]+$/.test(user.login)) {
     throw new CmsError('configuration', 'GITHUB_ADMIN_ID does not identify a GitHub user.', 500);
   }
@@ -79,7 +77,7 @@ export async function resolveOwner(): Promise<string> {
 
 export async function resolveRepository(token?: string): Promise<RepositoryContext> {
   const { repository } = getCmsConfig();
-  const owner = await resolveOwner();
+  const owner = await resolveOwner(token);
   const metadata = await githubJson<GitHubRepository>(repoPath(owner, repository, ''), { token });
   if (!metadata) {
     throw new CmsError(

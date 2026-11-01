@@ -9,11 +9,15 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:css": "stylelint \"src/**/*.css\"",
-    "test": "node --import ./tests/register-server-only.mjs --experimental-strip-types --test tests/*.test.ts",
+    "test": "vitest run",
+    "typecheck:tests": "tsc --project tsconfig.test.json --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:browser": "playwright test",
-    "test:cms:browser": "node scripts/test-cms-browser.mjs"
+    "test:live": "playwright test --config=playwright.live.config.ts",
+    "test:cms:browser": "node scripts/test-cms-browser.mjs",
+    "test:http:fixture": "node scripts/test-cms-browser.mjs http",
+    "test:cms:fixture": "node scripts/test-cms-browser.mjs all"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.8",
@@ -41,7 +45,8 @@
     "prettier": "^3.6.2",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=22"

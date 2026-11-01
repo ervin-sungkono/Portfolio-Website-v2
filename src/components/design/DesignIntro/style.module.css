@@ -1,0 +1,20 @@
+.designIntro {
+  max-width: 58rem;
+  padding-bottom: var(--space-8);
+
+  > :global(.editorial-label) {
+    margin: 0 0 var(--space-5);
+  }
+
+  h1 {
+    max-width: 16ch;
+  }
+
+  h1 span {
+    color: var(--muted);
+  }
+}
+
+.profileLink {
+  margin-top: var(--space-2);
+}
