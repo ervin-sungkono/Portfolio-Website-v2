@@ -11,6 +11,7 @@ export type ProjectPanelProps = {
   newSlug: string;
   pending: boolean;
   feedback: ReactNode;
+  allowDelete?: boolean;
   onSelectedSlugChange: (slug: string) => void;
   onNewSlugChange: (slug: string) => void;
   onSave: (data: ProjectDocument) => Promise<void>;

@@ -1,0 +1,153 @@
+.github-import {
+  display: grid;
+  gap: var(--space-6);
+
+  .github-import-repository {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .github-import-repository-controls {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 48rem;
+    min-width: 0;
+  }
+
+  .github-import-status {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+
+  .github-import-details-heading {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  .github-import-details-heading > div {
+    min-width: 0;
+  }
+
+  .github-import-details {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--background);
+
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h3 {
+      font-size: var(--text-title);
+    }
+
+    > p {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 0.18em;
+      overflow-wrap: anywhere;
+    }
+
+    code {
+      overflow-wrap: anywhere;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-3);
+      margin: 0;
+    }
+
+    dl > div {
+      min-width: 0;
+    }
+
+    dt {
+      color: var(--muted);
+      font-size: var(--text-xs);
+      font-weight: 700;
+    }
+
+    dd {
+      margin: var(--space-1) 0 0;
+      font-size: var(--text-sm);
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .github-import-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .github-import-topics span {
+    max-width: 100%;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+
+  .github-import-private-warning {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--control-border);
+    border-radius: 7px;
+    background: var(--accent-soft);
+
+    p {
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    code {
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .github-import-prefill-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    min-width: 0;
+
+    p {
+      max-width: 55ch;
+      margin: 0;
+    }
+  }
+}
+
+@media (width >= 48rem) {
+  .github-import {
+    .github-import-details {
+      padding: var(--space-6);
+
+      dl {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  }
+}

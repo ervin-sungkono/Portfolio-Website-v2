@@ -14,6 +14,7 @@ export function ImagesPanel({
   technologiesForm,
   selectedProjectSlug,
   newProjectSlug,
+  projectOnly = false,
   active,
   pending,
   feedback,
@@ -32,7 +33,9 @@ export function ImagesPanel({
   const technologies = useWatch({ control: technologiesForm.control }) || {};
   const technologyEntries = Object.entries(technologies) as Array<[string, Technologies[string]]>;
   const uploadSlug =
-    scope === 'technology' ? 'technologies' : selectedProjectSlug || newProjectSlug.trim();
+    !projectOnly && scope === 'technology'
+      ? 'technologies'
+      : selectedProjectSlug || newProjectSlug.trim();
   const projectSlugMatches =
     result?.scope === 'project' && result.slug === (selectedProjectSlug || newProjectSlug.trim());
 
@@ -140,21 +143,23 @@ export function ImagesPanel({
       {feedback}
       <form className="cms-editor-form cms-editor-upload-form" onSubmit={submit} noValidate>
         <fieldset disabled={pending}>
-          <label className="cms-editor-field">
-            <span>Image destination</span>
-            <select
-              value={scope}
-              onChange={(event) => {
-                setScope(event.target.value as 'project' | 'technology');
-                setValidationMessage('');
-                setValidationTarget('file');
-                setCopyMessage('');
-              }}
-            >
-              <option value="project">Project cover or gallery</option>
-              <option value="technology">Technology icon</option>
-            </select>
-          </label>
+          {!projectOnly && (
+            <label className="cms-editor-field">
+              <span>Image destination</span>
+              <select
+                value={scope}
+                onChange={(event) => {
+                  setScope(event.target.value as 'project' | 'technology');
+                  setValidationMessage('');
+                  setValidationTarget('file');
+                  setCopyMessage('');
+                }}
+              >
+                <option value="project">Project cover or gallery</option>
+                <option value="technology">Technology icon</option>
+              </select>
+            </label>
+          )}
           {scope === 'project' ? (
             <label className="cms-editor-field">
               <span>Project slug</span>
@@ -170,7 +175,9 @@ export function ImagesPanel({
                 }
               />
               <span className="cms-editor-hint" id="cms-image-project-help">
-                Select a project in Projects, or enter the new project slug there first.
+                {projectOnly
+                  ? 'This image will be uploaded to the project selected in the importer.'
+                  : 'Select a project in Projects, or enter the new project slug there first.'}
               </span>
             </label>
           ) : (

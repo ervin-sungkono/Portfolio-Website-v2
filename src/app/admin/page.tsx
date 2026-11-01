@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { auth, cmsAuthConfigured, signIn, signOut } from '@/lib/cms/auth';
-import { isOwnerId } from '@/lib/cms/auth-policy';
+import Link from 'next/link';
+import { auth, cmsAuthConfigured, isCurrentOwner, signIn, signOut } from '@/lib/cms/auth';
 import { CmsEditor } from '@/components/admin/CmsEditor';
 
 export const metadata: Metadata = {
@@ -13,13 +13,13 @@ async function AdminWorkspace() {
   if (!cmsAuthConfigured()) {
     return (
       <p>
-        Set AUTH_SECRET, AUTH_GITHUB_ID, AUTH_GITHUB_SECRET, GITHUB_ADMIN_ID, and GITHUB_REPO on the
+        Set AUTH_SECRET, AUTH_GITHUB_ID, AUTH_GITHUB_SECRET, GITHUB_PAT, and GITHUB_REPO on the
         server to enable GitHub sign-in. See the repository setup guide.
       </p>
     );
   }
   const session = await auth();
-  if (!isOwnerId(session?.user?.id, process.env.GITHUB_ADMIN_ID?.trim())) {
+  if (!(await isCurrentOwner(session?.user?.id))) {
     return (
       <form
         action={async () => {
@@ -27,7 +27,7 @@ async function AdminWorkspace() {
           await signIn('github', { redirectTo: '/admin' });
         }}
       >
-        <p>Sign in as the configured GitHub owner to edit published portfolio content.</p>
+        <p>Sign in with the GitHub account configured by the server credential to edit content.</p>
         <button className="button" type="submit">
           Sign in with GitHub
         </button>
@@ -46,6 +46,11 @@ async function AdminWorkspace() {
           Sign out
         </button>
       </form>
+      <p>
+        <Link className="button button-outline" href="/admin/import">
+          Import repository
+        </Link>
+      </p>
       <CmsEditor />
     </>
   );
