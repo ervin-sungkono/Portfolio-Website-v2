@@ -18,6 +18,7 @@ Production credentials are only needed for live contact integration. ESLint appl
 
 ```sh
 npm run typecheck
+npm run typecheck:tests
 npm run lint
 npm run lint:css
 npm test
@@ -26,11 +27,13 @@ npm run format:check
 git diff --check
 ```
 
+`npm test` runs Vitest's logic and handler integration tests without a running server. Tests use mocked providers and isolated GitHub fixtures. Test files are organized under `tests/unit`, `tests/integration`, `tests/e2e`, and `tests/support`. `npm run typecheck:tests` checks test TypeScript separately from the application.
+
 Run `npm start` after a production build to serve it locally. GitHub Actions runs the configured checks with Node.js 24. Text files use LF endings through `.gitattributes`. See [verification coverage](docs/verification.md#repeatable-checks) for what each command checks.
 
 ### Browser regressions
 
-The Playwright suite covers contact/API boundaries, project recovery without JavaScript, the desktop cursor, and hero/parallax behavior. It runs against a production build. Install Chromium once:
+The Playwright suite covers contact form behavior, project recovery without JavaScript, theme selection, the desktop cursor, and hero/parallax behavior. It normally runs against a production build. Install Chromium once:
 
 ```sh
 npx playwright install chromium
@@ -54,6 +57,8 @@ Remove-Item Env:NEXT_PUBLIC_RECAPTCHA_KEY
 
 The test server clears provider secrets and form tests mock CAPTCHA/delivery; no real email is sent. Rebuild with the real public site key before deploying a build that needs live CAPTCHA. Set `PLAYWRIGHT_EXECUTABLE_PATH` to a system Chromium executable if the bundled browser is unavailable. This suite is focused regression coverage, rather than a full accessibility or responsive audit.
 
+To exercise the public browser suite against an already-running `http://localhost:3000`, use `npm run test:live`. It does not start or restart the server; contact form requests are intercepted. Assertions that name projects assume the expected portfolio content is present in that server's configuration.
+
 ## Documentation
 
 The documentation was consolidated on **23 October 2026 (Asia/Jakarta)**. Each topic has one primary reference:
@@ -68,10 +73,10 @@ The documentation was consolidated on **23 October 2026 (Asia/Jakarta)**. Each t
 
 ## Updating content
 
-Without CMS configuration, the site reads `src/content/profile.ts`, `projects.json`, `designs.json`, and `engineering.ts`. With `GITHUB_ADMIN_ID` and `GITHUB_REPO` set, runtime GitHub content replaces projects and homepage copy through `src/lib/content.ts`. Configured storage errors do not silently fall back to bundled projects. Designs, verified identity/experience, engineering studies, CV, and team attribution remain application content.
+Portfolio content is read from the public `ervin-sungkono/web-assets` repository at build time and after on-demand revalidation. Projects, homepage copy, and taxonomy can be edited in the CMS; profile, skills, designs, and project walkthroughs are in `content/portfolio.json` in that repository. There is no checked-in application data fallback. After editing that document directly on GitHub, use **Refresh public content** in the owner workspace.
 
-Follow [GitHub CMS setup and operation](docs/architecture.md#github-cms) for the five environment variables, OAuth setup, safe initialization, and publishing. For a legacy content review, use the [LLM mapping instructions](docs/web-assets-migration-agent.md). The content repository must be separate from the application and must not be a Vercel deployment source. Content publishes invalidate ISR without redeploying.
+Follow [GitHub CMS setup and operation](docs/architecture.md#github-cms) for OAuth setup, source overrides, initialization, and publishing. For a legacy content review, use the [LLM mapping instructions](docs/web-assets-migration-agent.md). The content repository must be separate from the application and must not be a Vercel deployment source. Content publishes invalidate ISR without redeploying.
 
-Run `npm run test:cms:browser` for the isolated production CMS workflow; it uses simulated GitHub storage and encrypted test sessions, never a real GitHub write or email. It replaces the local `.next` build with a fixture build; rebuild normally before development or release.
+Run `npm run test:cms:browser` for the isolated production CMS browser workflow, `npm run test:http:fixture` for its real HTTP boundary checks, or `npm run test:cms:fixture` for both. They use simulated GitHub storage and encrypted test sessions, never a real GitHub write or email. Each command replaces the local `.next` build with a fixture build; use an isolated checkout while a development server is running and rebuild normally afterward.
 
 Contact variables and provider behavior are documented in [contact integration](docs/architecture.md#contact-integration) and `.env.example`. Professional content expansion remains deferred. Read [AGENTS.md](AGENTS.md) before implementation work.

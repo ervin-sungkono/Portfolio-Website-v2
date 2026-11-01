@@ -1,10 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
-import { projectStudies } from '@/lib/content';
 import { ExternalLink } from '../ExternalLink';
 import { Reveal } from '../Reveal';
-import { PointerSurface } from '../../PointerSurface';
+import { PointerSurface } from './PointerSurface';
 import { ParallaxImage } from '../ParallaxImage';
 import { imageSizes } from '@/lib/image-sizes';
 import type { ProjectCardProps } from './type';
@@ -13,13 +12,10 @@ import './style.css';
 export function ProjectCard({
   project,
   featured = false,
-  headingLevel = 3,
   index,
   sizes = imageSizes.twoColumns,
   parallaxTravel,
 }: ProjectCardProps) {
-  const Heading = headingLevel === 2 ? 'h2' : 'h3';
-  const study = projectStudies[project.slug];
   const Surface = parallaxTravel === undefined ? PointerSurface : 'div';
 
   return (
@@ -54,7 +50,7 @@ export function ProjectCard({
       <Reveal className="project-card-content">
         <div className="project-card-heading">
           <p className="editorial-label">{project.category}</p>
-          <Heading>{project.name}</Heading>
+          <h3>{project.name}</h3>
         </div>
         <p className="project-card-description">{project.description}</p>
         <div className="tags">
@@ -64,7 +60,7 @@ export function ProjectCard({
         </div>
         <div className="project-card-links">
           <Link href={`/project/${project.slug}`} className="text-link">
-            {study ? 'Read Walkthrough' : 'Project Details'}
+            {project.study ? 'Read Walkthrough' : 'Project Details'}
             <span className="sr-only"> for {project.name}</span>
             <ArrowUpRightIcon size={16} aria-hidden="true" />
           </Link>

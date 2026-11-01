@@ -6,8 +6,10 @@ import { cmsErrorResponse, cmsResponse, readCmsJson, requireSameOrigin } from '@
 import { invalidateContent } from '@/lib/cms/cache';
 import { publishAndRevalidate } from '@/lib/cms/publishing';
 import { getSnapshot } from '@/lib/cms/repository';
-import { deleteProject, initializeRepository, publishContent } from '@/lib/cms/service';
+import { initializeRepository } from '@/lib/cms/initialization';
+import { deleteProject, publishContent } from '@/lib/cms/content-mutations';
 import { publishMutationSchema } from '@/lib/cms/schemas';
+import { synchronizeProjectIndex } from '@/lib/cms/project-index';
 
 const slug = z
   .string()
@@ -24,7 +26,7 @@ const operationSchema = z.union([
   z
     .strictObject({
       kind: z.literal('revalidate'),
-      target: z.enum(['project', 'site', 'taxonomy']),
+      target: z.enum(['project', 'site', 'taxonomy', 'all']),
       slug: slug.optional(),
     })
     .refine(
@@ -61,12 +63,18 @@ export async function POST(request: Request) {
       return cmsResponse(
         await publishAndRevalidate(
           () => initializeRepository(token),
-          () => invalidateContent('all'),
+          async () => {
+            await synchronizeProjectIndex(token);
+            invalidateContent('all');
+          },
         ),
       );
     }
     if (operation.kind === 'revalidate') {
       await assertCmsOwner(token);
+      if (operation.target === 'project' || operation.target === 'all') {
+        await synchronizeProjectIndex(token);
+      }
       invalidateContent(operation.target, operation.slug);
       return cmsResponse({ cache: 'refreshed' });
     }
@@ -74,7 +82,10 @@ export async function POST(request: Request) {
       return cmsResponse(
         await publishAndRevalidate(
           () => deleteProject(token, operation.slug, operation.expectedSha),
-          () => invalidateContent('project', operation.slug),
+          async () => {
+            await synchronizeProjectIndex(token);
+            invalidateContent('project', operation.slug);
+          },
         ),
       );
     }
@@ -86,7 +97,12 @@ export async function POST(request: Request) {
           const result = await publishContent(token, operation);
           return { ...result, commitSha: result.sha, sha: result.contentSha };
         },
-        () => invalidateContent(target, operation.kind === 'project' ? operation.slug : undefined),
+        async () => {
+          if (operation.kind === 'project') {
+            await synchronizeProjectIndex(token);
+          }
+          invalidateContent(target, operation.kind === 'project' ? operation.slug : undefined);
+        },
       ),
     );
   } catch (error) {

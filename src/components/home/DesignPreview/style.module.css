@@ -1,0 +1,31 @@
+.designSection {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+}
+
+.sectionHeading {
+  margin-bottom: var(--space-10);
+}
+
+.collectionLink {
+  margin-top: var(--space-8);
+}
+
+.designGallery {
+  align-items: start;
+}
+
+@media (width >= 70rem) {
+  .designGallery {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    align-items: start;
+
+    > :nth-child(2) {
+      margin-top: clamp(var(--space-8), 5vw, var(--space-16));
+    }
+  }
+}
+
+:global(.design-tile).parallaxArtwork:hover img {
+  transform: none;
+}

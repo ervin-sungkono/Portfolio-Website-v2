@@ -1,0 +1,44 @@
+.projectHeader {
+  max-width: 68rem;
+  padding-bottom: var(--space-8);
+
+  > :global(.editorial-label) {
+    margin: 0 0 var(--space-4);
+  }
+
+  h1 {
+    max-width: 18ch;
+  }
+}
+
+.backLink {
+  margin-bottom: var(--space-8);
+}
+
+.projectDescription {
+  max-width: 62ch !important;
+  margin-block: var(--space-5) var(--space-4) !important;
+  font-size: clamp(1.125rem, 1rem + 0.35vw, 1.375rem) !important;
+  line-height: 1.7;
+}
+
+.focus {
+  display: inline-block;
+  padding-block: var(--space-2);
+}
+
+.actions {
+  margin-top: var(--space-5);
+}
+
+@media (width < 40rem) {
+  .actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+
+    > a {
+      width: 100%;
+    }
+  }
+}

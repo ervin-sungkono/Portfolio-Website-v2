@@ -4,7 +4,7 @@ const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
 const node = process.execPath.includes(' ') ? `"${process.execPath}"` : process.execPath;
 
 export default defineConfig({
-  testDir: './tests/cms-browser',
+  testDir: './tests/e2e/cms',
   fullyParallel: false,
   forbidOnly: true,
   retries: 0,
@@ -43,6 +43,7 @@ export default defineConfig({
       EMAIL_PASS: '',
       RECAPTCHA_SECRET: '',
       NEXT_TELEMETRY_DISABLED: '1',
+      CMS_FIXTURE_PORTFOLIO_OVERRIDE: process.env.CMS_FIXTURE_PORTFOLIO_OVERRIDE ?? '',
     },
   },
 });

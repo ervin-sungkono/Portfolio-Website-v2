@@ -12,8 +12,11 @@ const sourceRepositories = new Set([
 export type CmsConfig = { adminId: number; repository: string };
 
 export function getCmsConfig(): CmsConfig {
-  const adminIdValue = process.env.GITHUB_ADMIN_ID?.trim();
-  const repository = process.env.GITHUB_REPO?.trim();
+  const configuredId = process.env.GITHUB_ADMIN_ID?.trim();
+  const configuredRepository = process.env.GITHUB_REPO?.trim();
+  // The public portfolio has a known content repository; paired overrides support fixtures.
+  const adminIdValue = configuredId || (!configuredRepository ? '43065067' : undefined);
+  const repository = configuredRepository || (!configuredId ? 'web-assets' : undefined);
 
   if (
     !adminIdValue ||
@@ -45,4 +48,19 @@ export function getCmsConfig(): CmsConfig {
   }
 
   return { adminId: Number(adminIdValue), repository };
+}
+
+export function getPublicSource() {
+  const { adminId, repository } = getCmsConfig();
+  const isDefault = adminId === 43065067 && repository.toLowerCase() === 'web-assets';
+  const owner = process.env.GITHUB_CONTENT_OWNER?.trim() || (isDefault ? 'ervin-sungkono' : '');
+  const branch = process.env.GITHUB_CONTENT_BRANCH?.trim() || (isDefault ? 'master' : '');
+  if (!/^[A-Za-z0-9-]+$/.test(owner) || !branch || branch.length > 255) {
+    throw new CmsError(
+      'configuration',
+      'Set GITHUB_CONTENT_OWNER and GITHUB_CONTENT_BRANCH for the public content repository.',
+      500,
+    );
+  }
+  return { owner, name: repository, branch };
 }

@@ -1,6 +1,4 @@
 import type { NextConfig } from 'next';
-import projects from './src/content/projects.json';
-import designs from './src/content/designs.json';
 
 const config: NextConfig = {
   poweredByHeader: false,
@@ -13,8 +11,6 @@ const config: NextConfig = {
     qualities: [75],
     formats: ['image/webp'],
     localPatterns: [{ pathname: '/_next/static/media/**', search: '' }],
-    // Match complete paths and queries, including Dribbble's existing resize parameter.
-    remotePatterns: [...projects, ...designs].map(({ image }) => new URL(image)),
     unoptimized: true, // FIXME: temporary fix until Vercel image optimization works again
   },
 };

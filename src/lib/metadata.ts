@@ -1,12 +1,9 @@
 import type { Metadata } from 'next';
-import { profile } from '@/content/profile';
+import { getPortfolio } from '@/lib/content';
 
 // One public origin keeps previews, canonical links, and discovery files consistent.
 export const site = {
   url: 'https://ervincs.com',
-  name: profile.name,
-  title: `${profile.name} | Frontend Software Engineer`,
-  description: `${profile.name}, software engineer at Samsung R&D Institute Indonesia. Explore React and Next.js projects, frontend case studies, and interface design.`,
 };
 
 type PageMetadata = {
@@ -17,14 +14,15 @@ type PageMetadata = {
   imageAlt?: string;
 };
 
-export function pageMetadata({
+export async function pageMetadata({
   title,
   description,
   path,
   image = '/images/preview-img.png',
-  imageAlt = `${profile.name} software engineering portfolio`,
-}: PageMetadata): Metadata {
-  const fullTitle = path === '/' ? title : `${title} | ${site.name}`;
+  imageAlt,
+}: PageMetadata): Promise<Metadata> {
+  const { profile } = await getPortfolio();
+  const fullTitle = path === '/' ? title : `${title} | ${profile.name}`;
   return {
     title: path === '/' ? { absolute: title } : title,
     description,
@@ -33,9 +31,9 @@ export function pageMetadata({
       title: fullTitle,
       description,
       url: path,
-      siteName: site.name,
+      siteName: profile.name,
       type: 'website',
-      images: [{ url: image, alt: imageAlt }],
+      images: [{ url: image, alt: imageAlt ?? `${profile.name} software engineering portfolio` }],
     },
     twitter: {
       card: 'summary_large_image',

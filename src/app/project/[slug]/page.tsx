@@ -1,19 +1,20 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { connection } from 'next/server';
-import { ArrowLeftIcon, ArrowUpRightIcon, GithubLogoIcon } from '@phosphor-icons/react/dist/ssr';
-import { getProjects, findProject, projectStudies, relatedProjects } from '@/lib/content';
-import { ExternalLink } from '@/components/common/ExternalLink';
-import { ProjectCard } from '@/components/common/ProjectCard';
+import { getProjects, findProject, relatedProjects } from '@/lib/content';
+import { ProjectHeader } from '@/components/project/ProjectHeader';
+import { ProjectMedia } from '@/components/project/ProjectMedia';
+import { ProjectStory } from '@/components/project/ProjectStory';
+import { RelatedProjects } from '@/components/project/RelatedProjects';
 import { pageMetadata } from '@/lib/metadata';
-import styles from './project-detail.module.css';
-import { imageSizes } from '@/lib/image-sizes';
+import styles from './style.module.css';
 
 type Props = { params: Promise<{ slug: string }> };
 
 export const instant = false;
+
+export async function generateStaticParams() {
+  return (await getProjects()).map(({ slug }) => ({ slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -31,169 +32,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProjectPage({ params }: Props) {
-  await connection();
   const project = await findProject((await params).slug);
   if (!project) {
     notFound();
   }
-  const study = projectStudies[project.slug];
+  const study = project.study;
   const related = relatedProjects(await getProjects(), project);
 
   return (
     <div className={`container ${styles.projectPage}`}>
-      <section className={`page-heading project-detail-heading ${styles.projectHeader}`}>
-        <Link href="/project" className={`text-link back-link ${styles.backLink}`}>
-          <ArrowLeftIcon size={17} aria-hidden="true" /> All Projects
-        </Link>
-        <p className="editorial-label">{project.category}</p>
-        <h1>{project.name}</h1>
-        <p className={styles.projectDescription}>{project.description}</p>
-        {study && <p className={`meta ${styles.focus}`}>Engineering Focus: {study.focus}</p>}
-        <div className={`hero-actions ${styles.actions}`}>
-          {project.demo && (
-            <ExternalLink href={project.demo} className="button">
-              Open Project <ArrowUpRightIcon size={18} aria-hidden="true" />
-            </ExternalLink>
-          )}
-          {project.source && (
-            <ExternalLink href={project.source} className="button button-outline">
-              <GithubLogoIcon size={19} aria-hidden="true" /> View Source
-            </ExternalLink>
-          )}
-        </div>
-      </section>
-
-      <figure className={styles.mediaFrame}>
-        <div className={styles.mediaMat}>
-          <Image
-            src={project.image}
-            alt={`${project.name} application interface`}
-            width={1600}
-            height={1000}
-            sizes={imageSizes.full}
-            preload
-            className={styles.mediaImage}
-          />
-        </div>
-      </figure>
-
-      {Boolean(project.gallery?.length) && (
-        <section className={styles.gallery} aria-label={`${project.name} screenshots`}>
-          {project.gallery?.map((image, index) => (
-            <Image
-              key={image}
-              src={image}
-              alt={`${project.name} screenshot ${index + 2}`}
-              width={1600}
-              height={1000}
-              sizes={imageSizes.twoColumns}
-            />
-          ))}
-        </section>
-      )}
-
-      <div className={`detail-body section ${styles.studyLayout}`}>
-        <aside className={styles.sidebar}>
-          <section className={styles.sideSection} aria-labelledby="built-with-heading">
-            <p className="editorial-label">Project details</p>
-            <h2 id="built-with-heading">Built With</h2>
-            <div className="tags">
-              {project.topics.map((topic) => (
-                <span key={topic}>{topic}</span>
-              ))}
-            </div>
-            <p className={styles.sourceNote}>
-              Project information and original screenshot from the public repository.
-            </p>
-          </section>
-          {study && (
-            <nav className={styles.contents} aria-label="Project walkthrough sections">
-              <a href="#overview">Overview</a>
-              <a href="#engineering">Implementation &amp; Tradeoffs</a>
-              <a href="#next-step">Next Validation Step</a>
-            </nav>
-          )}
-        </aside>
-
-        <article className={styles.projectStory}>
-          <section className={styles.chapter} aria-labelledby="overview">
-            <p className="editorial-label">Overview</p>
-            <h2 id="overview">About the Project</h2>
-            <p>{project.details || study?.context || project.description}</p>
-            {study && (
-              <>
-                <h3>The Problem</h3>
-                <p>{study.challenge}</p>
-                <h3>What It Does</h3>
-                <ul className="feature-list">
-                  {study.highlights.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-            {project.source && (
-              <ExternalLink
-                href={project.source}
-                className={`text-link ${styles.implementationLink}`}
-              >
-                Explore the Implementation <ArrowUpRightIcon size={17} aria-hidden="true" />
-              </ExternalLink>
-            )}
-          </section>
-
-          {study && (
-            <>
-              <section className={`${styles.chapter} ${styles.technicalChapter}`}>
-                <p className="editorial-label">Technical notes</p>
-                <div className="walkthrough">
-                  <h2 id="engineering">Implementation &amp; Tradeoffs</h2>
-                  <p className="walkthrough-note">
-                    Implementation summaries follow the public documentation. Tradeoffs are a
-                    technical reading of those choices; next steps describe further validation.
-                  </p>
-                  <div className={styles.decisions}>
-                    {study.decisions.map((decision) => (
-                      <article key={decision.title} className={styles.decision}>
-                        <h3>{decision.title}</h3>
-                        <p>{decision.implementation}</p>
-                        <p>
-                          <strong>Tradeoff.</strong> {decision.tradeoff}
-                        </p>
-                      </article>
-                    ))}
-                  </div>
-                  <div id="next-step" className={styles.nextStep}>
-                    <h3>Next Validation Step</h3>
-                    <p>{study.nextStep}</p>
-                  </div>
-                  <ExternalLink href={study.reference.href} className="text-link section-link">
-                    {study.reference.label} <ArrowUpRightIcon size={17} aria-hidden="true" />
-                  </ExternalLink>
-                </div>
-              </section>
-            </>
-          )}
-        </article>
-      </div>
-
-      {related.length > 0 && (
-        <section
-          className={`section related-projects ${styles.relatedSection}`}
-          aria-labelledby="related-heading"
-        >
-          <div className="section-heading">
-            <p className="editorial-label">Continue browsing</p>
-            <h2 id="related-heading">Keep Exploring.</h2>
-            <p>More work with related technologies and application patterns.</p>
-          </div>
-          <div className="project-grid">
-            {related.map((candidate) => (
-              <ProjectCard key={candidate.id} project={candidate} />
-            ))}
-          </div>
-        </section>
-      )}
+      <ProjectHeader project={project} study={study} />
+      <ProjectMedia project={project} />
+      <ProjectStory project={project} study={study} />
+      <RelatedProjects related={related} />
     </div>
   );
 }

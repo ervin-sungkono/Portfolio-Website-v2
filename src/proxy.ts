@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import projects from './content/projects.json';
 
 export async function proxy(request: NextRequest) {
   const slug = request.nextUrl.pathname.slice('/project/'.length);
@@ -9,9 +8,7 @@ export async function proxy(request: NextRequest) {
     : `http://127.0.0.1:${process.env.PORT || '3000'}`;
   const headers = { cookie: request.headers.get('cookie') ?? '' };
   let exists = false;
-  if (!process.env.GITHUB_ADMIN_ID && !process.env.GITHUB_REPO) {
-    exists = projects.some((project) => project.slug === slug);
-  } else if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 100) {
+  if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 100) {
     const url = new URL('/api/content/project', origin);
     url.searchParams.set('slug', slug);
     try {
@@ -38,7 +35,7 @@ export async function proxy(request: NextRequest) {
   }
   try {
     // Buffer the static recovery document: PPR rewrites can replace a supplied 404 with 200.
-    const recovery = await fetch(new URL('/project-not-found', origin), {
+    const recovery = await fetch(new URL('/not-found', origin), {
       headers,
       cache: 'no-store',
       signal: AbortSignal.timeout(15_000),

@@ -1,0 +1,153 @@
+.selected {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+}
+
+.sectionHeading {
+  margin-bottom: var(--space-10);
+}
+
+.bentoGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--layout-gap);
+  align-items: stretch;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.primaryProject,
+.secondaryProject,
+.additionalProject {
+  min-width: 0;
+  align-self: start;
+}
+
+.designTeaser {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(var(--space-6), 3vw, var(--space-10));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+  align-self: start;
+}
+
+.designTeaser:hover {
+  border-color: var(--accent);
+  background: var(--surface-high);
+}
+
+.teaserKicker {
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.designTeaser h3 {
+  margin: var(--space-4) 0 0;
+  font-size: clamp(1.35rem, 1.1rem + 0.8vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+}
+
+.designTeaser p {
+  margin: var(--space-4) 0 0;
+  color: var(--muted);
+  font-size: var(--text-body);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.teaserAction {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.designTeaser:hover .teaserAction {
+  color: var(--accent);
+}
+
+.teaserImage {
+  width: 100%;
+  margin-top: var(--space-4);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - var(--space-2));
+  background: var(--surface-high);
+  aspect-ratio: 4 / 3;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.collectionLink {
+  margin-top: var(--space-8);
+}
+
+@media (width >= 48rem) {
+  .bentoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .primaryProject {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (width >= 70rem) {
+  .bentoGrid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--layout-gap) var(--space-6);
+  }
+
+  .primaryProject {
+    grid-column: 1 / span 8;
+    grid-row: 1;
+  }
+
+  .secondaryProject {
+    grid-column: 9 / -1;
+    grid-row: 1;
+  }
+
+  .additionalProject {
+    grid-column: 1 / span 9;
+    grid-row: 2;
+  }
+
+  .designTeaser {
+    grid-column: 10 / span 3;
+    grid-row: 2;
+
+    h3 {
+      font-size: clamp(1.125rem, 0.95rem + 0.5vw, 1.5rem);
+      line-height: 1.2;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .designTeaser {
+    transition: none;
+  }
+}

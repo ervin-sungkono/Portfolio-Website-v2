@@ -1,6 +1,6 @@
 # Visual system, responsive layout, and motion
 
-Reviewed against the working tree on **23 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
+Updated for the current component and hero structure on **31 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
 
 ## Visual system
 
@@ -32,7 +32,7 @@ Modular screenshots use proportional cover cropping without inset padding or let
 | About           | Profile introduction, experience timeline, and grouped existing skills.                                        |
 | Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                           |
 | Contact         | Editorial introduction and the labelled form with validation and status feedback.                              |
-| Not found       | Standalone viewport-height recovery page with its own particles and pause control.                             |
+| Not found       | Viewport-height recovery section with links to home and projects.                                              |
 
 The container caps at **75rem**. Layout starts stacked and uses content-fit thresholds:
 
@@ -61,26 +61,26 @@ The owner workspace uses the existing rem tokens and themes, native labelled con
 
 ## Motion boundaries
 
-Native scrolling controls the document. There is no section snapping, wheel interception, artificial scroll smoothing, or nearest-section settling. Motion remains an enhancement over visible server HTML. Motion components are colocated under `src/components/<Component>/`; see [code boundaries](architecture.md#code-boundaries).
+Native scrolling controls the document. There is no section snapping, wheel interception, artificial scroll smoothing, or nearest-section settling. Motion remains an enhancement over visible server HTML. Motion components live with their shared, layout, or home responsibilities; see [code boundaries](architecture.md#code-boundaries).
 
 | Component            | Behavior and boundary                                                                                                                                 |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Reveal`             | One entry animation: 10px travel over 0.35 seconds. Focus completes an active reveal; reduced motion skips it. Content is visible without JavaScript. |
 | `PointerSurface`     | Bounded image tilt up to 4 degrees, using springs for a desktop mouse with fine-pointer/hover capability. Pointer exit/cancel returns to neutral.     |
 | `MotionEnhancements` | Scroll progress and conditional cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.                           |
 | `ScrollHero`         | Desktop content-fit sticky scene with a reversible project crossfade.                                                                                 |
 | `ParallaxImage`      | Bounded image-only travel inside a clipped frame, with matching overscan.                                                                             |
-| `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |     |
+| `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |
 
 Keep continuous pointer/scroll values out of React state. Discrete state may select a project, focus hold, or motion eligibility. Clean up media subscriptions, observers, listeners, animation frames, and engine instances.
 
 ## Hero crossfade and image parallax
 
-`src/lib/motion/use-scroll-motion.ts` enables scroll motion only with **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. `ScrollHero` additionally measures whether its content fits below the header. The eligible scene reserves one viewport for reading plus half a viewport of scroll travel, then releases into normal flow.
+`src/lib/hooks/use-scroll-motion.ts` enables scroll motion only with **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. `src/components/home/ScrollHero` additionally measures whether its content fits below the header. With multiple slides, the eligible scene reserves one viewport for reading plus half a small viewport (`50svh`) of scroll travel per transition, then releases into normal flow. The component accepts a collection of slides; zero slides show the empty-state message and one slide remains visible in normal flow.
 
-The hero crossfades **WeTrack into ChatGPT Clone**. The latter still uses an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; the active project switches at the midpoint. Copy, frame geometry, and actions stay stationary. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
+The homepage currently supplies its first two featured projects from the CMS: **WeTrack and ChatGPT Clone** in the published content. The second preview remains an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; for two slides the active project switches at the midpoint. More slides divide that interval into successive transitions. Copy, frame geometry, and actions stay stationary. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
 
-Only one preview is interactive and exposed to assistive technology: the other is inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Otherwise, phone/tablet, coarse-pointer, short/oversized, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel.
+Only one preview is interactive and exposed to assistive technology: the others are inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Otherwise, phone/tablet, coarse-pointer, short/oversized, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel.
 
 | Image surface                                                    | Travel                             |
 | ---------------------------------------------------------------- | ---------------------------------- |

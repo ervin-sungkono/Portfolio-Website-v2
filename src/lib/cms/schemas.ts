@@ -64,6 +64,75 @@ export const siteSchema = z.strictObject({
     ),
 });
 
+const projectStudySchema = z.strictObject({
+  focus: text(200),
+  context: text(5_000),
+  challenge: text(5_000),
+  highlights: z.array(text(1_000)).max(30),
+  decisions: z
+    .array(
+      z.strictObject({
+        title: text(200),
+        implementation: text(5_000),
+        tradeoff: text(5_000),
+      }),
+    )
+    .max(30),
+  nextStep: text(5_000),
+  reference: z.strictObject({ label: text(200), href: httpsUrl }),
+});
+
+export const portfolioSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  profile: z.strictObject({
+    name: text(120),
+    title: text(120),
+    linkedin: httpsUrl,
+    github: httpsUrl,
+    dribbble: httpsUrl,
+    instagram: httpsUrl,
+    cv: httpsUrl,
+    intro: text(5_000),
+    experiences: z
+      .array(
+        z.strictObject({
+          company: text(200),
+          role: text(200),
+          start: z.string().regex(/^\d{4}-\d{2}$/),
+          end: z
+            .string()
+            .regex(/^\d{4}-\d{2}$/)
+            .nullable(),
+          description: text(5_000),
+        }),
+      )
+      .max(100),
+    education: z.strictObject({ school: text(200), degree: text(200), years: text(100) }),
+  }),
+  skills: z
+    .array(
+      z.strictObject({
+        label: text(100),
+        icon: z.string().regex(/^[a-z0-9-]+$/),
+      }),
+    )
+    .max(100),
+  designs: z
+    .array(
+      z.strictObject({
+        title: text(200),
+        url: httpsUrl,
+        id: text(100),
+        image: httpsUrl,
+        category: text(100),
+      }),
+    )
+    .max(500),
+  projectStudies: z.record(idSchema, projectStudySchema),
+  portfolioSource: httpsUrl,
+  portfolioSourceRef: text(200),
+});
+
 export const categoriesSchema = z.record(
   idSchema,
   z.strictObject({ label: text(80), sortOrder: z.number().int().min(0).max(100_000) }),
@@ -73,6 +142,11 @@ export const technologiesSchema = z.record(
   idSchema,
   z.strictObject({ label: text(80), icon: technologyIconPath.optional() }),
 );
+
+export const projectIndexSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  projects: z.array(idSchema).max(500).refine(unique, 'Project slugs must be unique.'),
+});
 
 const expectedSha = z
   .string()
@@ -95,6 +169,8 @@ export const uploadMediaSchema = z.strictObject({
 
 export type ProjectDocument = z.infer<typeof projectSchema>;
 export type SiteDocument = z.infer<typeof siteSchema>;
+export type PortfolioDocument = z.infer<typeof portfolioSchema>;
+export type ProjectStudy = z.infer<typeof projectStudySchema>;
 export type Categories = z.infer<typeof categoriesSchema>;
 export type Technologies = z.infer<typeof technologiesSchema>;
 export type PublishMutation = z.infer<typeof publishMutationSchema>;

@@ -1,8 +1,5 @@
-import projectData from '@/content/projects.json';
-import designData from '@/content/designs.json';
 import { getPublicContent } from '@/lib/cms/public';
-import { profile } from '@/content/profile';
-import { site } from '@/lib/metadata';
+import type { PortfolioDocument, ProjectStudy } from '@/lib/cms/schemas';
 import { cacheLife, cacheTag } from 'next/cache';
 
 export type Project = {
@@ -20,14 +17,16 @@ export type Project = {
   gallery?: string[];
   categories?: string[];
   tags?: string[];
+  study?: ProjectStudy;
 };
-export type Design = (typeof designData)[number];
-
-export const designs: readonly Design[] = designData;
+export type Design = PortfolioDocument['designs'][number];
 
 export async function getProjects(): Promise<readonly Project[]> {
-  const remote = await getPublicContent();
-  return remote?.projects ?? projectData;
+  return (await getPublicContent()).projects;
+}
+
+export async function getPortfolio() {
+  return (await getPublicContent()).portfolio;
 }
 
 export function selectFeaturedProjects(projects: readonly Project[]) {
@@ -37,7 +36,7 @@ export function selectFeaturedProjects(projects: readonly Project[]) {
 export async function findProject(slug: string) {
   'use cache';
   cacheTag(`project:${slug}`, 'projects', 'taxonomy');
-  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 });
+  cacheLife({ stale: 300, revalidate: Infinity, expire: Infinity });
   return (await getProjects()).find((project) => project.slug === slug);
 }
 
@@ -52,16 +51,6 @@ export function filterProjects(projects: readonly Project[], query: string, cate
           .includes(term)),
   );
 }
-
-// Public content exports keep pages independent of the storage format.
-export {
-  projectStudies,
-  engineeringCapabilities,
-  portfolioDecisions,
-  portfolioFileUrl,
-  portfolioSource,
-  portfolioSourceRef,
-} from '@/content/engineering';
 
 export function relatedProjects(projects: readonly Project[], project: Project, limit = 2) {
   // Shared technologies take priority, followed by projects in the same category.
@@ -80,14 +69,5 @@ export function relatedProjects(projects: readonly Project[], project: Project, 
 }
 
 export async function getSiteContent() {
-  const remote = await getPublicContent();
-  return (
-    remote?.site ?? {
-      schemaVersion: 1 as const,
-      siteTitle: site.title,
-      headline: 'Frontend Engineering.\nFrom UI to Integration.',
-      introduction: `I’m ${profile.name}, a software engineer at Samsung R&D Institute Indonesia with a focus on frontend development and interface design.`,
-      socialLinks: [],
-    }
-  );
+  return (await getPublicContent()).site;
 }

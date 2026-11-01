@@ -1,0 +1,103 @@
+.heroCopy {
+  min-width: 0;
+
+  h1 {
+    max-width: 11em;
+    font-size: clamp(2.75rem, 4.15vw, 4.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.065em;
+  }
+
+  h1 span {
+    display: block;
+    max-width: 18em;
+    margin-top: 0.2em;
+    color: var(--muted);
+    font-size: 0.62em;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+  }
+}
+
+.heroVisual {
+  position: relative;
+  min-width: 0;
+
+  &::after {
+    position: absolute;
+    z-index: 1;
+    inset: var(--space-3);
+    border-radius: calc(var(--radius) - var(--space-2));
+    background:
+      linear-gradient(var(--accent), var(--accent)) left top / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) left top / 1px var(--space-5),
+      linear-gradient(var(--accent), var(--accent)) right top / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) right top / 1px var(--space-5),
+      linear-gradient(var(--accent), var(--accent)) left bottom / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) left bottom / 1px var(--space-5),
+      linear-gradient(var(--accent), var(--accent)) right bottom / var(--space-5) 1px,
+      linear-gradient(var(--accent), var(--accent)) right bottom / 1px var(--space-5);
+    background-repeat: no-repeat;
+    content: '';
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.heroMedia {
+  position: relative;
+  aspect-ratio: 1.62;
+
+  img {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+}
+
+.heroPlaceholder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  background: linear-gradient(140deg, var(--surface), var(--accent-soft));
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.placeholderWindow {
+  display: grid;
+  width: 58%;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+
+  span {
+    height: var(--space-2);
+    border-radius: var(--space-1);
+    background: var(--accent-soft);
+  }
+
+  span:nth-child(2) {
+    width: 75%;
+  }
+
+  span:nth-child(3) {
+    width: 45%;
+  }
+}
+
+:global(.hero-visual).heroVisual {
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+
+:global(.hero-visual).heroVisual:hover {
+  box-shadow: 0 0 0 1px var(--accent);
+  transform: none;
+}

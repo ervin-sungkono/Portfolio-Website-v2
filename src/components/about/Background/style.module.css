@@ -1,0 +1,33 @@
+.education,
+.backgroundStory {
+  min-width: 0;
+}
+
+.background {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: var(--layout-gap);
+  border-top: 1px solid var(--line);
+}
+
+.education h2 {
+  max-width: 18ch;
+  font-size: var(--text-heading-small);
+}
+
+.education p:last-child,
+.backgroundStory > p {
+  color: var(--muted);
+  font-size: var(--text-body);
+}
+
+.backgroundStory h3 {
+  margin-top: 0;
+}
+
+@media (width < 48rem) {
+  .background {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+}
