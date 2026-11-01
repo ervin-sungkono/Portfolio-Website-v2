@@ -17,6 +17,7 @@ export function ProjectPanel({
   newSlug,
   pending,
   feedback,
+  allowDelete = true,
   onSelectedSlugChange,
   onNewSlugChange,
   onSave,
@@ -397,7 +398,7 @@ export function ProjectPanel({
           <button className="button" type="submit" disabled={pending}>
             {selectedSlug ? 'Save project' : 'Create project'}
           </button>
-          {selectedSlug && (
+          {selectedSlug && allowDelete && (
             <button
               className="button cms-editor-danger-button"
               type="button"

@@ -8,6 +8,7 @@ export type ImagesPanelProps = {
   technologiesForm: UseFormReturn<Technologies>;
   selectedProjectSlug: string;
   newProjectSlug: string;
+  projectOnly?: boolean;
   active: boolean;
   pending: boolean;
   feedback: ReactNode;
