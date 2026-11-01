@@ -1,6 +1,6 @@
 # Portfolio architecture and operations
 
-Updated for CSS ownership on **1 November 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
+Updated for the GitHub and Dribbble CMS flow on **1 November 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
 
 ## Scope and stack
 
@@ -15,7 +15,7 @@ The owner-only GitHub CMS lives inside this Next.js application. A separate publ
 | `src/app`                | Routes, layouts, metadata endpoints, page composition, and the contact API.        |
 | `src/components`         | Reusable UI and focused browser interactions.                                      |
 | `src/styles/globals.css` | Shared theme, typography, spacing, layout utilities, and accessibility primitives. |
-| `web-assets/content`     | Published profile, engineering walkthroughs, projects, and design records.         |
+| `web-assets/content`     | Published profile, engineering walkthroughs, projects, and selected design IDs.    |
 | `src/lib/content.ts`     | Collection exports, project lookup, filtering, and related-project selection.      |
 | `src/lib/metadata.ts`    | Public origin and shared page/social metadata.                                     |
 | `src/lib/contact`        | Shared validation, bounded request parsing, and server-only provider integration.  |
@@ -31,7 +31,7 @@ Keep functions and boundaries small. Add abstractions or dependencies only when 
 
 Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, and `/contact`. The content snapshot has 17 project detail pages, for 22 public pages in total, and 16 design entries.
 
-- Project search/category filters and design categories use shareable GET URLs with server rendering.
+- Project search/category filters use shareable GET URLs with server rendering. The Design page shows all available selected shots in saved order, without category filters.
 - GitHub content uses explicit `featured` flags and `sortOrder`; unfiltered archives exclude featured entries. Filtering searches the complete published collection.
 - Project details can render newly published slugs after deployment. Their content is cached and invalidated after publication. Unknown/unpublished slugs use 404/noindex recovery; the current checks and any no-JavaScript limits are recorded in [verification](verification.md).
 - Related projects prioritize shared technologies, then category, through a small pure function.
@@ -43,7 +43,7 @@ The 404 markup and its module live together in `src/app/not-found/`. The framewo
 
 `profile.name` in `web-assets/content/portfolio.json` is authoritative: **Ervin Cahyadinata Sungkono**. Use the full name in visible identity, accessible alternatives, metadata, and structured data. Existing account URLs remain unchanged.
 
-Edit profile facts, skills, designs, and project walkthroughs in the content repository's `content/portfolio.json`; the owner CMS edits homepage copy, projects, and taxonomy. Access public collections through `src/lib/content.ts`. The homepage selects up to three featured projects, so ordering is editorial. WeTrack, ChatGPT Clone, and Next Pokedex have walkthroughs with documented features, tradeoff analysis, original sources, and explicitly proposed validation steps. WeTrack's team credits remain visible.
+Edit profile facts, skills, and project walkthroughs in the content repository's `content/portfolio.json`; the owner CMS edits homepage copy, projects, taxonomy, and the ordered selection of Dribbble shot IDs. Design titles, links, and images are read from Dribbble on the server. Access public collections through `src/lib/content.ts`. The homepage selects up to three featured projects, so ordering is editorial. WeTrack, ChatGPT Clone, and Next Pokedex have walkthroughs with documented features, tradeoff analysis, original sources, and explicitly proposed validation steps. WeTrack's team credits remain visible.
 
 The inherited content was reviewed on **7 October 2026**; the documentation date does not refresh those external facts:
 
@@ -56,7 +56,7 @@ The inherited content was reviewed on **7 October 2026**; the documentation date
 | Experience and education                             | The owner's public [LinkedIn profile](https://www.linkedin.com/in/ervin-cahyadinata-sungkono), recorded in the content repository; it is not polled at runtime. |
 | CV                                                   | Original link retained; its currency has not been independently verified.                                                                                       |
 
-`src/lib/content.ts` is the public content boundary. All published records come from GitHub; there is no bundled portfolio-data fallback. A cold build or cache refresh fails visibly if the required remote content is unavailable or invalid. The generic application shell remains available so the owner can reach CMS setup.
+`src/lib/content.ts` is the public content boundary. Portfolio documents come from GitHub and selected design details come from Dribbble; there is no bundled portfolio-data fallback. A cold read of unavailable or invalid GitHub content fails visibly. When Dribbble is unavailable, the affected design section displays an unavailable message. The generic application shell remains available so the owner can reach CMS setup.
 
 ## GitHub CMS
 
@@ -64,33 +64,33 @@ The inherited content was reviewed on **7 October 2026**; the documentation date
 
 Configure these server-only variables from `.env.example` in local `.env.local` or the intended Vercel environment:
 
-| Variable                | Purpose                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `AUTH_SECRET`           | Random secret for Auth.js encrypted sessions; use at least 32 random characters. |
-| `AUTH_GITHUB_ID`        | GitHub OAuth application's client ID.                                            |
-| `AUTH_GITHUB_SECRET`    | GitHub OAuth application's client secret.                                        |
-| `GITHUB_ADMIN_ID`       | Owner's immutable numeric GitHub user ID.                                        |
-| `GITHUB_REPO`           | Separate public content repository name, without an owner or slash.              |
-| `GITHUB_CONTENT_OWNER`  | Public repository owner login; required for a non-default source.                |
-| `GITHUB_CONTENT_BRANCH` | Public repository branch; required for a non-default source.                     |
+| Variable             | Purpose                                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `AUTH_SECRET`        | Random secret for Auth.js encrypted sessions; use at least 32 random characters.                              |
+| `AUTH_GITHUB_ID`     | GitHub OAuth application's client ID.                                                                         |
+| `AUTH_GITHUB_SECRET` | GitHub OAuth application's client secret.                                                                     |
+| `GITHUB_REPO`        | Separate public content repository name, without an owner or slash.                                           |
+| `GITHUB_PAT`         | Server-side GitHub personal access token for owner identity, repository discovery, content reads, and writes. |
+| `DRIBBBLE_TOKEN`     | Server-side Dribbble OAuth access token used to list the owner's shots.                                       |
 
-Create an OAuth application with callback `https://<deployment-host>/api/auth/callback/github`; for local development use `http://localhost:3000/api/auth/callback/github` with a separate development OAuth app. The provider requests `read:user repo`. The `repo` permission is broad; application writes are constrained to the configured repository and allowlisted paths. Never expose these variables through `NEXT_PUBLIC_`, browser storage, URLs, or logs. Public reads default to `ervin-sungkono/web-assets` on `master` without an OAuth token; changing the owner or repository also requires the matching public owner and branch variables.
+Create an OAuth application with callback `https://<deployment-host>/api/auth/callback/github`; for local development use `http://localhost:3000/api/auth/callback/github` with a separate development OAuth app. OAuth requests `read:user` for sign-in only. The PAT needs access to the public content repository, including contents read/write; to list private repositories it also needs the corresponding repository access. Automatic creation requires a token permitted to create repositories; otherwise create an empty public repository first. Grant only the access needed and keep every credential out of `NEXT_PUBLIC_`, browser storage, URLs, and logs. The PAT's `/user` response supplies the content owner, and GitHub supplies the configured repository's default branch; these are not separate settings.
 
-Do not connect the content repository as a Vercel deployment source. Only application source changes need builds. A template installer supplies their own OAuth app, numeric ID, repository name, and Auth secret; no repository picker, database, or extra read token is required. GitHub configuration does not change the canonical public origin `https://ervincs.com`.
+Do not connect the content repository as a Vercel deployment source. Only application source changes need builds. A template installer supplies their own OAuth app, PAT, Dribbble token, repository name, and Auth secret. GitHub configuration does not change the canonical public origin `https://ervincs.com`.
 
-Opening `/admin` shows setup or GitHub sign-in. Sign-in accepts only the configured GitHub account ID. Auth.js keeps its OAuth access token in an encrypted HttpOnly, SameSite cookie; client session JSON exposes only the allowlisted identity fields. Every CMS mutation checks that encrypted owner session and verifies the token's current identity with GitHub again. Expired/revoked credentials require another sign-in. Auth/admin responses and CMS APIs do not expose the access token. Next.js resolves the `server-only` build marker itself; there is no `server-only` npm dependency.
+Opening `/admin` shows setup or GitHub sign-in. The OAuth identity must match the numeric ID returned by the PAT's GitHub `/user` endpoint at sign-in and on privileged requests; a missing, revoked, or unverifiable PAT fails closed. Rotating to a PAT for a different account changes the authorized owner. The encrypted HttpOnly, SameSite session retains the identity, not the OAuth access token; client session JSON exposes only allowlisted identity fields. The PAT and Dribbble token remain in trusted server code and never appear in CMS responses. Next.js resolves the `server-only` build marker itself; there is no `server-only` npm dependency.
 
 ### Modules and storage
 
 - `src/lib/cms/schemas.ts`: shared strict Zod documents and mutations, used by React Hook Form and server validation.
-- `github.ts`, `repository.ts`: bounded GitHub access, numeric owner/default-branch resolution, typed files, reads, media/reference validation, and custom-identity commits.
+- `github.ts`, `github-repositories.ts`, `repository.ts`: GitHub access, repository discovery, owner/default-branch resolution, typed files, reads, media/reference validation, and custom-identity commits.
 - `initialization.ts`, `content-mutations.ts`, `project-index.ts`, `media.ts`: initialization, optimistic JSON publishing/deletion, project-index synchronization, and immutable image uploads.
 - `auth.ts`, `auth-policy.ts`, `http.ts`: trusted credential retrieval, owner policy, same-origin mutations, bounded JSON requests, and private responses.
 - `public.ts`, `cache.ts`, `publishing.ts`: public cached projection, invalidation policy, and separation of commit success from cache failures.
-- `src/components/admin/CmsEditor`: structured project, site-profile, category, technology, and image forms; no GitHub API calls or credentials in components. Panels and messages have nested PascalCase directories; the editor's own `style.css` keeps shared form primitives, avoiding duplicated control styles.
+- `src/lib/dribbble.ts`: server-side Dribbble shot listing, pagination, and mapping into public design details.
+- `src/components/admin/CmsEditor` and `GitHubImport`: structured project, site-profile, category, technology, and image forms, plus design selection and repository mapping; components call only the application's CMS endpoints and never receive credentials.
 - `src/proxy.ts` and `/api/content/project`: publication checks before project rendering, using the same cached public content boundary. Missing projects return a buffered recovery document with HTTP 404/noindex/no-store. This avoids Next.js PPR's blank no-JavaScript recovery and status replacement during rewrites. Internal requests use the platform's `VERCEL_URL` or local `127.0.0.1:PORT` (default 3000), never a visitor-supplied Host. Set `PORT` when running the app locally on another port.
 
-Storage uses `content/site.json`, `content/portfolio.json`, `content/categories.json`, `content/technologies.json`, `content/project-index.json`, and `content/projects/<slug>.json`. The filename is the URL identity; project JSON has no duplicate ID/slug. The CMS maintains the project index because raw GitHub URLs cannot list directories. Registries use stable IDs, projects refer to those IDs, and images use repository-relative paths under `media/projects/<slug>/` or `media/technologies/`. The application's existing route remains `/project/<slug>`.
+Storage uses `content/site.json`, `content/portfolio.json`, `content/categories.json`, `content/technologies.json`, `content/project-index.json`, and `content/projects/<slug>.json`. The filename is the URL identity; project JSON has no duplicate slug. Strict version-2 projects have a nullable `githubRepositoryId`, which must be unique when present. The version-2 portfolio stores an ordered list of selected Dribbble IDs, not shot metadata. The CMS maintains the project index because raw GitHub URLs cannot list directories. Registries use stable IDs, projects refer to those IDs, and images use repository-relative paths under `media/projects/<slug>/` or `media/technologies/`. The application's existing route remains `/project/<slug>`.
 
 ### Initialization and editing
 
@@ -98,13 +98,17 @@ After authorized sign-in, choose **Initialize repository** only for a nonexisten
 
 The editor retains drafts after validation, network, or SHA conflicts. Every update compares the loaded file's blob SHA; a stale version returns HTTP 409. Category/technology edits validate references against the current snapshot. Publish/unpublish/delete validate authoritative documents and media before writing. Separate concurrent file writes are not transactional: use one publishing tab for taxonomy changes to avoid a category deletion racing with a project update; manual Git repair can be needed if such a race occurs. All content is public in GitHub, including `published: false` and earlier revisions; unpublishing only hides it from the portfolio.
 
+On `/admin/import`, choose an accessible GitHub repository and map it to a new or existing project. Review suggested metadata and complete the shared project form before saving. Refreshing GitHub metadata leaves the draft untouched; applying available fields fills only blanks. The owner must acknowledge that saving metadata from a private repository or uploading an image places it in the public content repository, even for an unpublished project. The Designs panel provides show/hide controls without editing shot details. Missing selected IDs remain saved until explicitly removed.
+
 Images accept PNG, JPEG, and WebP only, at most 1 MiB, with matching MIME, extension, and byte signatures. Arbitrary SVG uploads are rejected. Existing technology SVG references are checked. Uploads use content-hashed names, then the owner selects the returned path in the project/icon form. Upload and JSON commits are separate; an abandoned upload may leave an unused public file. Git history and existing browser/CDN copies cannot be made private by unpublishing.
 
 ### Publishing and ISR
 
-At build time and after invalidation, the public reader resolves the latest branch commit through GitHub's public commit feed, then loads and validates all JSON at that immutable revision via raw GitHub URLs. This avoids the unauthenticated REST core limit and keeps one consistent revision across files. Next.js Cache Components retains the result without time-based revalidation; individual project lookups also carry `project:<slug>` tags. Cache keys include the public repository and branch, never session credentials. Authenticated editor reads use GitHub's REST API and bypass the public cache. A failed cold read is visible; a failed background refresh may retain the previous cached result.
+At build time and after invalidation, the server derives the public source from the PAT owner and GitHub's repository metadata, resolves the latest branch commit through GitHub's public commit feed, then loads and validates all JSON at that immutable revision via raw GitHub URLs. Next.js Cache Components retains the result without time-based revalidation; individual project lookups also carry `project:<slug>` tags. Cache keys and cached results do not contain credentials. Authenticated editor reads use GitHub's REST API and bypass the public cache. A failed cold read is visible; a failed background refresh may retain the previous cached result. Selected design details are fetched from Dribbble's `GET /v2/user/shots`, following its pagination links, and cached for public rendering; failed API responses are not cached as successful empty selections.
 
 After GitHub confirms a project write or delete, the CMS synchronizes the index before invalidating affected tags and paths. The project and index are separate optimistic commits, so a failed index update leaves the accepted project commit intact and reports a pending refresh; **Retry public refresh** repairs the index and retries invalidation. `revalidateTag(tag, 'max')` marks data stale; visitors may briefly receive the previous version while regeneration runs. “Cache refreshed” means invalidation was accepted, not instant global delivery. The owner can also use **Refresh public content** after direct GitHub edits; it rebuilds the index and invalidates all public content.
+
+Saving a design selection commits only the IDs within the latest validated portfolio document, then invalidates `/` and `/design`. If cache invalidation fails after a successful commit, retry the public refresh rather than saving the selection again. Dribbble's [published API terms](https://developer.dribbble.com/terms/) restrict storage of its data; whether saved shot IDs and ISR-cached responses are permitted requires clarification from Dribbble.
 
 `partialPrefetching` is explicitly disabled while migrating the existing portfolio to Cache Components. Existing project detail paths are prerendered at build time; new published paths can render after an authorized refresh without a build. Collection GET filters use blocking server rendering so native navigation remains usable. Direct GitHub edits require an authorized refresh; there is no webhook or scheduled refresh. Content commits never call a deploy hook or Vercel deployment API. `images.unoptimized: true` still serves original GitHub assets; the CMS does not enable image transformations.
 

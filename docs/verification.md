@@ -1,6 +1,16 @@
 # Verification and remaining work
 
-Updated for CSS-module colocation on **1 November 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+Updated for the GitHub and Dribbble CMS refactor on **1 November 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+
+## GitHub and Dribbble CMS refactor — 1 November 2026
+
+- Node.js 24.22.1 application and test typechecks, Stylelint, and **72/72** Vitest unit and handler integration tests passed. ESLint completed with no errors and three effect-synchronization warnings, including the existing contact warning. Checks cover PAT/OAuth identity matching, rejected legacy sessions, missing/revoked credentials, strict version-2 schemas, duplicate and inaccessible repository mappings, Dribbble pagination/errors, selection writes, and commit-before-invalidation recovery.
+- The isolated CMS production build passed, followed by **6/6 Chromium workflows** and **2/2 HTTP checks** with simulated GitHub/Dribbble responses and encrypted test sessions. They cover project publication, image upload, design show/hide and public refresh, preservation/removal of unavailable IDs, and private repository disclosure, draft-preserving refresh, mapping save, and invalidation-only retry. The import and design controls were checked in both themes at 320, 390, 820, 1024, and 1440 px, with keyboard interaction and 200% root-font reflow samples. The initial import check found narrow-screen overflow; loading the shared editor styles resolved it before the passing run.
+- A separate production build read the newly published public content with a simulated PAT identity and empty Dribbble response. The **30/30 public Chromium regressions** passed against that build. The CMS fixture tests, rather than this public suite, exercised actual design-card rendering with simulated shots. The initial sandbox build failed with Windows `EPERM` while creating `.next` output; the successful build and browser checks ran outside that sandbox. Contact delivery remained mocked.
+- Whole-repository Prettier and Git whitespace checks passed; all **35** local Markdown links and fragments in the maintained guidance resolved. No clean `npm ci` or fresh dependency audit was run for this refactor.
+- The authorized `web-assets/master` update is [`fac7bf3b0e595017fff282c1a64aa76d889a0ceb`](https://github.com/ervin-sungkono/web-assets/commit/fac7bf3b0e595017fff282c1a64aa76d889a0ceb), a fast-forward from `3d29efddf7e7cc08b9f042d36d6639159f9d5b38`. Both commit identities are `Portfolio CMS <cms@portfolio.local>`. The unchanged `legacy` branch remains at `3a62ce04163dfdc8d6e328df385ba538762555b9`.
+- Read-back fetched all **22** JSON documents at the exact new commit. The remote tree's **83** blob hashes matched the reviewed local tree; schema and reference validation passed for all **17** projects, and all **25** referenced image files passed the server's byte checks. The 17 GitHub repository IDs match the reviewed legacy ID-to-slug mapping and GitHub source repositories; all **16** selected Dribbble IDs and their order, other project/portfolio facts including `portfolioSourceRef`, and all **35** compatibility `images/` and `icons/` blobs were preserved.
+- No real OAuth consent, Dribbble API call, authenticated CMS publication, hosted ISR propagation, or deployment was exercised: local PAT and Dribbble credentials were not configured. The schema change on `master` is intentionally not backward compatible; an already-running reader expecting version 1 may fail after refreshing until the application is updated. Clarification is still needed on whether saving shot IDs and ISR responses complies with [Dribbble's API terms](https://developer.dribbble.com/terms/). The stacked follow-up application branches need their own integration review.
 
 ## CSS-module colocation — 1 November 2026
 
@@ -109,21 +119,21 @@ Installing ESLint 10 emitted peer-dependency override warnings because some plug
 
 Use Node.js 24 and the committed lockfile. Setup and browser commands are in [README](../README.md#development).
 
-| Command                     | Scope                                                                                                                 |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `npm run lint`              | ESLint with Next.js Core Web Vitals and TypeScript recommendations, LF/final-newline, and empty-line checks.          |
-| `npm run typecheck`         | Strict application TypeScript. The application tsconfig excludes `tests`.                                             |
-| `npm run typecheck:tests`   | Strict TypeScript for the test files.                                                                                 |
-| `npm run lint:css`          | Stylelint across `src/**/*.css`, using `stylelint-config-standard` plus LF and final-newline rules from `@stylistic`. |
-| `npm test`                  | Vitest unit and handler integration tests covering content, motion, contact, authentication, storage, and publishing. |
-| `npm run build`             | Production build and static route generation.                                                                         |
-| `npm run format:check`      | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.           |
-| `git diff --check`          | Whitespace in the relevant diff.                                                                                      |
-| `npm run test:browser`      | Public Chromium regressions against a production build.                                                               |
-| `npm run test:live`         | Public Chromium regressions against an existing localhost:3000 server; contact requests are mocked.                   |
-| `npm run test:cms:browser`  | Isolated GitHub CMS production build and browser workflow; replaces `.next` with a fixture build.                     |
-| `npm run test:http:fixture` | Production HTTP checks against the isolated fixture server; replaces `.next` with a fixture build.                    |
-| `npm run test:cms:fixture`  | Runs the CMS browser and HTTP fixture checks together.                                                                |
+| Command                     | Scope                                                                                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run lint`              | ESLint with Next.js Core Web Vitals and TypeScript recommendations, LF/final-newline, and empty-line checks.                                                      |
+| `npm run typecheck`         | Strict application TypeScript. The application tsconfig excludes `tests`.                                                                                         |
+| `npm run typecheck:tests`   | Strict TypeScript for the test files.                                                                                                                             |
+| `npm run lint:css`          | Stylelint across `src/**/*.css`, using `stylelint-config-standard` plus LF and final-newline rules from `@stylistic`.                                             |
+| `npm test`                  | Vitest unit and handler integration tests covering content, motion, contact, authentication, storage, and publishing.                                             |
+| `npm run build`             | Production build and static route generation; public GitHub content requires configured server-side source credentials, or the documented read-only test fixture. |
+| `npm run format:check`      | Whole-repository Prettier; use scoped checks for documentation-only changes when unrelated work is present.                                                       |
+| `git diff --check`          | Whitespace in the relevant diff.                                                                                                                                  |
+| `npm run test:browser`      | Public Chromium regressions against a production build.                                                                                                           |
+| `npm run test:live`         | Public Chromium regressions against an existing localhost:3000 server; contact requests are mocked.                                                               |
+| `npm run test:cms:browser`  | Isolated GitHub CMS production build and browser workflow; replaces `.next` with a fixture build.                                                                 |
+| `npm run test:http:fixture` | Production HTTP checks against the isolated fixture server; replaces `.next` with a fixture build.                                                                |
+| `npm run test:cms:fixture`  | Runs the CMS browser and HTTP fixture checks together.                                                                                                            |
 
 `.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, ESLint, CSS lint, application/test typechecking, Vitest, a dummy-CAPTCHA production build, Chromium installation, and the public and CMS fixture tests on pull requests. This describes the current workflow definition; inspect an actual run before claiming remote CI passed.
 
@@ -138,7 +148,7 @@ Use Node.js 24 and the committed lockfile. Setup and browser commands are in [RE
 | `theme.spec.ts`            | 1     | Theme destination label and persisted selection across public navigation.                                                                                               |
 | `responsive.spec.ts`       | 3     | Both themes, five widths, keyboard focus, 200% root-font reflow, and short-screen mobile-menu access.                                                                   |
 
-The production browser server uses `127.0.0.1:3103`, clears provider secrets, and does not reuse an existing server. The live configuration targets an existing localhost server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. The fixture HTTP tests cover large Unicode payloads, request limits, origin checks, and CMS authorization. These tests do not send real email. The public dummy CAPTCHA key must be present at build time for the fixture suites; rebuild with the real public key before any deployment that needs live CAPTCHA.
+The production browser server uses `127.0.0.1:3103` and does not reuse an existing server. The documented public fixture simulates the GitHub identity and Dribbble responses while reading the live public content tree. The live configuration targets an existing localhost server. Form tests mock CAPTCHA/delivery; the offline Nodemailer test uses JSON transport. The fixture HTTP tests cover large Unicode payloads, request limits, origin checks, and CMS authorization. These tests do not send real email. The public dummy CAPTCHA key must be present at build time for the fixture suites; rebuild without test fixtures and with the real public key before any deployment that needs live CAPTCHA.
 
 The suite is focused regression coverage. It is not a complete responsive, accessibility, particle, external-asset, or live-provider test suite. Broader checks below were separate dated reviews.
 
