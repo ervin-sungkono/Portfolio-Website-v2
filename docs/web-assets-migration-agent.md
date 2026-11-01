@@ -26,11 +26,12 @@ The target repository stores:
 - One `content/projects/<slug>.json` per project using `projectSchema`.
 - Project images under `media/projects/<slug>/`; optional technology icons under `media/technologies/`.
 
-Use the schema definitions in `src/lib/cms/schemas.ts` as the source of truth. Project documents require `schemaVersion: 1`, `title`, `summary`, `description`, `published`, `featured`, `sortOrder`, `year`, category and technology ID arrays, `tags`, `links`, and `media` with a cover and gallery. Registries are keyed by stable lowercase-hyphen IDs. Do not add fields that strict schemas reject.
+Use the schema definitions in `src/lib/cms/schemas.ts` as the source of truth. Project documents require `schemaVersion: 2`, a nullable `githubRepositoryId`, `title`, `summary`, `description`, `published`, `featured`, `sortOrder`, `year`, category and technology ID arrays, `tags`, `links`, and `media` with a cover and gallery. The version-2 portfolio stores selected Dribbble shot IDs in order, without copied shot metadata. Registries are keyed by stable lowercase-hyphen IDs. Do not add fields that strict schemas reject.
 
 Map legacy files and fields as follows:
 
 - Match `data/projects/<numeric-id>.json` to the existing slug through the mapping in `web-assets/master/README.md`. Never guess a slug from a title or numeric ID.
+- Verify a project's numeric GitHub repository ID from its source repository; use `null` when a mapping cannot be verified. Do not assign the same ID to multiple projects. Preserve the selected Dribbble IDs and their order when comparing designs.
 - Map verified project names, descriptions, category, topics, demo/source links, and cover/gallery assets to their corresponding CMS fields. Use a literal, accurate excerpt for `summary` only when the source has no summary; flag derived text in the report.
 - Map category and technology labels to stable registry IDs and update every project reference consistently. Put technologies in `technologies` when they describe the stack; keep other verified topics as tags. Do not invent categories, technologies, links, or project facts.
 - Treat a missing legacy year as unresolved. A verified GitHub repository creation year may be proposed as a documented proxy, with its source and limitation stated; do not present it as a confirmed project completion year.
