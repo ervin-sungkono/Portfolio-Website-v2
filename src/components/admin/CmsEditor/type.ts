@@ -1,6 +1,6 @@
 import type { Categories, ProjectDocument, SiteDocument, Technologies } from '@/lib/cms/schemas';
 
-export type CmsSection = 'projects' | 'site' | 'categories' | 'technologies' | 'images';
+export type CmsSection = 'projects' | 'site' | 'categories' | 'technologies' | 'designs' | 'images';
 
 export type FieldErrorProps = { id: string; message?: string };
 
@@ -17,8 +17,13 @@ export type CmsWriteRequest =
   | { kind: 'site'; expectedSha: string; data: SiteDocument }
   | { kind: 'categories'; expectedSha: string; data: Categories }
   | { kind: 'technologies'; expectedSha: string; data: Technologies }
+  | { kind: 'designs'; expectedSha: string; designs: string[] }
   | { kind: 'delete-project'; slug: string; expectedSha: string }
-  | { kind: 'revalidate'; target: 'project' | 'site' | 'taxonomy' | 'all'; slug?: string };
+  | {
+      kind: 'revalidate';
+      target: 'project' | 'site' | 'taxonomy' | 'designs' | 'all';
+      slug?: string;
+    };
 
 export type EditorMessage = {
   tone: 'success' | 'error' | 'conflict';
@@ -26,7 +31,7 @@ export type EditorMessage = {
   commitUrl?: string;
   cache?: 'refreshed' | 'pending';
   conflictSlug?: string;
-  revalidateTarget?: 'project' | 'site' | 'taxonomy';
+  revalidateTarget?: 'project' | 'site' | 'taxonomy' | 'designs';
   revalidateSlug?: string;
 };
 

@@ -1,14 +1,10 @@
 .collectionBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-6);
   padding-block: 0 var(--space-5);
   border-bottom: 1px solid var(--line);
-
-  :global(.design-filters) {
-    margin: 0;
-  }
 }
 
 .designCount {
@@ -144,13 +140,9 @@
 
 @media (width < 40rem) {
   .collectionBar {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-end;
     gap: var(--space-2);
-
-    :global(.design-filters) {
-      margin-bottom: 0;
-    }
   }
 
   .designCount {

@@ -1,5 +1,6 @@
 import { getPublicContent } from '@/lib/cms/public';
-import type { PortfolioDocument, ProjectStudy } from '@/lib/cms/schemas';
+import type { ProjectStudy } from '@/lib/cms/schemas';
+import { getDribbbleDesigns, type DribbbleShot } from '@/lib/dribbble';
 import { cacheLife, cacheTag } from 'next/cache';
 
 export type Project = {
@@ -19,7 +20,7 @@ export type Project = {
   tags?: string[];
   study?: ProjectStudy;
 };
-export type Design = PortfolioDocument['designs'][number];
+export type Design = DribbbleShot;
 
 export async function getProjects(): Promise<readonly Project[]> {
   return (await getPublicContent()).projects;
@@ -27,6 +28,19 @@ export async function getProjects(): Promise<readonly Project[]> {
 
 export async function getPortfolio() {
   return (await getPublicContent()).portfolio;
+}
+
+async function getCachedDesigns(): Promise<readonly Design[]> {
+  'use cache';
+  cacheTag('portfolio', 'designs');
+  cacheLife({ stale: 300, revalidate: Infinity, expire: Infinity });
+
+  const { designs } = await getPortfolio();
+  return getDribbbleDesigns(designs);
+}
+
+export async function getDesigns(): Promise<readonly Design[]> {
+  return getCachedDesigns();
 }
 
 export function selectFeaturedProjects(projects: readonly Project[]) {
