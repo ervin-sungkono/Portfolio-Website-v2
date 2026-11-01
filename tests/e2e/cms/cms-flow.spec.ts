@@ -2,25 +2,21 @@ import { expect, test, type BrowserContext } from '@playwright/test';
 import { unlink, writeFile } from 'node:fs/promises';
 import { CmsEditorPage } from '../../support/cms-editor-page';
 import {
-  cmsAdminId as adminId,
   cmsBaseUrl as baseURL,
   cmsCookieName as cookieName,
-  cmsOwnerToken as ownerToken,
+  cmsPat as pat,
+  cmsPatUserId as ownerId,
   cmsSessionCookie,
   fixturePng as png,
 } from '../../support/cms-fixture';
 
 const projectSlug = 'browser-cms-project';
 
-async function addOwnerCookie(
-  context: BrowserContext,
-  githubId = adminId,
-  accessToken = ownerToken,
-) {
+async function addOwnerCookie(context: BrowserContext, githubId = ownerId) {
   await context.addCookies([
     {
       name: cookieName,
-      value: await cmsSessionCookie(cookieName, githubId, accessToken),
+      value: await cmsSessionCookie(cookieName, githubId),
       domain: 'localhost',
       path: '/',
       httpOnly: true,
@@ -65,7 +61,7 @@ test('owner publishes content and a prior project 404 recovers without a new bui
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
   const browserSession = await context.request.get(new URL('/api/auth/session', baseURL).href);
   expect(browserSession.status()).toBe(200);
-  expect(await browserSession.text()).not.toContain(ownerToken);
+  expect(await browserSession.text()).not.toContain(pat);
   await expect(page.getByLabel('Choose a project')).toBeVisible();
   await editor.expectUniquePanels();
   const overridePath = process.env.CMS_FIXTURE_PORTFOLIO_OVERRIDE;

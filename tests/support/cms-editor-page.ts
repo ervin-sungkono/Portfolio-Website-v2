@@ -10,7 +10,7 @@ export class CmsEditorPage {
 
   async expectUniquePanels() {
     await expect(this.page.locator('.cms-editor')).toHaveCount(1);
-    for (const id of ['projects', 'site', 'categories', 'technologies', 'images']) {
+    for (const id of ['projects', 'site', 'categories', 'technologies', 'designs', 'images']) {
       await expect(this.page.locator(`#cms-editor-${id}-panel`)).toHaveCount(1);
     }
   }

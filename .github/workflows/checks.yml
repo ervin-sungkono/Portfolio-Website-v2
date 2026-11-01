@@ -25,8 +25,16 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_RECAPTCHA_KEY: review-test-key
+          GITHUB_PAT: fixture-public-token
+          GITHUB_REPO: web-assets
+          DRIBBBLE_TOKEN: fixture-dribbble-token
+          NODE_OPTIONS: --import=./tests/support/fixtures/public-runtime.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
         env:
           NEXT_PUBLIC_RECAPTCHA_KEY: review-test-key
+          GITHUB_PAT: fixture-public-token
+          GITHUB_REPO: web-assets
+          DRIBBBLE_TOKEN: fixture-dribbble-token
+          NODE_OPTIONS: --import=./tests/support/fixtures/public-runtime.mjs
       - run: npm run test:cms:fixture
