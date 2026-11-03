@@ -1,6 +1,19 @@
 # Verification and remaining work
 
-Updated for the GitHub and Dribbble CMS refactor on **1 November 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+Updated **3 November 2026 (Asia/Jakarta)**. This document separates current repository observations from historical application checks. [Architecture](architecture.md) owns implementation/operations; [UI behavior](responsive-and-motion.md) owns presentation and interaction rules.
+
+## Current web-assets remote observation — 3 November 2026
+
+- A fresh read-only GitHub connector check observed `web-assets/master` still at [`fac7bf3b0e595017fff282c1a64aa76d889a0ceb`](https://github.com/ervin-sungkono/web-assets/commit/fac7bf3b0e595017fff282c1a64aa76d889a0ceb). Re-reading `content/portfolio.json` and `content/project-index.json` at that ref showed schema version 2, 16 selected Dribbble shot IDs, and 17 project slugs.
+- The prior exact-commit checks of all 22 JSON documents, 83 blob hashes, media, schema/references, and source mappings remain applicable to this unchanged commit; those broader checks were not repeated on 3 November.
+
+## Browser drafts and project galleries — 3 November 2026
+
+- Node.js 24.22.1 application and test typechecks passed, as did **89/89** unit and integration tests, CSS lint, whole-repository formatting, and Git whitespace checks. ESLint passed with one existing contact-form effect warning. All **37** local Markdown links and fragments in the maintained guidance resolved.
+- An isolated CMS production build passed, followed by **13/13** Chromium workflows and **2/2** HTTP checks with simulated GitHub and Dribbble providers. The checks cover browser draft persistence and storage failures, the single-tab lock, private repository import, multiple staged images, one final commit, existing and new-project conflicts, repository or branch changes, design selection, cache-only retries, and on-demand public refresh. The editor checks include both themes, keyboard interaction, 320–1440px widths, and 200% root-font samples.
+- A separate isolated public production build passed **2/2** project-gallery browser checks and **14/14** focused project-route and cursor checks. The gallery checks used a real multi-image project to exercise no-JavaScript content, labeled controls, keyboard navigation through every image, and reduced motion. These focused checks do not establish full accessibility conformance or real-device behavior.
+- A read-only screenshot sweep of the running `localhost:3000` covered **26 routes**, including all 17 project pages and both recovery routes, at 320, 390, and 1440px in the light theme; eight representative routes were also captured in the dark theme at 390 and 1440px. Document-width checks at 320, 390, 820, 1024, and 1440px found no horizontal overflow. Representative pages were visually reviewed, and keyboard checks confirmed the skip-link focus and mobile menu Escape behavior. The fresh browser context showed the sign-in views for `/admin` and `/admin/import`; authenticated editor coverage came from the isolated fixture above. These screenshots are local review artifacts, not real-device, screen-reader, forced-colors, or actual browser-zoom checks.
+- The isolated browser fixtures use encrypted test sessions and simulated provider writes. Real GitHub OAuth, PAT-authorized publishing, Dribbble responses, and hosted ISR propagation remain unverified; no application deployment or live provider write was performed in this follow-up.
 
 ## GitHub and Dribbble CMS refactor — 1 November 2026
 
@@ -86,7 +99,7 @@ After cleanup, the Node.js 24 unit/service suite passed **32/32**, strict TypeSc
 
 The owner selected **isolated local workflow verification** for the CMS. The local environment has no CMS OAuth application or persistent content-source configuration. Browser tests use fake GitHub responses and encrypted fixture sessions; they do not establish real consent, token revocation, OAuth-authorized CMS API repository creation/writes, contribution-graph attribution, or hosted Vercel cache propagation. The separately authorized Git CLI migration and its read-back checks are recorded above.
 
-The single-owner MVP protects per-file blob versions. Simultaneous writes to different interdependent files (for example deleting a category while another tab adds that category to a project) are not a repository-wide transaction and can require manual reference repair. Use one publishing tab for taxonomy changes; atomic multi-file publication remains deferred rather than implying that target-file SHA checks prevent every cross-file race.
+The current final submission checks document SHAs and the branch revision, then updates the branch once with a commit containing the whole draft. A stale document or concurrent branch move returns a conflict for review; the browser draft remains available until the owner explicitly adopts the reviewed versions as its baseline or discards the draft. Local fixture coverage does not establish hosted GitHub race behavior.
 
 No merge, production promotion, DNS/domain update, production-secret update, or live email test was performed. Current image delivery remains unoptimized. Real browser zoom, assistive technology, forced colors, real devices, field performance, and production indexing retain the limits below.
 
@@ -133,13 +146,17 @@ Use Node.js 24 and the committed lockfile. Setup and browser commands are in [RE
 | `git diff --check`          | Whitespace in the relevant diff.                                                                                                                                  |
 | `npm run test:browser`      | Public Chromium regressions against a production build.                                                                                                           |
 | `npm run test:live`         | Public Chromium regressions against an existing localhost:3000 server; contact requests are mocked.                                                               |
-| `npm run test:cms:browser`  | Isolated GitHub CMS production build and browser workflow; replaces `.next` with a fixture build.                                                                 |
-| `npm run test:http:fixture` | Production HTTP checks against the isolated fixture server; replaces `.next` with a fixture build.                                                                |
-| `npm run test:cms:fixture`  | Runs the CMS browser and HTTP fixture checks together.                                                                                                            |
+| `npm run test:cms:browser`  | CMS production build and browser workflows in the checkout where the command is run; serves the fixture build on port 3104.                                       |
+| `npm run test:http:fixture` | Production HTTP boundary checks; builds and serves the fixture from the checkout where the command is run on port 3104.                                           |
+| `npm run test:cms:fixture`  | Runs the CMS browser and HTTP fixture checks together in the checkout where the command is run.                                                                   |
+
+The CMS fixture runner requires Node.js 24. Run it from an isolated copy if a development server is using that checkout's `.next`; it uses simulated GitHub/Dribbble state and encrypted fixture sessions.
 
 `.github/workflows/checks.yml` installs Node.js 24/dependencies and runs formatting, ESLint, CSS lint, application/test typechecking, Vitest, a dummy-CAPTCHA production build, Chromium installation, and the public and CMS fixture tests on pull requests. This describes the current workflow definition; inspect an actual run before claiming remote CI passed.
 
 ### Browser suite coverage
+
+The CMS browser workflows cover Web Locks-based single-tab editing, browser Cache Storage drafts across reloads, pending-write unload protection, no GitHub mutation while editing, multiple media-blob requests followed by one final commit, existing- and new-project conflict retention with explicit baseline review, repository/default-branch drift, private-repository import, cache-only retries after a pending refresh, and design-selection changes. These are focused flows; they do not exercise real OAuth, GitHub writes, or hosted cache propagation.
 
 | Spec in `tests/e2e/public` | Cases | Coverage                                                                                                                                                                |
 | -------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

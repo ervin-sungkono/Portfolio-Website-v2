@@ -1,6 +1,6 @@
 # Visual system, responsive layout, and motion
 
-Updated for the current component and hero structure on **31 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
+Updated for the current component and CMS behavior on **3 November 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
 
 ## Visual system
 
@@ -51,13 +51,17 @@ Preserve skip navigation, landmarks, heading order, keyboard access, visible foc
 
 Mobile navigation is a disclosure. Its toggle precedes its links in DOM and visual order; Escape closes it and returns focus to the toggle; focus leaving the header closes it. It does not use a modal focus trap. All links must remain reachable on short screens and with enlarged text.
 
-Theme labels describe the destination action and theme choice persists. Project actions include the project name and avoid redundant title/arrow links. Form fields retain associated labels, `aria-describedby` errors, first-error focus, polite status, and drafts on failure. Submission details live in [architecture](architecture.md#contact-integration).
+Theme labels describe the destination action and theme choice persists. Project actions include the project name and avoid redundant title/arrow links. Contact fields retain associated labels, `aria-describedby` errors, first-error focus, polite status, and drafts on failure; contact delivery behavior lives in [architecture](architecture.md#contact-integration). CMS editing behavior is described below and in [architecture](architecture.md#github-cms).
 
 For UI changes, exercise both themes and keyboard navigation at **320, 390, 820, 1024, and 1440px**, plus text enlargement/reflow, short viewports, coarse pointers, reduced motion, and no JavaScript. Root-font enlargement is distinct from actual browser zoom. Automated results do not establish full accessibility conformance.
 
 ## CMS editor
 
-The owner workspace uses the existing rem tokens and themes, native labelled controls, wrapping navigation buttons, and content-fit grids. Projects, site profile, categories, technologies, and images are structured forms with shared Zod validation. Repository import reuses the project and image controls; a private-source warning precedes publishing or uploading. Designs use labelled show/hide checkboxes, with unavailable selected IDs still removable. Invalid fields expose associated messages and receive first-error focus; publish/upload operations prevent duplicates and retain drafts after failure. Dirty drafts retain their originally loaded blob SHA across refreshes. Explicit conflict reload discards only the selected editor section. The workspace adds no decorative motion, modal focus trap, or wheel handling. Check the dated [verification](verification.md) before inferring responsive/accessibility coverage.
+The owner workspace uses the existing rem tokens and themes, native labelled controls, wrapping navigation buttons, and content-fit grids. Projects, site profile, categories, technologies, and images are structured forms with shared Zod validation. Repository import reuses the project and image controls; a private-source warning precedes saving private-repository metadata or staging its images. Designs use labelled show/hide checkboxes, with unavailable selected IDs still removable.
+
+Per-section saves keep project, site-profile, category, and technology changes in browser Cache Storage; design toggles save to that same draft automatically. Image staging stores files and paths in the browser draft, supports multiple files, and lets the owner remove a staged image before submission. The draft restores after a reload in the same browser profile, subject to browser quota, eviction, and clearing. Editing requires a secure context and Web Locks support; only one `/admin` or `/admin/import` tab per origin may edit at a time. A browser before-unload prompt warns while a draft write is pending or needs retry. **Submit all changes** asks for confirmation, stages the remaining image blobs, and sends the full draft in one commit. A SHA conflict keeps the draft and presents the current repository version beside it; the owner must choose **Use reviewed versions as baseline** before submitting the revised draft. A cache-only retry after a successful commit does not submit content again.
+
+Invalid fields expose associated messages and receive first-error focus. The workspace adds no decorative motion, modal focus trap, or wheel handling. Check the dated [verification](verification.md) before inferring responsive/accessibility coverage.
 
 ## Motion boundaries
 
@@ -67,7 +71,7 @@ Native scrolling controls the document. There is no section snapping, wheel inte
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Reveal`             | One entry animation: 10px travel over 0.35 seconds. Focus completes an active reveal; reduced motion skips it. Content is visible without JavaScript. |
 | `PointerSurface`     | Bounded image tilt up to 4 degrees, using springs for a desktop mouse with fine-pointer/hover capability. Pointer exit/cancel returns to neutral.     |
-| `MotionEnhancements` | Scroll progress and conditional cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.                           |
+| `MotionEnhancements` | Scroll progress and conditional public-page cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.               |
 | `ScrollHero`         | Desktop content-fit sticky scene with a reversible project crossfade.                                                                                 |
 | `ParallaxImage`      | Bounded image-only travel inside a clipped frame, with matching overscan.                                                                             |
 | `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |
@@ -98,6 +102,6 @@ On eligible desktop fine-pointer/hover screens, the idle cursor has an **8px plu
 
 The center follows raw pointer Motion values without interpolation, position springs, or delayed movement. Shape changes take 140ms; target-frame morphs take 160ms. A requestAnimationFrame loop follows live target geometry while hovered or completing a transition, with scroll/resize refreshes and cleanup. Continuous coordinates do not enter React state.
 
-The native cursor is hidden only while the replacement is active. Text-entry fields, contenteditable regions, disabled controls, iframes, pointer exit/cancel, window blur, document hiding, reduced motion, and cleanup restore it. Small/coarse-pointer and no-JavaScript contexts retain native interaction. The overlay cannot capture clicks and is hidden from assistive technology. The `html` background token keeps difference blending visible against the isolated body's painted background in both themes.
+The native cursor is hidden only while the replacement is active. Admin routes always retain the native cursor. Text-entry fields, contenteditable regions, disabled controls, iframes, pointer exit/cancel, window blur, document hiding, reduced motion, and cleanup restore it. Small/coarse-pointer and no-JavaScript contexts retain native interaction. The overlay cannot capture clicks and is hidden from assistive technology. The `html` background token keeps difference blending visible against the isolated body's painted background in both themes.
 
 Historical browser coverage and the limits of fixture-based image reviews are recorded once in [verification](verification.md). Bounded engine settings are safeguards rather than measured battery, accessibility, or field-performance results.

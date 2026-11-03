@@ -82,10 +82,18 @@ The documentation was consolidated on **23 October 2026 (Asia/Jakarta)**. Each t
 
 ## Updating content
 
-Portfolio content is read from the configured public GitHub repository at build time and after on-demand revalidation. The owner workspace edits projects, homepage copy, taxonomy, and the selected Dribbble shot IDs; `/admin/import` maps accessible GitHub repositories into project drafts. Profile, skills, project walkthroughs, and the ordered design selection are in `content/portfolio.json`. Design titles, links, and images come from Dribbble at runtime. There is no checked-in application data fallback. After editing content directly on GitHub, use **Refresh public content** in the owner workspace.
+Portfolio content is read from the configured public GitHub repository at build time and after on-demand revalidation. The owner workspace edits projects, homepage copy, taxonomy, and the selected Dribbble shot IDs; `/admin/import` maps accessible GitHub repositories into project drafts. Profile, skills, project walkthroughs, and the ordered design selection are in `content/portfolio.json`. Design titles, links, and images come from Dribbble at runtime. There is no checked-in application data fallback. For direct GitHub edits to project files, update `content/project-index.json` when adding or removing a project, then use **Refresh public content**; refresh only invalidates caches and does not rebuild the index.
+
+Edits in the owner workspace stay in this browser's Cache Storage until **Submit all changes**. They remain after a reload in the same browser profile, but are not uploaded or synchronized to another browser or device before submission. CMS editing requires a secure browser context with Web Locks support and allows one `/admin` or `/admin/import` tab per origin at a time. A browser prompt warns before leaving while a draft save is pending or still needs a retry. Browser storage quotas, eviction, or clearing site data can still remove a draft. The final action confirms and publishes the saved content and selected images in one Git commit. A content conflict keeps the local draft available for review; after a commit succeeds, **Retry public refresh** only retries cache invalidation and does not submit another commit.
 
 Follow [GitHub CMS setup and operation](docs/architecture.md#github-cms) for credentials, initialization, importing, and publishing. For a legacy content review, use the [LLM mapping instructions](docs/web-assets-migration-agent.md). The content repository must be separate from the application and must not be a Vercel deployment source. Content publishes invalidate ISR without redeploying.
 
-Run `npm run test:cms:browser` for the isolated production CMS browser workflow, `npm run test:http:fixture` for its real HTTP boundary checks, or `npm run test:cms:fixture` for both. They use simulated GitHub storage and encrypted test sessions, never a real GitHub write or email. Each command replaces the local `.next` build with a fixture build; use an isolated checkout while a development server is running and rebuild normally afterward.
+Run `npm run test:cms:browser` for the isolated production CMS browser workflow, `npm run test:http:fixture` for its real HTTP boundary checks, or `npm run test:cms:fixture` for both. They use simulated GitHub storage and encrypted test sessions, never a real GitHub write or email. The runner builds `.next` in the checkout where it is invoked and uses port 3104. If a development server is using that checkout's `.next`, run the fixture from an isolated copy and rebuild normally afterward.
+
+These commands require Node.js 24. For example, copy the repository to `artifacts/cms-verification`, open a shell in that copy, then run:
+
+```powershell
+npm run test:cms:fixture
+```
 
 Contact variables and provider behavior are documented in [contact integration](docs/architecture.md#contact-integration) and `.env.example`. Professional content expansion remains deferred. Read [AGENTS.md](AGENTS.md) before implementation work.

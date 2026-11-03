@@ -1,6 +1,6 @@
 # Portfolio agent handoff
 
-Updated **25 October 2026 (Asia/Jakarta)**. Continue from `dev`, where rework PR #2 has merged; inspect live repository state before continuing.
+Updated **3 November 2026 (Asia/Jakarta)**. Continue from `dev`, where rework PR #2 has merged; inspect live repository state before continuing.
 
 ## Repository and branch
 
@@ -58,6 +58,7 @@ Documentation-only work needs formatting, local link/fragment validation, and wh
 - Preserve distinct route descriptions and matching social metadata. Filtered URLs canonicalize to the unfiltered collection. Structured data must match visible verified facts and be serialized safely.
 - Write specific, natural descriptions without invented metrics, seniority, personal team contributions, or ranking promises. Professional content expansion remains deferred until requested.
 - The single-owner CMS uses GitHub OAuth for sign-in, a server-side GitHub PAT for the owner identity and repository operations, and a server-side Dribbble token for design details. Content lives in a separate public repository with shared schemas; `src/lib/cms` owns auth/storage/publishing/cache boundaries, and UI never calls provider APIs directly. There is no explicit `server-only` npm dependency; Next.js resolves the marker. Do not add a database, separate backend, object-storage provider, multi-user roles, or speculative layers.
+- CMS edits and staged images stay in browser Cache Storage under a single-tab Web Lock until final submission creates one GitHub commit. Bind the draft to its repository and branch, preserve it on conflicts, and keep cache-refresh retries free of Git writes. See [architecture](docs/architecture.md#github-cms).
 - `web-assets/master` contains the migrated CMS layout; `legacy` preserves the prior tree. Keep compatibility `images/` and `icons/` URLs until the application cutover is verified. Migration refs and checks are in `docs/verification.md`; [LLM mapping instructions](docs/web-assets-migration-agent.md) describe future audits. No converter or migration utility is maintained.
 - Preserve the project response boundary in `src/proxy.ts`: Proxy uses the cached public reader via `/api/content/project`, and missing projects return complete 404/noindex/no-store HTML. Replacing it with a runtime `notFound()` or PPR rewrite alone regresses JavaScript-disabled recovery. Internal origin comes from trusted platform configuration, not a request Host header.
 
