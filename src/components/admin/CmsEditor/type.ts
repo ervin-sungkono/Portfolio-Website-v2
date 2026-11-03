@@ -16,7 +16,6 @@ export type EditorMessage = {
   tone: 'success' | 'error' | 'conflict';
   text: string;
   commitUrl?: string;
-  cache?: 'refreshed' | 'pending';
 };
 
 export type LoadState = 'loading' | 'ready' | 'needs-initialization' | 'error';

@@ -849,7 +849,6 @@ export function CmsEditor() {
             ? 'The commit succeeded. Public refresh is pending; retry it without submitting again.'
             : 'All changes were submitted in one commit. Public content is refreshing.',
         commitUrl,
-        ...(pendingRefresh && { cache: 'pending' as const }),
       });
       loadedSnapshotRef.current = false;
       setDiscardVersions(
@@ -1012,7 +1011,6 @@ export function CmsEditor() {
       setFinalMessage({
         tone: 'error',
         text: `${error instanceof Error ? error.message : 'Public content refresh failed.'} You can retry without creating another commit.`,
-        ...(getDraft().pendingRefresh && { cache: 'pending' as const }),
       });
     } finally {
       busyRef.current = false;
@@ -1222,7 +1220,6 @@ export function CmsEditor() {
               <CmsMessage
                 message={messages.projects}
                 onDismiss={() => clearSectionMessage('projects')}
-                pending={pending}
               />
             }
             onSelectedSlugChange={selectProject}
@@ -1240,11 +1237,7 @@ export function CmsEditor() {
             active={activeSection === 'site'}
             pending={pending}
             feedback={
-              <CmsMessage
-                message={messages.site}
-                onDismiss={() => clearSectionMessage('site')}
-                pending={pending}
-              />
+              <CmsMessage message={messages.site} onDismiss={() => clearSectionMessage('site')} />
             }
             onSave={saveSite}
             onClearMessage={() => clearSectionMessage('site')}
@@ -1258,7 +1251,6 @@ export function CmsEditor() {
               <CmsMessage
                 message={messages.categories}
                 onDismiss={() => clearSectionMessage('categories')}
-                pending={pending}
               />
             }
             onSave={saveCategories}
@@ -1273,7 +1265,6 @@ export function CmsEditor() {
               <CmsMessage
                 message={messages.technologies}
                 onDismiss={() => clearSectionMessage('technologies')}
-                pending={pending}
               />
             }
             onSave={saveTechnologies}
@@ -1287,7 +1278,6 @@ export function CmsEditor() {
               <CmsMessage
                 message={messages.designs}
                 onDismiss={() => clearSectionMessage('designs')}
-                pending={pending}
               />
             }
             onClearMessage={() => clearSectionMessage('designs')}
@@ -1304,7 +1294,6 @@ export function CmsEditor() {
               <CmsMessage
                 message={messages.images}
                 onDismiss={() => clearSectionMessage('images')}
-                pending={pending}
               />
             }
             onUpload={uploadImage}
@@ -1312,12 +1301,7 @@ export function CmsEditor() {
           />
         </>
       )}
-      <CmsMessage
-        message={finalMessage}
-        onDismiss={() => setFinalMessage(undefined)}
-        onRetry={() => void refreshPublicContent()}
-        pending={pending}
-      />
+      <CmsMessage message={finalMessage} onDismiss={() => setFinalMessage(undefined)} />
       {confirmationDialog}
     </section>
   );

@@ -262,11 +262,11 @@ export function GitHubImport() {
   );
 
   function showMessage(next: EditorMessage) {
-    setMessage((current) => (current?.cache === 'pending' ? current : next));
+    setMessage(next);
   }
 
   function clearMessage() {
-    setMessage((current) => (current?.cache === 'pending' ? current : undefined));
+    setMessage(undefined);
   }
 
   const loadSnapshot = useCallback(async () => {
@@ -382,7 +382,9 @@ export function GitHubImport() {
       !draftReady ||
       !snapshot ||
       !selectedRepository ||
-      (!formIsDirty && (alreadyStaged || alreadyInSnapshot)) ||
+      (!formIsDirty &&
+        (Boolean(selectedProjectSlug) ||
+          newProjectSlug.trim() === slugFromRepository(selectedRepository.name))) ||
       (selectedRepository.private && !privateAcknowledged)
     ) {
       return;
@@ -740,7 +742,7 @@ export function GitHubImport() {
     }
   }
 
-  const projectFeedback = <CmsMessage message={message} pending={isSaving} />;
+  const projectFeedback = <CmsMessage message={message} onDismiss={clearMessage} />;
 
   return (
     <div
@@ -997,7 +999,9 @@ export function GitHubImport() {
             )}
             active
             pending={isUploading || isSaving}
-            feedback={<CmsMessage message={uploadMessage} pending={isUploading} />}
+            feedback={
+              <CmsMessage message={uploadMessage} onDismiss={() => setUploadMessage(undefined)} />
+            }
             onUpload={uploadImage}
             onClearMessage={() => setUploadMessage(undefined)}
           />
