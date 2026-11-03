@@ -2,7 +2,7 @@ import { safeCommitUrl } from '../utils';
 import type { CmsMessageProps } from './type';
 import './style.css';
 
-export function CmsMessage({ message, onRetry, onDismiss, pending = false }: CmsMessageProps) {
+export function CmsMessage({ message, onDismiss }: CmsMessageProps) {
   if (!message) {
     return null;
   }
@@ -17,16 +17,6 @@ export function CmsMessage({ message, onRetry, onDismiss, pending = false }: Cms
         <a href={commitUrl} target="_blank" rel="noreferrer">
           View GitHub commit
         </a>
-      )}
-      {message.cache === 'pending' && onRetry && (
-        <button
-          type="button"
-          className="cms-editor-text-button"
-          onClick={onRetry}
-          disabled={pending}
-        >
-          Retry public refresh
-        </button>
       )}
       {onDismiss && (
         <button
