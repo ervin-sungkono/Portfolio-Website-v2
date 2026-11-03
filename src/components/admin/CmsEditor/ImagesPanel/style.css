@@ -1,14 +1,18 @@
 .cms-editor .cms-editor-images-panel {
   .cms-editor-upload-form {
     max-width: 44rem;
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-6);
 
     > fieldset {
       gap: var(--space-5);
     }
   }
 
-  .cms-editor-upload-result {
+  .cms-editor-images-status {
+    margin: 0 0 var(--space-5);
+  }
+
+  .cms-editor-staged-images {
     display: grid;
     gap: var(--space-4);
     min-width: 0;
@@ -20,20 +24,41 @@
       font-size: var(--text-title);
     }
 
-    > a {
-      min-height: 2.75rem;
-      display: inline-flex;
-      align-items: center;
-      width: fit-content;
-      color: var(--accent);
+    ul {
+      display: grid;
+      gap: var(--space-4);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      display: grid;
+      gap: var(--space-4);
+      min-width: 0;
+      padding: var(--space-4);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--background);
+    }
+
+    .cms-editor-staged-image-info {
+      display: grid;
+      gap: var(--space-2);
+      min-width: 0;
+    }
+
+    .cms-editor-staged-image-info > span {
+      color: var(--muted);
       font-size: var(--text-sm);
-      font-weight: 700;
-      text-decoration: underline;
-      text-underline-offset: 3px;
+    }
+
+    code {
+      overflow-wrap: anywhere;
     }
   }
 
   .cms-editor-technology-picker {
-    width: min(100%, 18rem);
+    width: min(100%, 22rem);
   }
 }

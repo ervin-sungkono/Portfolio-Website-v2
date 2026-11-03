@@ -1,7 +1,32 @@
+.cms-editor .cms-editor-site-panel {
+  .cms-editor-form > fieldset {
+    gap: var(--space-4);
+  }
+
+  .cms-editor-grid {
+    gap: var(--space-4);
+  }
+
+  .cms-editor-choice-group {
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .cms-editor-stack {
+    gap: var(--space-3);
+  }
+
+  .cms-editor-social-row {
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+}
+
 @media (width >= 48rem) {
   .cms-editor .cms-editor-site-panel {
     .cms-editor-social-row {
-      grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+      grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1.3fr) auto;
     }
   }
 }

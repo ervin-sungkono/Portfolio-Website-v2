@@ -165,10 +165,12 @@ export function CategoriesPanel({
         </fieldset>
         <div className="cms-editor-actions">
           <button className="button" type="submit" disabled={pending}>
-            Save categories
+            Save categories draft
           </button>
           {formState.isDirty && (
-            <span className="cms-editor-draft-state">Unsaved category changes</span>
+            <span className="cms-editor-draft-state">
+              Category changes are in your browser draft.
+            </span>
           )}
         </div>
       </form>

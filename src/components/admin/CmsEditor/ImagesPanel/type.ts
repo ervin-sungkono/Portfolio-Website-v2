@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { ProjectDocument, Technologies } from '@/lib/cms/schemas';
-import type { ImageUploadResult } from '../type';
+
+export type ImageUploadTarget = {
+  kind: 'project' | 'technology';
+  projectSlug?: string;
+};
 
 export type ImagesPanelProps = {
   projectForm: UseFormReturn<ProjectDocument>;
@@ -9,10 +13,13 @@ export type ImagesPanelProps = {
   selectedProjectSlug: string;
   newProjectSlug: string;
   projectOnly?: boolean;
+  canUpload?: boolean;
   active: boolean;
   pending: boolean;
   feedback: ReactNode;
-  result?: ImageUploadResult;
-  onUpload: (file: File, slug: string, scope: 'project' | 'technology') => Promise<void>;
+  onUpload: (
+    file: File,
+    target: ImageUploadTarget,
+  ) => Promise<{ path: string; alreadyExists?: boolean }>;
   onClearMessage: () => void;
 };

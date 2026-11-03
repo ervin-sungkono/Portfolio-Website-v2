@@ -1,0 +1,31 @@
+.cms-confirm-dialog {
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: var(--space-6);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background: var(--surface-high);
+  color: var(--text);
+  overflow: auto;
+
+  &::backdrop {
+    background: rgb(0 0 0 / 55%);
+  }
+
+  h2 {
+    font-size: var(--text-heading-small);
+  }
+
+  p {
+    color: var(--muted);
+    margin-block: var(--space-4) var(--space-6);
+    overflow-wrap: anywhere;
+  }
+}
+
+.cms-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

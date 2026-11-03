@@ -3,17 +3,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import {
   projectSchema,
   technologiesSchema,
   type ProjectDocument,
   type Technologies,
 } from '@/lib/cms/schemas';
+import { useConfirmDialog } from '../ConfirmDialog';
+import { useCmsDraft } from '../CmsDraftProvider';
+import type { CmsDraft } from '../CmsDraftProvider/type';
+import { applyDraft, repositoryKey, stageProject } from '../CmsEditor/draft';
 import { CmsMessage } from '../CmsEditor/CmsMessage';
 import { ImagesPanel } from '../CmsEditor/ImagesPanel';
 import { ProjectPanel } from '../CmsEditor/ProjectPanel';
-import type { CmsSnapshot, EditorMessage, ImageUploadResult } from '../CmsEditor/type';
+import type { CmsSnapshot, EditorMessage } from '../CmsEditor/type';
 import { errorFrom, parseSnapshot, readJson } from '../CmsEditor/response';
 import type { ImportRepository } from './type';
 import '../CmsEditor/style.css';
@@ -129,25 +133,74 @@ function formatUpdatedAt(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
-function base64Content(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      const separator = result.indexOf(',');
-      if (separator < 0) {
-        reject(new Error('The image could not be read. Choose it again and retry.'));
-        return;
-      }
-      resolve(result.slice(separator + 1));
-    };
-    reader.onerror = () =>
-      reject(new Error('The image could not be read. Choose it again and retry.'));
-    reader.readAsDataURL(file);
-  });
+function withDraftNewProject(snapshot: CmsSnapshot, draft: CmsDraft) {
+  if (
+    !draft.newProject ||
+    snapshot.projects.some((project) => project.slug === draft.newProject?.slug)
+  ) {
+    return snapshot;
+  }
+  return {
+    ...snapshot,
+    projects: [
+      ...snapshot.projects,
+      { slug: draft.newProject.slug, data: draft.newProject.data, sha: '' },
+    ],
+  };
+}
+
+function projectSlugIsTaken(
+  snapshot: CmsSnapshot | null,
+  draft: CmsDraft,
+  slug: string,
+  repositoryId: number,
+) {
+  return Boolean(
+    snapshot?.projects.some((project) => project.slug === slug) ||
+      draft.projects.upsert.some((project) => project.slug === slug) ||
+      (draft.newProject?.slug === slug &&
+        draft.newProject.data.githubRepositoryId !== repositoryId),
+  );
+}
+
+function stageImportedProject(
+  draft: CmsDraft,
+  slug: string,
+  expectedSha: string | null,
+  data: ProjectDocument,
+  isNewProject: boolean,
+): CmsDraft {
+  if (!isNewProject) {
+    const next = stageProject(draft, slug, expectedSha, data);
+    return draft.newProject?.slug === slug ? { ...next, newProject: undefined } : next;
+  }
+
+  const imported = { slug, data };
+  if (draft.newProject && JSON.stringify(draft.newProject) === JSON.stringify(imported)) {
+    return draft;
+  }
+
+  let next = draft;
+  if (
+    draft.newProject &&
+    draft.newProject.slug !== slug &&
+    draft.newProject.data.githubRepositoryId !== data.githubRepositoryId
+  ) {
+    next = stageProject(next, draft.newProject.slug, null, draft.newProject.data);
+  }
+  if (
+    draft.newProject?.slug === slug &&
+    draft.newProject.data.githubRepositoryId !== data.githubRepositoryId
+  ) {
+    return draft;
+  }
+  return { ...next, newProject: imported };
 }
 
 export function GitHubImport() {
+  const draftStore = useCmsDraft();
+  const { get: getDraft, ready: draftReady, update: updateDraft } = draftStore;
+  const { confirm, confirmationDialog } = useConfirmDialog();
   const form = useForm<ProjectDocument>({
     resolver: zodResolver(projectSchema),
     defaultValues: emptyProject(),
@@ -168,20 +221,45 @@ export function GitHubImport() {
   const [selectedProjectSlug, setSelectedProjectSlug] = useState('');
   const [newProjectSlug, setNewProjectSlug] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [isRetryingRefresh, setIsRetryingRefresh] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<ImageUploadResult>();
   const [uploadMessage, setUploadMessage] = useState<EditorMessage>();
   const [privateAcknowledged, setPrivateAcknowledged] = useState(false);
   const [message, setMessage] = useState<EditorMessage>();
   const privateAcknowledgement = useRef<HTMLInputElement>(null);
   const snapshotRef = useRef<CmsSnapshot | null>(null);
+  const autoSavedProjectRef = useRef('');
 
   const selectedRepository = useMemo(
     () => repositories.find((repository) => repository.id === selectedRepositoryId) ?? null,
     [repositories, selectedRepositoryId],
   );
   const formIsDirty = form.formState.isDirty;
+  const formValues = useWatch({ control: form.control }) as ProjectDocument;
+
+  const persistProjectDraft = useCallback(
+    async (data: ProjectDocument) => {
+      if (!selectedRepositoryId) {
+        return false;
+      }
+      const slug = selectedProjectSlug || newProjectSlug.trim();
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+        return false;
+      }
+      const currentDraft = getDraft();
+      if (
+        !selectedProjectSlug &&
+        projectSlugIsTaken(snapshotRef.current, currentDraft, slug, data.githubRepositoryId ?? 0)
+      ) {
+        return false;
+      }
+      const current = snapshotRef.current?.projects.find((project) => project.slug === slug);
+      const expectedSha = selectedProjectSlug ? current?.sha || null : null;
+      return updateDraft((draft) =>
+        stageImportedProject(draft, slug, expectedSha, data, !selectedProjectSlug),
+      );
+    },
+    [getDraft, newProjectSlug, selectedProjectSlug, selectedRepositoryId, updateDraft],
+  );
 
   function showMessage(next: EditorMessage) {
     setMessage((current) => (current?.cache === 'pending' ? current : next));
@@ -192,6 +270,9 @@ export function GitHubImport() {
   }
 
   const loadSnapshot = useCallback(async () => {
+    if (!draftReady) {
+      return null;
+    }
     try {
       const response = await fetch('/api/cms', { cache: 'no-store' });
       const body = await readJson(response);
@@ -204,8 +285,23 @@ export function GitHubImport() {
       if (!response.ok || error) {
         throw new Error(error || `The content snapshot could not be loaded (${response.status}).`);
       }
-      const next = parseSnapshot(body);
-      snapshotRef.current = next;
+      const remote = parseSnapshot(body);
+      const key = repositoryKey(remote);
+      const storedDraft = getDraft();
+      if (storedDraft.repository && storedDraft.repository !== key) {
+        throw new Error(
+          'The saved browser draft belongs to a different content repository. Return to that account or discard the draft before importing.',
+        );
+      }
+      if (
+        !storedDraft.repository &&
+        !(await updateDraft((current) => ({ ...current, repository: key })))
+      ) {
+        throw new Error('The browser could not save the draft. Check site storage and retry.');
+      }
+      const currentDraft = getDraft();
+      const next = withDraftNewProject(applyDraft(remote, currentDraft), currentDraft);
+      snapshotRef.current = remote;
       setSnapshot(next);
       setSnapshotError('');
       setSnapshotState('ready');
@@ -217,7 +313,7 @@ export function GitHubImport() {
       );
       return null;
     }
-  }, []);
+  }, [draftReady, getDraft, updateDraft]);
 
   const loadRepositories = useCallback(async (manual = false) => {
     if (manual) {
@@ -254,45 +350,114 @@ export function GitHubImport() {
   }, []);
 
   useEffect(() => {
-    void loadSnapshot();
-    void loadRepositories();
-  }, [loadRepositories, loadSnapshot]);
+    if (!draftReady) {
+      return;
+    }
+    let active = true;
+    queueMicrotask(() => {
+      if (active) {
+        void loadSnapshot();
+        void loadRepositories();
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [draftReady, loadRepositories, loadSnapshot]);
 
-  function hasUnsubmittedDraft() {
-    if (!selectedRepositoryId) {
-      return false;
+  useEffect(() => {
+    const slug = selectedProjectSlug || newProjectSlug.trim();
+    const alreadyStaged =
+      draftStore.draft.projects.upsert.some(
+        (project) =>
+          project.slug === slug && project.data.githubRepositoryId === selectedRepository?.id,
+      ) ||
+      (draftStore.draft.newProject?.slug === slug &&
+        draftStore.draft.newProject.data.githubRepositoryId === selectedRepository?.id);
+    const alreadyInSnapshot = snapshot?.projects.some(
+      (project) =>
+        project.slug === slug && project.data.githubRepositoryId === selectedRepository?.id,
+    );
+    if (
+      !draftReady ||
+      !snapshot ||
+      !selectedRepository ||
+      (!formIsDirty && (alreadyStaged || alreadyInSnapshot)) ||
+      (selectedRepository.private && !privateAcknowledged)
+    ) {
+      return;
     }
-    if (formIsDirty) {
-      return true;
-    }
-    if (!selectedProjectSlug) {
-      return true;
-    }
-    return false;
-  }
+    void persistProjectDraft(formValues).then((saved) => {
+      if (!saved || alreadyStaged || alreadyInSnapshot) {
+        return;
+      }
+      const key = `${selectedRepository.id}:${slug}`;
+      if (autoSavedProjectRef.current !== key) {
+        autoSavedProjectRef.current = key;
+        setMessage({
+          tone: 'success',
+          text: 'Project changes are saved in this browser draft. Submit all changes in the portfolio editor to write them to GitHub.',
+        });
+      }
+    });
+  }, [
+    draftReady,
+    draftStore.draft,
+    formIsDirty,
+    formValues,
+    persistProjectDraft,
+    privateAcknowledged,
+    selectedRepository,
+    selectedProjectSlug,
+    newProjectSlug,
+    snapshot,
+  ]);
 
-  function chooseRepository(repositoryId: number) {
+  async function chooseRepository(repositoryId: number) {
     if (repositoryId === selectedRepositoryId) {
       return;
     }
-    if (
-      hasUnsubmittedDraft() &&
-      !window.confirm('Discard the current project draft and switch repositories?')
-    ) {
-      return;
+    if (selectedRepositoryId !== null && formIsDirty) {
+      const saved =
+        selectedRepository?.private && !privateAcknowledged
+          ? false
+          : await persistProjectDraft(form.getValues());
+      if (!saved && !selectedRepository?.private) {
+        showMessage({
+          tone: 'error',
+          text: 'The current project draft could not be saved in this browser. Resolve the storage issue before switching repositories.',
+        });
+        return;
+      }
+      if (
+        !(await confirm({
+          title: 'Switch GitHub repository?',
+          description: saved
+            ? 'The current project draft is saved in this browser and will remain available in the portfolio editor. Switch to the selected repository?'
+            : 'The private repository warning has not been acknowledged, so the current form changes are not in the browser draft. Switching will discard those changes. Continue?',
+          confirmLabel: 'Switch repository',
+        }))
+      ) {
+        return;
+      }
     }
     const repository = repositories.find((item) => item.id === repositoryId);
     if (!repository || !snapshot) {
       return;
     }
 
-    const mapped = snapshot.projects.filter(
+    const currentDraft = getDraft();
+    const currentSnapshot = withDraftNewProject(
+      applyDraft(snapshotRef.current ?? snapshot, currentDraft),
+      currentDraft,
+    );
+    setSnapshot(currentSnapshot);
+    const mapped = currentSnapshot.projects.filter(
       (project) => project.data.githubRepositoryId === repository.id,
     );
     setSelectedRepositoryId(repository.id);
     setPrivateAcknowledged(false);
     clearMessage();
-    setUploadResult(undefined);
     setUploadMessage(undefined);
     if (mapped.length > 1) {
       setSelectedProjectSlug('');
@@ -301,6 +466,24 @@ export function GitHubImport() {
       showMessage({
         tone: 'error',
         text: 'More than one project already uses this GitHub repository ID. Resolve the duplicate mapping in the project editor before continuing.',
+      });
+      return;
+    }
+    if (
+      !mapped.length &&
+      projectSlugIsTaken(
+        snapshotRef.current,
+        currentDraft,
+        slugFromRepository(repository.name),
+        repository.id,
+      )
+    ) {
+      setSelectedProjectSlug('');
+      setNewProjectSlug(slugFromRepository(repository.name));
+      form.reset(suggestionsFromRepository(repository));
+      showMessage({
+        tone: 'error',
+        text: 'A project with this URL slug already exists. Choose a different slug before staging this repository.',
       });
       return;
     }
@@ -315,21 +498,38 @@ export function GitHubImport() {
     form.reset(suggestionsFromRepository(repository));
   }
 
-  function chooseProject(slug: string) {
+  async function chooseProject(slug: string) {
     if (!snapshot || !selectedRepository) {
       return;
     }
     if (slug === selectedProjectSlug) {
       return;
     }
-    if (
-      (formIsDirty || !selectedProjectSlug) &&
-      !window.confirm('Discard the current project draft and choose a different project?')
-    ) {
-      return;
+    if (formIsDirty) {
+      const saved =
+        selectedRepository.private && !privateAcknowledged
+          ? false
+          : await persistProjectDraft(form.getValues());
+      if (!saved && !selectedRepository.private) {
+        showMessage({
+          tone: 'error',
+          text: 'The current project draft could not be saved in this browser. Resolve the storage issue before choosing another project.',
+        });
+        return;
+      }
+      if (
+        !(await confirm({
+          title: 'Choose a different project?',
+          description: saved
+            ? 'The current project draft is saved in this browser and will remain available in the portfolio editor.'
+            : 'The private repository warning has not been acknowledged, so the current form changes are not in the browser draft. Switching will discard those changes.',
+          confirmLabel: 'Choose project',
+        }))
+      ) {
+        return;
+      }
     }
     clearMessage();
-    setUploadResult(undefined);
     setUploadMessage(undefined);
     if (!slug) {
       setSelectedProjectSlug('');
@@ -337,7 +537,13 @@ export function GitHubImport() {
       form.reset(suggestionsFromRepository(selectedRepository));
       return;
     }
-    const project = snapshot.projects.find((entry) => entry.slug === slug);
+    const currentDraft = getDraft();
+    const currentSnapshot = withDraftNewProject(
+      applyDraft(snapshotRef.current ?? snapshot, currentDraft),
+      currentDraft,
+    );
+    setSnapshot(currentSnapshot);
+    const project = currentSnapshot.projects.find((entry) => entry.slug === slug);
     if (!project) {
       showMessage({ tone: 'error', text: 'That project is no longer in the loaded snapshot.' });
       return;
@@ -345,13 +551,16 @@ export function GitHubImport() {
     if (
       project.data.githubRepositoryId !== null &&
       project.data.githubRepositoryId !== selectedRepository.id &&
-      !window.confirm(
-        'This project is mapped to a different GitHub repository. Replace its mapping? Project fields will be kept for review.',
-      )
+      !(await confirm({
+        title: 'Replace this project mapping?',
+        description:
+          'The project is mapped to another GitHub repository. Replace that mapping in the browser draft and review the project fields before submitting?',
+        confirmLabel: 'Replace mapping',
+      }))
     ) {
       return;
     }
-    const duplicate = snapshot.projects.some(
+    const duplicate = currentSnapshot.projects.some(
       (entry) =>
         entry.slug !== project.slug && entry.data.githubRepositoryId === selectedRepository.id,
     );
@@ -411,74 +620,40 @@ export function GitHubImport() {
     });
   }
 
-  async function uploadImage(file: File, slug: string, scope: 'project' | 'technology') {
-    if (!selectedRepository || !snapshot || scope !== 'project') {
-      return;
+  async function uploadImage(
+    file: File,
+    target: { kind: 'project' | 'technology'; projectSlug?: string },
+  ) {
+    if (!selectedRepository || !snapshot || target.kind !== 'project') {
+      throw new Error('Choose a GitHub repository before staging a project image.');
     }
     if (selectedRepository.private && !privateAcknowledged) {
-      setUploadMessage({
-        tone: 'error',
-        text: 'Review and acknowledge the public repository warning before uploading an image for this private repository.',
-      });
       privateAcknowledgement.current?.focus();
-      return;
+      throw new Error(
+        'Review and acknowledge the public repository warning before staging an image for this private repository.',
+      );
     }
 
     setIsUploading(true);
-    setUploadResult(undefined);
     setUploadMessage(undefined);
     try {
-      const content = await base64Content(file);
-      const response = await fetch('/api/cms/media', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, filename: file.name, mime: file.type, content }),
-      });
-      const body = await readJson(response);
-      const error = errorFrom(body);
-      if (!response.ok || error || typeof body.path !== 'string') {
-        throw new Error(
-          error ||
-            `The image could not be uploaded (${response.status}). Choose it again and retry.`,
-        );
-      }
-      const result: ImageUploadResult = {
-        path: body.path,
-        commitUrl: typeof body.commitUrl === 'string' ? body.commitUrl : '',
-        scope: 'project',
-        slug,
-      };
-      setUploadResult(result);
-      const refreshed = await loadSnapshot();
-      setUploadMessage({
-        tone: refreshed ? 'success' : 'error',
-        text: refreshed
-          ? 'Image uploaded to the public content repository. Add its path to this project, then save the project separately.'
-          : 'Image uploaded, but the latest project snapshot could not be loaded. The image path is available below.',
-        commitUrl: result.commitUrl || undefined,
-      });
+      const slug = target.projectSlug || '';
+      const result = await draftStore.stageMedia(file, target.kind, slug);
+      setUploadMessage({ tone: 'success', text: 'Image saved to the browser draft.' });
+      return result;
     } catch (error) {
-      setUploadMessage({
-        tone: 'error',
-        text:
-          error instanceof Error
-            ? error.message
-            : 'The image could not be uploaded. Choose it again and retry.',
-      });
+      const messageText =
+        error instanceof Error
+          ? error.message
+          : 'The image could not be staged. Choose it again and retry.';
+      setUploadMessage({ tone: 'error', text: messageText });
+      throw error;
     } finally {
       setIsUploading(false);
     }
   }
 
   async function saveProject(data: ProjectDocument) {
-    if (message?.cache === 'pending') {
-      setMessage({
-        ...message,
-        tone: 'error',
-        text: 'The previous project commit is intact, but public refresh is still pending. Retry public refresh before saving another project.',
-      });
-      return;
-    }
     if (!selectedRepository || !snapshot) {
       showMessage({ tone: 'error', text: 'Choose an accessible GitHub repository first.' });
       return;
@@ -519,58 +694,38 @@ export function GitHubImport() {
       });
       return;
     }
+    if (
+      !selectedProjectSlug &&
+      projectSlugIsTaken(snapshotRef.current, getDraft(), slug, selectedRepository.id)
+    ) {
+      showMessage({
+        tone: 'error',
+        text: 'A project with this URL slug already exists. Choose a different slug before saving this repository draft.',
+      });
+      return;
+    }
 
     setIsSaving(true);
     setMessage(undefined);
     try {
-      const response = await fetch('/api/cms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          kind: 'project',
-          slug,
-          expectedSha: selectedProjectSlug ? (current?.sha ?? null) : null,
-          data,
-        }),
-      });
-      const body = await readJson(response);
-      const error = errorFrom(body);
-      if (response.status === 409) {
-        setMessage({
-          tone: 'conflict',
-          conflictSlug: slug,
-          text:
-            error || 'The project changed in GitHub after it was loaded. Your draft is still here.',
-        });
-        return;
-      }
-      if (!response.ok || error) {
+      if (!(await persistProjectDraft(data))) {
         throw new Error(
-          error || `The project could not be saved (${response.status}). Your draft is still here.`,
+          draftStore.error ||
+            'The project could not be saved to the browser draft. Check site storage and retry.',
         );
       }
-
       setSelectedProjectSlug(slug);
       setNewProjectSlug('');
       form.reset(data);
-      const cache = body.cache === 'pending' || body.cache === 'refreshed' ? body.cache : undefined;
-      const writeText = selectedProjectSlug
-        ? 'Project and GitHub mapping saved.'
-        : 'Project created and GitHub mapping saved.';
-      const refreshed = await loadSnapshot();
-      const refreshText = !refreshed
-        ? ' The commit succeeded, but the project list could not be refreshed. Reload before editing again.'
-        : cache === 'pending'
-          ? ' Public refresh is pending.'
-          : cache === 'refreshed'
-            ? ' Cache invalidation was accepted. Visitors may briefly see the previous version while regeneration runs.'
-            : '';
+      const currentDraft = getDraft();
+      const next = withDraftNewProject(
+        applyDraft(snapshotRef.current ?? snapshot, currentDraft),
+        currentDraft,
+      );
+      setSnapshot(next);
       setMessage({
-        tone: refreshed ? 'success' : 'error',
-        text: `${writeText}${refreshText}`,
-        commitUrl: typeof body.commitUrl === 'string' ? body.commitUrl : undefined,
-        cache,
-        ...(cache === 'pending' ? { revalidateTarget: 'project', revalidateSlug: slug } : {}),
+        tone: 'success',
+        text: 'Project saved to the browser draft. Return to the portfolio editor and submit the draft to write it to GitHub.',
       });
     } catch (error) {
       setMessage({
@@ -585,90 +740,30 @@ export function GitHubImport() {
     }
   }
 
-  async function retryPublicRefresh() {
-    const prior = message;
-    if (
-      !prior ||
-      prior.cache !== 'pending' ||
-      prior.revalidateTarget !== 'project' ||
-      !prior.revalidateSlug
-    ) {
-      return;
-    }
-    setIsRetryingRefresh(true);
-    try {
-      const response = await fetch('/api/cms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          kind: 'revalidate',
-          target: 'project',
-          slug: prior.revalidateSlug,
-        }),
-      });
-      const body = await readJson(response);
-      const error = errorFrom(body);
-      if (!response.ok || error) {
-        throw new Error(error || `Public refresh failed (${response.status}).`);
-      }
-      setMessage({
-        ...prior,
-        tone: 'success',
-        cache: 'refreshed',
-        text: 'Public refresh retry was accepted without rewriting the project. Visitors may briefly see the previous version while regeneration runs.',
-      });
-    } catch (error) {
-      setMessage({
-        ...prior,
-        tone: 'error',
-        text: `Public refresh failed: ${error instanceof Error ? error.message : 'try again'}. The project commit is intact; retry public refresh.`,
-      });
-    } finally {
-      setIsRetryingRefresh(false);
-    }
-  }
-
-  async function reloadConflict() {
-    const next = await loadSnapshot();
-    if (!next || !message?.conflictSlug) {
-      return;
-    }
-    const latest = next.projects.find((project) => project.slug === message.conflictSlug);
-    if (latest) {
-      setSelectedProjectSlug(latest.slug);
-      setNewProjectSlug('');
-      form.reset(latest.data);
-    } else {
-      setSelectedProjectSlug('');
-      setNewProjectSlug(selectedRepository ? slugFromRepository(selectedRepository.name) : '');
-      form.reset(
-        selectedRepository ? suggestionsFromRepository(selectedRepository) : emptyProject(),
-      );
-    }
-    setMessage(undefined);
-  }
-
-  const projectFeedback = (
-    <CmsMessage
-      message={message}
-      onReload={message?.tone === 'conflict' ? () => void reloadConflict() : undefined}
-      onRetry={message?.cache === 'pending' ? () => void retryPublicRefresh() : undefined}
-      pending={isSaving || isRetryingRefresh}
-    />
-  );
+  const projectFeedback = <CmsMessage message={message} pending={isSaving} />;
 
   return (
     <div
       className="cms-editor github-import"
-      aria-busy={isSaving || isUploading || isRetryingRefresh || isRefreshingRepositories}
+      aria-busy={isSaving || isUploading || isRefreshingRepositories}
     >
       <div className="cms-editor-heading">
         <h2>Map a GitHub repository to a project</h2>
         <p>
           Choose one of the authenticated account’s accessible repositories. Its numeric GitHub ID
           is saved with the project; imported details are suggestions you can review and edit.
+          Changes are stored in this browser draft until you submit them in the portfolio editor.
         </p>
-        <Link className="text-link" href="/admin">
+        <Link
+          className="text-link"
+          href="/admin"
+          aria-disabled={isUploading || isSaving}
+          onClick={(event) => {
+            if (isUploading || isSaving) {
+              event.preventDefault();
+            }
+          }}
+        >
           Back to portfolio editor
         </Link>
       </div>
@@ -699,7 +794,7 @@ export function GitHubImport() {
               value={selectedRepository ? selectedRepository.id : ''}
               onChange={(event) => {
                 if (event.target.value) {
-                  chooseRepository(Number(event.target.value));
+                  void chooseRepository(Number(event.target.value));
                 }
               }}
               disabled={
@@ -845,13 +940,13 @@ export function GitHubImport() {
         {selectedRepository && selectedRepository.private && (
           <div className="github-import-private-warning">
             <p>
-              <strong>Private repository metadata will be public.</strong> Saving copies the
-              repository ID and any project details you enter into{' '}
+              <strong>Private repository metadata will be public.</strong> Submitting this browser
+              draft copies the repository ID and any project details you enter into{' '}
               <code>
                 {snapshot?.repository.owner}/{snapshot?.repository.name}
               </code>
-              , which is a public repository. This remains public even if the portfolio project is
-              unpublished.
+              , which is a public repository. The information remains public even if the portfolio
+              project is unpublished.
             </p>
             <label className="cms-editor-checkbox">
               <input
@@ -861,10 +956,13 @@ export function GitHubImport() {
                 onChange={(event) => setPrivateAcknowledged(event.target.checked)}
               />
               <span>
-                I reviewed this warning and understand the repository ID and saved project metadata
+                I reviewed this warning and understand the repository ID and staged project metadata
                 will be visible in the public content repository.
               </span>
             </label>
+            <p className="cms-editor-hint">
+              Acknowledge this warning to edit and save the project in your browser draft.
+            </p>
           </div>
         )}
       </section>
@@ -882,27 +980,27 @@ export function GitHubImport() {
                 className="button button-outline"
                 type="button"
                 onClick={applyVerifiedFields}
-                disabled={isSaving}
+                disabled={isSaving || (selectedRepository.private && !privateAcknowledged)}
               >
                 Apply verified fields to blank fields
               </button>
             </div>
           )}
-          {selectedRepository && (
-            <ImagesPanel
-              projectForm={form}
-              technologiesForm={technologiesForm}
-              selectedProjectSlug={selectedProjectSlug}
-              newProjectSlug={newProjectSlug}
-              projectOnly
-              active
-              pending={isUploading || isSaving}
-              feedback={<CmsMessage message={uploadMessage} pending={isUploading} />}
-              result={uploadResult}
-              onUpload={uploadImage}
-              onClearMessage={() => setUploadMessage(undefined)}
-            />
-          )}
+          <ImagesPanel
+            projectForm={form}
+            technologiesForm={technologiesForm}
+            selectedProjectSlug={selectedProjectSlug}
+            newProjectSlug={newProjectSlug}
+            projectOnly
+            canUpload={Boolean(
+              selectedRepository && (!selectedRepository.private || privateAcknowledged),
+            )}
+            active
+            pending={isUploading || isSaving}
+            feedback={<CmsMessage message={uploadMessage} pending={isUploading} />}
+            onUpload={uploadImage}
+            onClearMessage={() => setUploadMessage(undefined)}
+          />
           {selectedRepository && (
             <ProjectPanel
               form={form}
@@ -910,7 +1008,12 @@ export function GitHubImport() {
               active
               selectedSlug={selectedProjectSlug}
               newSlug={newProjectSlug}
-              pending={isSaving || isUploading || !selectedRepository}
+              pending={
+                isSaving ||
+                isUploading ||
+                !selectedRepository ||
+                (selectedRepository.private && !privateAcknowledged)
+              }
               feedback={projectFeedback}
               allowDelete={false}
               onSelectedSlugChange={chooseProject}
@@ -927,6 +1030,12 @@ export function GitHubImport() {
           )}
         </>
       )}
+      {snapshotState !== 'ready' && draftStore.error && (
+        <p className="cms-editor-field-error" role="alert">
+          {draftStore.error}
+        </p>
+      )}
+      {confirmationDialog}
     </div>
   );
 }

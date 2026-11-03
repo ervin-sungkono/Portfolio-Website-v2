@@ -167,10 +167,12 @@ export function TechnologiesPanel({
         </fieldset>
         <div className="cms-editor-actions">
           <button className="button" type="submit" disabled={pending}>
-            Save technologies
+            Save technologies draft
           </button>
           {formState.isDirty && (
-            <span className="cms-editor-draft-state">Unsaved technology changes</span>
+            <span className="cms-editor-draft-state">
+              Technology changes are in your browser draft.
+            </span>
           )}
         </div>
       </form>

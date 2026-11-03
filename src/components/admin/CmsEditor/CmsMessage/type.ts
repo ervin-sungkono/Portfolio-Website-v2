@@ -2,7 +2,7 @@ import type { EditorMessage } from '../type';
 
 export type CmsMessageProps = {
   message?: EditorMessage;
-  onReload?: () => void;
   onRetry?: () => void;
+  onDismiss?: () => void;
   pending?: boolean;
 };

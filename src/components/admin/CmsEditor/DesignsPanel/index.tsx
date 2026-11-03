@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCmsDraft } from '../../CmsDraftProvider';
 import { readJson } from '../response';
 import type { DesignsPanelProps, DribbbleShot } from './type';
 import './style.css';
@@ -65,28 +66,19 @@ function parseSelection(value: Record<string, unknown>): SelectionResponse {
   };
 }
 
-export function DesignsPanel({
-  active,
-  pending,
-  feedback,
-  onSave,
-  onClearMessage,
-  onDirtyChange,
-}: DesignsPanelProps) {
+export function DesignsPanel({ active, pending, feedback, onClearMessage }: DesignsPanelProps) {
+  const { get: getDraft, update: updateDraft } = useCmsDraft();
   const [shots, setShots] = useState<DribbbleShot[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expectedSha, setExpectedSha] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [loadedVersion, setLoadedVersion] = useState(-1);
-  const [isDirty, setIsDirty] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [loadVersion, setLoadVersion] = useState(0);
 
   const loadSelection = useCallback(
     async (signal: AbortSignal) => {
-      setIsLoading(true);
-      setLoadError('');
       try {
         const response = await fetch('/api/cms/dribbble/shots', {
           cache: 'no-store',
@@ -101,11 +93,10 @@ export function DesignsPanel({
           );
         }
         const loaded = parseSelection(body);
+        const draft = getDraft().designs;
         setShots(loaded.shots);
-        setSelectedIds(loaded.designs);
-        setExpectedSha(loaded.sha);
-        setIsDirty(false);
-        onDirtyChange(false);
+        setSelectedIds(draft?.designs ?? loaded.designs);
+        setExpectedSha(draft?.expectedSha ?? loaded.sha);
       } catch (error) {
         if (signal.aborted) {
           return;
@@ -123,7 +114,7 @@ export function DesignsPanel({
         }
       }
     },
-    [loadVersion, onDirtyChange],
+    [getDraft, loadVersion],
   );
 
   useEffect(() => {
@@ -131,50 +122,38 @@ export function DesignsPanel({
       return;
     }
     const controller = new AbortController();
-    void loadSelection(controller.signal);
-    return () => controller.abort();
+    let activeLoad = true;
+    queueMicrotask(() => {
+      if (activeLoad) {
+        void loadSelection(controller.signal);
+      }
+    });
+    return () => {
+      activeLoad = false;
+      controller.abort();
+    };
   }, [active, hasLoaded, loadSelection, loadVersion, loadedVersion]);
 
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const shotIds = useMemo(() => new Set(shots.map((shot) => shot.id)), [shots]);
   const unavailableIds = selectedIds.filter((id) => !shotIds.has(id));
 
-  function markDirty() {
-    setIsDirty(true);
-    onDirtyChange(true);
-    onClearMessage();
-  }
-
   function toggleSelection(id: string) {
-    setSelectedIds((current) =>
-      current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id],
-    );
-    markDirty();
-  }
-
-  async function saveSelection() {
-    if (!expectedSha || !isDirty || pending) {
-      return;
-    }
-    const reply = await onSave({ expectedSha, designs: selectedIds });
-    if (!reply) {
-      return;
-    }
-    if (reply.sha) {
-      setExpectedSha(reply.sha);
-    }
-    setIsDirty(false);
-    onDirtyChange(false);
+    const next = selectedIds.includes(id)
+      ? selectedIds.filter((selectedId) => selectedId !== id)
+      : [...selectedIds, id];
+    setSelectedIds(next);
+    onClearMessage();
+    void updateDraft((draft) => ({
+      ...draft,
+      designs: { expectedSha: draft.designs?.expectedSha ?? expectedSha, designs: next },
+    }));
   }
 
   function reload() {
-    if (
-      isDirty &&
-      !window.confirm('Reload the saved selection and discard these show/hide changes?')
-    ) {
-      return;
-    }
     onClearMessage();
+    setIsLoading(true);
+    setLoadError('');
     setLoadVersion((version) => version + 1);
   }
 
@@ -197,7 +176,7 @@ export function DesignsPanel({
           onClick={reload}
           disabled={pending || isLoading}
         >
-          {isLoading ? 'Loading shots…' : 'Reload shots and selection'}
+          {isLoading ? 'Loading shots…' : 'Reload shots'}
         </button>
       </div>
 
@@ -284,19 +263,9 @@ export function DesignsPanel({
             <p className="cms-editor-empty">Dribbble did not return any usable shots.</p>
           ) : null}
 
-          <div className="cms-editor-actions">
-            <button
-              type="button"
-              className="button"
-              onClick={() => void saveSelection()}
-              disabled={pending || !expectedSha || !isDirty}
-            >
-              Save selection
-            </button>
-            {isDirty && (
-              <span className="cms-editor-draft-state">Unsaved design selection changes</span>
-            )}
-          </div>
+          <p className="cms-editor-draft-state">
+            Selection changes are saved in this browser until you submit.
+          </p>
         </>
       ) : null}
     </section>

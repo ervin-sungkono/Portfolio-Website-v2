@@ -1,13 +1,39 @@
-import type { ImagesPanelProps } from './type';
-import './style.css';
-import { useRef, useState } from 'react';
+'use client';
+
+import { useId, useRef, useState } from 'react';
 import { useWatch } from 'react-hook-form';
-import type { Technologies } from '@/lib/cms/schemas';
-import { safeCommitUrl } from '../utils';
+import type { ProjectDocument, Technologies } from '@/lib/cms/schemas';
+import { useConfirmDialog } from '../../ConfirmDialog';
+import { useCmsDraft } from '../../CmsDraftProvider';
+import type { DraftMedia } from '../../CmsDraftProvider/type';
+import type { ImagesPanelProps, ImageUploadTarget } from './type';
+import './style.css';
 
 const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const maxImageSize = 1024 * 1024;
 const projectSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function removePathFromProject(project: ProjectDocument, path: string): ProjectDocument {
+  const cover = project.media.cover === path ? '' : project.media.cover;
+  const gallery = project.media.gallery.filter((item) => item !== path);
+  if (cover === project.media.cover && gallery.length === project.media.gallery.length) {
+    return project;
+  }
+  return { ...project, media: { cover, gallery } };
+}
+
+function removePathFromTechnologies(technologies: Technologies, path: string): Technologies {
+  return Object.fromEntries(
+    Object.entries(technologies).map(([id, technology]) => {
+      if (technology.icon !== path) {
+        return [id, technology];
+      }
+      const withoutIcon = { ...technology };
+      delete withoutIcon.icon;
+      return [id, withoutIcon];
+    }),
+  ) as Technologies;
+}
 
 export function ImagesPanel({
   projectForm,
@@ -15,112 +41,213 @@ export function ImagesPanel({
   selectedProjectSlug,
   newProjectSlug,
   projectOnly = false,
+  canUpload = true,
   active,
   pending,
   feedback,
-  result,
   onUpload,
   onClearMessage,
 }: ImagesPanelProps) {
   const [scope, setScope] = useState<'project' | 'technology'>('project');
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [validationMessage, setValidationMessage] = useState('');
   const [validationTarget, setValidationTarget] = useState<'file' | 'slug'>('file');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [technologyIds, setTechnologyIds] = useState<Record<string, string>>({});
+  const [removingPaths, setRemovingPaths] = useState<string[]>([]);
+  const [isStaging, setIsStaging] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
-  const [technologyId, setTechnologyId] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
   const projectSlugInput = useRef<HTMLInputElement>(null);
+  const inputId = useId();
+  const { confirm, confirmationDialog } = useConfirmDialog();
+  const draftStore = useCmsDraft();
   const technologies = useWatch({ control: technologiesForm.control }) || {};
   const technologyEntries = Object.entries(technologies) as Array<[string, Technologies[string]]>;
-  const uploadSlug =
-    !projectOnly && scope === 'technology'
-      ? 'technologies'
-      : selectedProjectSlug || newProjectSlug.trim();
-  const projectSlugMatches =
-    result?.scope === 'project' && result.slug === (selectedProjectSlug || newProjectSlug.trim());
+  const stagedImages = draftStore.draft.media;
+  const uploadSlug = selectedProjectSlug || newProjectSlug.trim();
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  function addProjectPath(path: string) {
+    const media = projectForm.getValues('media');
+    if (!media.cover) {
+      projectForm.setValue('media.cover', path, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      projectForm.setValue(
+        'media.gallery',
+        media.gallery.filter((item) => item !== path),
+        { shouldDirty: true, shouldTouch: true, shouldValidate: true },
+      );
+      return;
+    }
+    if (media.cover === path || media.gallery.includes(path)) {
+      return;
+    }
+    projectForm.setValue('media.gallery', [...media.gallery, path], {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setValidationMessage('');
+    setStatusMessage('');
+    setCopyMessage('');
     onClearMessage();
-    if (!file) {
-      setValidationMessage('Choose an image file to upload.');
+    if (!files.length) {
+      setValidationMessage('Choose one or more image files to stage.');
       setValidationTarget('file');
       fileInput.current?.focus();
       return;
     }
-    if (!allowedMimeTypes.has(file.type)) {
-      setValidationMessage('Choose a PNG, JPEG, or WebP image.');
-      setValidationTarget('file');
-      fileInput.current?.focus();
-      return;
-    }
-    if (file.size > maxImageSize) {
-      setValidationMessage('Choose an image no larger than 1 MiB.');
+    const invalidFile = files.find(
+      (file) => !allowedMimeTypes.has(file.type) || file.size === 0 || file.size > maxImageSize,
+    );
+    if (invalidFile) {
+      setValidationMessage(
+        !allowedMimeTypes.has(invalidFile.type)
+          ? `${invalidFile.name}: choose a PNG, JPEG, or WebP image.`
+          : `${invalidFile.name}: choose an image larger than 0 bytes and no larger than 1 MiB.`,
+      );
       setValidationTarget('file');
       fileInput.current?.focus();
       return;
     }
     if (scope === 'project' && !projectSlugPattern.test(uploadSlug)) {
-      setValidationMessage('Select a project or enter a valid project slug before uploading.');
+      setValidationMessage('Select a project or enter a valid project slug before staging images.');
       setValidationTarget('slug');
       projectSlugInput.current?.focus();
       return;
     }
-    void onUpload(file, uploadSlug, scope);
+
+    const target: ImageUploadTarget =
+      scope === 'project' ? { kind: 'project', projectSlug: uploadSlug } : { kind: 'technology' };
+    let completed = 0;
+    setIsStaging(true);
+    try {
+      for (const file of files) {
+        const result = await onUpload(file, target);
+        if (scope === 'project') {
+          addProjectPath(result.path);
+        }
+        completed += 1;
+      }
+      setFiles([]);
+      if (fileInput.current) {
+        fileInput.current.value = '';
+      }
+      setStatusMessage(
+        `${completed} ${completed === 1 ? 'image was' : 'images were'} saved to the browser draft. Submit the draft in the portfolio editor to publish them.`,
+      );
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : 'Choose the image again and retry.';
+      setStatusMessage(
+        completed
+          ? `${completed} ${completed === 1 ? 'image was' : 'images were'} saved to the browser draft before staging stopped. ${detail}`
+          : detail,
+      );
+    } finally {
+      setIsStaging(false);
+    }
   }
 
-  async function copyPath() {
-    if (!result) {
-      return;
-    }
+  async function copyPath(path: string) {
     try {
-      await navigator.clipboard.writeText(result.path);
+      await navigator.clipboard.writeText(path);
       setCopyMessage('Image path copied.');
     } catch {
-      setCopyMessage('Copy is unavailable here. Select the image path above and copy it.');
+      setCopyMessage('Copy is unavailable here. Select the image path and copy it.');
     }
   }
 
-  function setAsCover() {
-    if (!result || !projectSlugMatches) {
-      return;
-    }
-    projectForm.setValue('media.cover', result.path, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-    setCopyMessage('Cover path added to the project draft. Save the project to publish it.');
-  }
-
-  function addToGallery() {
-    if (!result || !projectSlugMatches) {
-      return;
-    }
-    const gallery = projectForm.getValues('media.gallery') || [];
-    if (gallery.includes(result.path)) {
-      setCopyMessage('This image is already in the project gallery.');
-      return;
-    }
-    projectForm.setValue('media.gallery', [...gallery, result.path], {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-    setCopyMessage('Image added to the project draft. Save the project to publish it.');
-  }
-
-  function setAsTechnologyIcon() {
-    if (!result || result.scope !== 'technology' || !technologyId) {
+  function setAsTechnologyIcon(image: DraftMedia) {
+    const technologyId = technologyIds[image.path];
+    if (image.scope !== 'technology' || !technologyId) {
       return;
     }
     const values = technologiesForm.getValues();
     technologiesForm.reset(
-      { ...values, [technologyId]: { ...values[technologyId], icon: result.path } },
+      { ...values, [technologyId]: { ...values[technologyId], icon: image.path } },
       { keepDefaultValues: true },
     );
-    setCopyMessage('Icon path added to the technology draft. Save technologies to publish it.');
+    setStatusMessage(`${image.filename} was added to the ${technologyId} technology draft.`);
+  }
+
+  async function removeStagedImage(image: DraftMedia) {
+    const accepted = await confirm({
+      title: 'Remove this staged image?',
+      description: `${image.path} will be removed from the browser draft, and its path will be cleared from staged project and technology data. It will not be included when you submit the draft.`,
+      confirmLabel: 'Remove image',
+    });
+    if (!accepted) {
+      return;
+    }
+
+    setRemovingPaths((current) => [...current, image.path]);
+    setStatusMessage('');
+    try {
+      const updated = await draftStore.update((current) => ({
+        ...current,
+        media: current.media.filter((item) => item.path !== image.path),
+        projects: {
+          ...current.projects,
+          upsert: current.projects.upsert.map((project) => ({
+            ...project,
+            data: removePathFromProject(project.data, image.path),
+          })),
+        },
+        newProject: current.newProject
+          ? {
+              ...current.newProject,
+              data: removePathFromProject(current.newProject.data, image.path),
+            }
+          : undefined,
+        technologies: current.technologies
+          ? {
+              ...current.technologies,
+              data: removePathFromTechnologies(current.technologies.data, image.path),
+            }
+          : undefined,
+      }));
+      if (!updated) {
+        setStatusMessage('The image could not be removed from the browser draft.');
+        return;
+      }
+
+      const media = projectForm.getValues('media');
+      if (media.cover === image.path) {
+        projectForm.setValue('media.cover', '', {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+      }
+      if (media.gallery.includes(image.path)) {
+        projectForm.setValue(
+          'media.gallery',
+          media.gallery.filter((path) => path !== image.path),
+          { shouldDirty: true, shouldTouch: true, shouldValidate: true },
+        );
+      }
+      const technologyValues = technologiesForm.getValues();
+      const nextTechnologies = removePathFromTechnologies(technologyValues, image.path);
+      if (JSON.stringify(technologyValues) !== JSON.stringify(nextTechnologies)) {
+        technologiesForm.reset(nextTechnologies, { keepDefaultValues: true });
+      }
+
+      const blobRemoved = await draftStore.removeMedia([image.path]);
+      setStatusMessage(
+        blobRemoved
+          ? `${image.filename} was removed from the browser draft.`
+          : `${image.filename} was removed from the draft list, but the browser could not clear its cached file.`,
+      );
+    } finally {
+      setRemovingPaths((current) => current.filter((path) => path !== image.path));
+    }
   }
 
   return (
@@ -135,14 +262,25 @@ export function ImagesPanel({
           <p className="eyebrow">Repository media</p>
           <h2 id="cms-images-heading">Images</h2>
           <p>
-            Upload a small image, then add its returned path to a project cover, gallery, or
-            technology icon.
+            Stage images in this browser draft. The repository changes only when you submit the
+            draft in the portfolio editor.
           </p>
         </div>
       </div>
       {feedback}
-      <form className="cms-editor-form cms-editor-upload-form" onSubmit={submit} noValidate>
-        <fieldset disabled={pending}>
+      {draftStore.error && (
+        <p className="cms-editor-field-error" role="alert">
+          {draftStore.error}
+        </p>
+      )}
+      <form
+        className="cms-editor-form cms-editor-upload-form"
+        onSubmit={(event) => void submit(event)}
+        noValidate
+      >
+        <fieldset
+          disabled={pending || isStaging || !canUpload || draftStore.draft.repository.length === 0}
+        >
           {!projectOnly && (
             <label className="cms-editor-field">
               <span>Image destination</span>
@@ -152,7 +290,7 @@ export function ImagesPanel({
                   setScope(event.target.value as 'project' | 'technology');
                   setValidationMessage('');
                   setValidationTarget('file');
-                  setCopyMessage('');
+                  setStatusMessage('');
                 }}
               >
                 <option value="project">Project cover or gallery</option>
@@ -176,26 +314,33 @@ export function ImagesPanel({
               />
               <span className="cms-editor-hint" id="cms-image-project-help">
                 {projectOnly
-                  ? 'This image will be uploaded to the project selected in the importer.'
+                  ? 'These images will be staged for the project selected in the importer.'
                   : 'Select a project in Projects, or enter the new project slug there first.'}
               </span>
             </label>
           ) : (
             <p className="cms-editor-hint">
-              This upload uses the shared <code>media/technologies/</code> folder.
+              These images use the shared <code>media/technologies/</code> folder.
             </p>
           )}
-          <label className="cms-editor-field">
-            <span>Choose image</span>
+          {!canUpload && projectOnly && (
+            <p className="cms-editor-hint">
+              Choose a repository and review its warning before staging images.
+            </p>
+          )}
+          <label className="cms-editor-field" htmlFor={inputId}>
+            <span>Choose images</span>
             <input
+              id={inputId}
               ref={fileInput}
               type="file"
               accept="image/png,image/jpeg,image/webp"
+              multiple
               onChange={(event) => {
-                setFile(event.target.files?.[0] || null);
+                setFiles(Array.from(event.target.files ?? []));
                 setValidationMessage('');
                 setValidationTarget('file');
-                setCopyMessage('');
+                setStatusMessage('');
               }}
               aria-invalid={Boolean(validationMessage && validationTarget === 'file')}
               aria-describedby={
@@ -205,7 +350,7 @@ export function ImagesPanel({
               }
             />
             <span className="cms-editor-hint" id="cms-image-file-help">
-              PNG, JPEG, or WebP, up to 1 MiB.
+              Select one or more PNG, JPEG, or WebP files, up to 1 MiB each.
             </span>
           </label>
           {validationMessage && (
@@ -217,93 +362,97 @@ export function ImagesPanel({
               {validationMessage}
             </p>
           )}
-          <button className="button" type="submit" disabled={pending || !file}>
-            {pending ? 'Uploading image…' : 'Upload image'}
+          <button className="button" type="submit" disabled={pending || isStaging || !files.length}>
+            {pending || isStaging ? 'Staging images…' : 'Stage images in browser draft'}
           </button>
         </fieldset>
       </form>
 
-      {result && (
-        <div className="cms-editor-upload-result">
-          <h3>Image uploaded</h3>
-          <label className="cms-editor-field">
-            <span>Repository path</span>
-            <input value={result.path} readOnly onFocus={(event) => event.currentTarget.select()} />
-          </label>
-          {safeCommitUrl(result.commitUrl) && (
-            <a href={safeCommitUrl(result.commitUrl)} target="_blank" rel="noreferrer">
-              View image commit
-            </a>
-          )}
-          <div className="cms-editor-actions">
-            <button
-              type="button"
-              className="button button-outline"
-              onClick={() => void copyPath()}
-              disabled={pending}
-            >
-              Copy path
-            </button>
-            {result.scope === 'project' && projectSlugMatches && (
-              <>
-                <button
-                  type="button"
-                  className="button button-outline"
-                  onClick={setAsCover}
-                  disabled={pending}
-                >
-                  Use as cover
-                </button>
-                <button
-                  type="button"
-                  className="button button-outline"
-                  onClick={addToGallery}
-                  disabled={pending}
-                >
-                  Add to gallery
-                </button>
-              </>
-            )}
-            {result.scope === 'technology' && (
-              <>
-                <label className="cms-editor-field cms-editor-technology-picker">
-                  <span>Technology</span>
-                  <select
-                    value={technologyId}
-                    onChange={(event) => setTechnologyId(event.target.value)}
-                    disabled={pending}
+      {statusMessage && (
+        <p className="cms-editor-hint cms-editor-images-status" role="status">
+          {statusMessage}
+        </p>
+      )}
+      {stagedImages.length > 0 && (
+        <div className="cms-editor-staged-images">
+          <h3>Images in browser draft</h3>
+          <ul aria-label="Images in browser draft">
+            {stagedImages.map((image) => (
+              <li key={image.path}>
+                <div className="cms-editor-staged-image-info">
+                  <strong>{image.filename}</strong>
+                  <span>
+                    {image.scope === 'project' ? `Project: ${image.slug}` : 'Technology icon'}
+                  </span>
+                  <code>{image.path}</code>
+                </div>
+                <div className="cms-editor-actions">
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    onClick={() => void copyPath(image.path)}
+                    disabled={pending || removingPaths.includes(image.path)}
                   >
-                    <option value="">Choose technology</option>
-                    {technologyEntries.map(([id, technology]) => (
-                      <option value={id} key={id}>
-                        {technology.label || id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  className="button button-outline"
-                  onClick={setAsTechnologyIcon}
-                  disabled={pending || !technologyId}
-                >
-                  Use as technology icon
-                </button>
-              </>
-            )}
-          </div>
-          {result.scope === 'project' && !projectSlugMatches && (
-            <p className="cms-editor-hint">
-              This image belongs to project “{result.slug}”. Select that project to add the path.
-            </p>
-          )}
-          {copyMessage && (
-            <p className="cms-editor-hint" role="status">
-              {copyMessage}
-            </p>
-          )}
+                    Copy path
+                  </button>
+                  {image.scope === 'technology' && (
+                    <>
+                      <label className="cms-editor-field cms-editor-technology-picker">
+                        <span>Technology for {image.filename}</span>
+                        <select
+                          value={technologyIds[image.path] || ''}
+                          onChange={(event) =>
+                            setTechnologyIds((current) => ({
+                              ...current,
+                              [image.path]: event.target.value,
+                            }))
+                          }
+                          disabled={pending || removingPaths.includes(image.path)}
+                        >
+                          <option value="">Choose technology</option>
+                          {technologyEntries.map(([id, technology]) => (
+                            <option value={id} key={id}>
+                              {technology.label || id}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="button button-outline"
+                        onClick={() => setAsTechnologyIcon(image)}
+                        disabled={
+                          pending ||
+                          removingPaths.includes(image.path) ||
+                          !technologyIds[image.path]
+                        }
+                      >
+                        Use as technology icon
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    className="button button-outline"
+                    onClick={() => void removeStagedImage(image)}
+                    disabled={pending || removingPaths.includes(image.path)}
+                  >
+                    {removingPaths.includes(image.path)
+                      ? 'Removing image…'
+                      : `Remove ${image.filename} from browser draft`}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
+      {copyMessage && (
+        <p className="cms-editor-hint" role="status">
+          {copyMessage}
+        </p>
+      )}
+      {confirmationDialog}
     </section>
   );
 }
