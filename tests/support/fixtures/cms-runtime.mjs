@@ -313,9 +313,11 @@ globalThis.fetch = async (input, init = {}) => {
 
   if (requestUrl.hostname === 'raw.githubusercontent.com') {
     const location = rawLocation(requestUrl);
-    const snapshot = location ? filesAtRef(location.ref) : null;
-    const stored = snapshot && location ? snapshot.get(location.path) : undefined;
     const intro = externalPortfolioIntro();
+    const overrideRevision = intro ? sha1(Buffer.from(`${latestCommit}:${intro}`)) : null;
+    const ref = location?.ref === overrideRevision ? latestCommit : location?.ref;
+    const snapshot = ref ? filesAtRef(ref) : null;
+    const stored = snapshot && location ? snapshot.get(location.path) : undefined;
     if (stored && location?.path === 'content/portfolio.json' && intro) {
       const data = JSON.parse(stored.bytes.toString('utf8'));
       data.profile.intro = intro;

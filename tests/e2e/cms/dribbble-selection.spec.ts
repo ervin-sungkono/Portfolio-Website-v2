@@ -1,4 +1,4 @@
-import { expect, test, type BrowserContext } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { CmsEditorPage } from '../../support/cms-editor-page';
 import {
   cmsBaseUrl as baseURL,
@@ -28,10 +28,29 @@ async function selectedDesignIds(context: BrowserContext) {
   return body.selection.designs as string[];
 }
 
+async function submitAllChanges(page: Page) {
+  await page.getByRole('button', { name: 'Submit all changes', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('heading', { name: 'Submit all changes?' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Submit changes', exact: true }).click();
+}
+
 test('owner shows and hides Dribbble shots, and the public design pages follow the saved IDs', async ({
   browser,
 }) => {
   const context = await browser.newContext({ baseURL });
+  let finalizations = 0;
+  const postedKinds: string[] = [];
+  await context.route('**/api/cms', async (route) => {
+    if (route.request().method() === 'POST') {
+      const kind = route.request().postDataJSON().kind;
+      postedKinds.push(kind);
+      if (kind === 'finalize') {
+        finalizations += 1;
+      }
+    }
+    await route.continue();
+  });
   await addOwnerCookie(context);
   const page = await context.newPage();
   const editor = new CmsEditorPage(page);
@@ -53,10 +72,25 @@ test('owner shows and hides Dribbble shots, and the public design pages follow t
   for (const number of [2, 3, 4]) {
     await panel.getByLabel(`Show on portfolio: Fixture Design ${number}`).uncheck();
   }
-  await page.getByRole('button', { name: 'Save selection' }).click();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Design selection saved.' }),
-  ).toBeVisible();
+  const originalDesignIds = await selectedDesignIds(context);
+  expect(originalDesignIds).not.toEqual(['1']);
+  expect(finalizations).toBe(0);
+  expect(postedKinds).toEqual([]);
+  await page.reload();
+  await page.getByRole('button', { name: 'Designs', exact: true }).click();
+  const restoredPanel = page.locator('#cms-editor-designs-panel');
+  await expect(restoredPanel.getByLabel('Show on portfolio: Fixture Design 1')).toBeChecked();
+  for (const number of [2, 3, 4]) {
+    await expect(
+      restoredPanel.getByLabel('Show on portfolio: Fixture Design ' + number),
+    ).not.toBeChecked();
+  }
+  await expect.poll(() => selectedDesignIds(context)).toEqual(originalDesignIds);
+  expect(finalizations).toBe(0);
+  expect(postedKinds).toEqual([]);
+  await submitAllChanges(page);
+  expect(finalizations).toBe(1);
+  expect(postedKinds).toEqual(['finalize']);
   await expect.poll(() => selectedDesignIds(context)).toEqual(['1']);
 
   await expect
@@ -68,10 +102,11 @@ test('owner shows and hides Dribbble shots, and the public design pages follow t
 
   await firstShot.getByLabel('Show on portfolio: Fixture Design 1').uncheck();
   await secondShot.getByLabel('Show on portfolio: Fixture Design 2').check();
-  await page.getByRole('button', { name: 'Save selection' }).click();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Design selection saved.' }),
-  ).toBeVisible();
+  await expect.poll(() => selectedDesignIds(context)).toEqual(['1']);
+  expect(postedKinds).toEqual(['finalize']);
+  await submitAllChanges(page);
+  expect(finalizations).toBe(2);
+  expect(postedKinds).toEqual(['finalize', 'finalize']);
   await expect.poll(() => selectedDesignIds(context)).toEqual(['2']);
 
   await expect
@@ -97,10 +132,10 @@ test('owner shows and hides Dribbble shots, and the public design pages follow t
   await expect(publicPage.getByRole('heading', { name: 'Fixture Design 2' })).toBeVisible();
 
   await secondShot.getByLabel('Show on portfolio: Fixture Design 2').uncheck();
-  await page.getByRole('button', { name: 'Save selection' }).click();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Design selection saved.' }),
-  ).toBeVisible();
+  expect(postedKinds).toEqual(['finalize', 'finalize']);
+  await submitAllChanges(page);
+  expect(finalizations).toBe(3);
+  expect(postedKinds).toEqual(['finalize', 'finalize', 'finalize']);
   await expect.poll(() => selectedDesignIds(context)).toEqual([]);
 
   await context.close();
