@@ -66,7 +66,7 @@ export function SiteProfilePanel({
             <span>Introduction</span>
             <textarea
               {...register('introduction')}
-              rows={6}
+              rows={4}
               maxLength={5_000}
               aria-invalid={Boolean(formState.errors.introduction)}
               aria-describedby={
@@ -158,10 +158,12 @@ export function SiteProfilePanel({
         </fieldset>
         <div className="cms-editor-actions">
           <button className="button" type="submit" disabled={pending}>
-            Save site profile
+            Save site profile draft
           </button>
           {formState.isDirty && (
-            <span className="cms-editor-draft-state">Unsaved site profile changes</span>
+            <span className="cms-editor-draft-state">
+              Site profile changes are in your browser draft.
+            </span>
           )}
         </div>
       </form>

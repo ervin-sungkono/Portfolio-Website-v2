@@ -1,10 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import {
-  cacheState,
-  errorFrom,
-  parseSnapshot,
-  readJson,
-} from '@/components/admin/CmsEditor/response';
+import { errorFrom, parseSnapshot, readJson } from '@/components/admin/CmsEditor/response';
 import { safeCommitUrl } from '@/components/admin/CmsEditor/utils';
 
 const snapshot = {
@@ -40,9 +35,6 @@ describe('CMS editor responses', () => {
     expect(await readJson(Response.json({ error: 'conflict' }))).toEqual({ error: 'conflict' });
     expect(errorFrom({ error: 'conflict' })).toBe('conflict');
     expect(errorFrom(null)).toBe('');
-    expect(cacheState('pending')).toBe('pending');
-    expect(cacheState('refreshed')).toBe('refreshed');
-    expect(cacheState('unknown')).toBeUndefined();
   });
 
   test('only exposes valid HTTPS commit links', () => {

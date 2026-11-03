@@ -2,36 +2,33 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import {
   categoriesSchema,
   projectSchema,
   siteSchema,
   technologiesSchema,
+  finalizeCmsDraftSchema,
   type Categories,
   type ProjectDocument,
   type SiteDocument,
   type Technologies,
 } from '@/lib/cms/schemas';
 import { CategoriesPanel } from './CategoriesPanel';
+import { useConfirmDialog } from '../ConfirmDialog';
+import { useCmsDraft } from '../CmsDraftProvider';
+import { emptyDraft, type CmsDraft } from '../CmsDraftProvider/type';
 import { CmsMessage } from './CmsMessage';
 import { DesignsPanel } from './DesignsPanel';
 import { ImagesPanel } from './ImagesPanel';
 import { ProjectPanel } from './ProjectPanel';
 import { SiteProfilePanel } from './SiteProfilePanel';
 import { TechnologiesPanel } from './TechnologiesPanel';
-import type {
-  BusySection,
-  LoadState,
-  CmsApiReply,
-  CmsSection,
-  CmsSnapshot,
-  CmsWriteRequest,
-  EditorMessage,
-  ImageUploadResult,
-} from './type';
-import { cacheState, errorFrom, parseSnapshot, readJson } from './response';
+import type { BusySection, LoadState, CmsSection, CmsSnapshot, EditorMessage } from './type';
+import { errorFrom, parseSnapshot, readJson } from './response';
 import { safeCommitUrl } from './utils';
+import { applyDraft, hasDraftChanges, repositoryKey, stageProject } from './draft';
+import { loadConflictReview, rebaseReviewedVersions, type ConflictReview } from './conflicts';
 import './style.css';
 
 const sectionLabels: Record<CmsSection, string> = {
@@ -66,25 +63,10 @@ function emptySite(): SiteDocument {
   return { schemaVersion: 1, siteTitle: '', headline: '', introduction: '', socialLinks: [] };
 }
 
-function base64Content(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      const separator = result.indexOf(',');
-      if (separator < 0) {
-        reject(new Error('The image could not be read. Choose it again and retry.'));
-        return;
-      }
-      resolve(result.slice(separator + 1));
-    };
-    reader.onerror = () =>
-      reject(new Error('The image could not be read. Choose it again and retry.'));
-    reader.readAsDataURL(file);
-  });
-}
-
 export function CmsEditor() {
+  const draftStore = useCmsDraft();
+  const { draft, ready: draftReady, get: getDraft, update: updateDraft } = draftStore;
+  const { confirm, confirmationDialog } = useConfirmDialog();
   const projectForm = useForm<ProjectDocument>({
     resolver: zodResolver(projectSchema),
     defaultValues: emptyProject(),
@@ -115,10 +97,9 @@ export function CmsEditor() {
   const [newProjectSlug, setNewProjectSlug] = useState('');
   const [busySection, setBusySection] = useState<BusySection>(null);
   const [messages, setMessages] = useState<Partial<Record<CmsSection, EditorMessage>>>({});
-  const [uploadResult, setUploadResult] = useState<ImageUploadResult>();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [publicRefreshMessage, setPublicRefreshMessage] = useState('');
-  const [designsDirty, setDesignsDirty] = useState(false);
+  const [finalMessage, setFinalMessage] = useState<EditorMessage>();
+  const [conflicts, setConflicts] = useState<ConflictReview[]>([]);
   const [discardVersions, setDiscardVersions] = useState<Record<CmsSection, number>>({
     projects: 0,
     site: 0,
@@ -142,25 +123,93 @@ export function CmsEditor() {
   const siteIsDirty = siteForm.formState.isDirty;
   const categoriesAreDirty = categoriesForm.formState.isDirty;
   const technologiesAreDirty = technologiesForm.formState.isDirty;
+  const projectValues = useWatch({ control: projectForm.control }) as ProjectDocument;
+  const siteValues = useWatch({ control: siteForm.control }) as SiteDocument;
+  const categoryValues = useWatch({ control: categoriesForm.control }) as Categories;
+  const technologyValues = useWatch({ control: technologiesForm.control }) as Technologies;
   const hasProjectDraft =
     projectIsDirty || (!selectedProjectSlug && Boolean(newProjectSlug.trim()));
   const hasUnsavedChanges =
-    hasProjectDraft || siteIsDirty || categoriesAreDirty || technologiesAreDirty || designsDirty;
+    hasProjectDraft ||
+    siteIsDirty ||
+    categoriesAreDirty ||
+    technologiesAreDirty ||
+    hasDraftChanges(draft);
   const resetProjectForm = projectForm.reset;
   const resetSiteForm = siteForm.reset;
   const resetCategoriesForm = categoriesForm.reset;
   const resetTechnologiesForm = technologiesForm.reset;
 
   useEffect(() => {
-    if (!hasUnsavedChanges) {
+    if (
+      !snapshot ||
+      !draftReady ||
+      busyRef.current ||
+      (!projectIsDirty && (selectedProjectSlug || !newProjectSlug.trim()))
+    ) {
       return;
     }
-    function warnBeforeLeaving(event: BeforeUnloadEvent) {
-      event.preventDefault();
+    if (selectedProjectSlug) {
+      const sha =
+        snapshot.projects.find((project) => project.slug === selectedProjectSlug)?.sha || null;
+      void updateDraft((value) => stageProject(value, selectedProjectSlug, sha, projectValues));
+    } else {
+      void updateDraft((value) => {
+        const next = { slug: newProjectSlug, data: projectValues };
+        return JSON.stringify(value.newProject) === JSON.stringify(next)
+          ? value
+          : { ...value, newProject: next };
+      });
     }
-    window.addEventListener('beforeunload', warnBeforeLeaving);
-    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
-  }, [hasUnsavedChanges]);
+  }, [
+    snapshot,
+    draftReady,
+    projectIsDirty,
+    selectedProjectSlug,
+    newProjectSlug,
+    projectValues,
+    updateDraft,
+  ]);
+
+  useEffect(() => {
+    if (!snapshot || !draftReady || busyRef.current || !siteIsDirty) {
+      return;
+    }
+    void updateDraft((value) => {
+      const next = { expectedSha: value.site?.expectedSha ?? snapshot.site.sha, data: siteValues };
+      return JSON.stringify(value.site) === JSON.stringify(next) ? value : { ...value, site: next };
+    });
+  }, [snapshot, draftReady, siteIsDirty, siteValues, updateDraft]);
+
+  useEffect(() => {
+    if (!snapshot || !draftReady || busyRef.current || !categoriesAreDirty) {
+      return;
+    }
+    void updateDraft((value) => {
+      const next = {
+        expectedSha: value.categories?.expectedSha ?? snapshot.categories.sha,
+        data: categoryValues,
+      };
+      return JSON.stringify(value.categories) === JSON.stringify(next)
+        ? value
+        : { ...value, categories: next };
+    });
+  }, [snapshot, draftReady, categoriesAreDirty, categoryValues, updateDraft]);
+
+  useEffect(() => {
+    if (!snapshot || !draftReady || busyRef.current || !technologiesAreDirty) {
+      return;
+    }
+    void updateDraft((value) => {
+      const next = {
+        expectedSha: value.technologies?.expectedSha ?? snapshot.technologies.sha,
+        data: technologyValues,
+      };
+      return JSON.stringify(value.technologies) === JSON.stringify(next)
+        ? value
+        : { ...value, technologies: next };
+    });
+  }, [snapshot, draftReady, technologiesAreDirty, technologyValues, updateDraft]);
 
   const refreshSnapshot = useCallback(
     async (
@@ -190,7 +239,21 @@ export function CmsEditor() {
             serverMessage || `The content snapshot could not be loaded (${response.status}).`,
           );
         }
-        const next = parseSnapshot(body);
+        const remote = parseSnapshot(body);
+        const key = repositoryKey(remote);
+        const stored = getDraft();
+        if (stored.repository && stored.repository !== key) {
+          throw new Error(
+            'The saved browser draft belongs to a different content repository. Return to that account or discard the draft.',
+          );
+        }
+        if (
+          !stored.repository &&
+          !(await updateDraft((value) => ({ ...value, repository: key })))
+        ) {
+          throw new Error('The browser could not save the draft. Check site storage and retry.');
+        }
+        const next = applyDraft(remote, getDraft());
         setLoadState('ready');
         setInitializationMessage('');
 
@@ -238,12 +301,13 @@ export function CmsEditor() {
           resetTechnologiesForm(next.technologies.data);
         }
         if (firstLoad || forceProjects || !hasProjectDraft) {
+          const newDraft = firstLoad ? getDraft().newProject : undefined;
           const wantedSlug = options.preferredSlug ?? selectedProjectSlug;
           const selected =
             next.projects.find((project) => project.slug === wantedSlug) || next.projects[0];
-          setSelectedProjectSlug(selected?.slug || '');
-          setNewProjectSlug('');
-          resetProjectForm(selected?.data || emptyProject());
+          setSelectedProjectSlug(newDraft ? '' : selected?.slug || '');
+          setNewProjectSlug(newDraft?.slug || '');
+          resetProjectForm(newDraft?.data || selected?.data || emptyProject());
         }
 
         loadedSnapshotRef.current = true;
@@ -271,6 +335,8 @@ export function CmsEditor() {
       siteIsDirty,
       snapshot,
       technologiesAreDirty,
+      getDraft,
+      updateDraft,
     ],
   );
 
@@ -279,191 +345,20 @@ export function CmsEditor() {
   }, [refreshSnapshot]);
 
   useEffect(() => {
-    void loadSnapshotRef.current({ initial: true });
-  }, []);
+    if (draftReady) {
+      void loadSnapshotRef.current({ initial: true });
+    }
+  }, [draftReady]);
 
   function setSectionMessage(section: CmsSection, message?: EditorMessage) {
+    if (message) {
+      setFinalMessage(undefined);
+    }
     setMessages((current) => ({ ...current, [section]: message }));
   }
 
   function clearSectionMessage(section: CmsSection) {
     setMessages((current) => ({ ...current, [section]: undefined }));
-  }
-
-  async function sendMutation(
-    section: CmsSection,
-    request: unknown,
-    conflictSlug?: string,
-    retryContext?: {
-      target: 'project' | 'site' | 'taxonomy' | 'designs';
-      slug?: string;
-      commitUrl?: string;
-    },
-  ): Promise<CmsApiReply | null> {
-    if (busyRef.current) {
-      return null;
-    }
-    busyRef.current = true;
-    setBusySection(section);
-    clearSectionMessage(section);
-    try {
-      const response = await fetch('/api/cms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
-      });
-      const body = await readJson(response);
-      const serverMessage = errorFrom(body);
-      if (response.status === 409) {
-        setSectionMessage(section, {
-          tone: 'conflict',
-          conflictSlug,
-          text: 'This content changed after you loaded it. Your draft is still here. Reload the repository version to discard your draft and continue.',
-          ...(retryContext
-            ? {
-                cache: 'pending' as const,
-                revalidateTarget: retryContext.target,
-                revalidateSlug: retryContext.slug,
-                commitUrl: retryContext.commitUrl,
-              }
-            : {}),
-        });
-        return null;
-      }
-      if (!response.ok || serverMessage) {
-        throw new Error(
-          serverMessage ||
-            (typeof body.message === 'string'
-              ? body.message
-              : `The update could not be saved (${response.status}). Your draft is still here.`),
-        );
-      }
-      return {
-        error: typeof body.error === 'string' ? body.error : undefined,
-        message: typeof body.message === 'string' ? body.message : undefined,
-        commitUrl: typeof body.commitUrl === 'string' ? body.commitUrl : undefined,
-        sha: typeof body.sha === 'string' ? body.sha : undefined,
-        cache: cacheState(body.cache),
-        path: typeof body.path === 'string' ? body.path : undefined,
-      };
-    } catch (error) {
-      setSectionMessage(section, {
-        tone: 'error',
-        text: retryContext
-          ? `Public refresh failed: ${error instanceof Error ? error.message : 'try again'}. The content commit is intact; retry public refresh.`
-          : error instanceof Error
-            ? error.message
-            : 'The update could not be saved. Your draft is still here.',
-        ...(retryContext
-          ? {
-              cache: 'pending' as const,
-              revalidateTarget: retryContext.target,
-              revalidateSlug: retryContext.slug,
-              commitUrl: retryContext.commitUrl,
-            }
-          : {}),
-      });
-      return null;
-    } finally {
-      busyRef.current = false;
-      setBusySection(null);
-    }
-  }
-
-  function reflectCommittedWrite(request: CmsWriteRequest, reply: CmsApiReply) {
-    setSnapshot((current) => {
-      if (!current) {
-        return current;
-      }
-      if (request.kind === 'delete-project') {
-        return {
-          ...current,
-          projects: current.projects.filter((project) => project.slug !== request.slug),
-        };
-      }
-      if (!reply.sha) {
-        return current;
-      }
-      if (request.kind === 'project') {
-        const project = { slug: request.slug, data: request.data, sha: reply.sha };
-        const exists = current.projects.some((entry) => entry.slug === request.slug);
-        return {
-          ...current,
-          projects: exists
-            ? current.projects.map((entry) => (entry.slug === request.slug ? project : entry))
-            : [...current.projects, project],
-        };
-      }
-      if (request.kind === 'site') {
-        return { ...current, site: { data: request.data, sha: reply.sha } };
-      }
-      if (request.kind === 'categories') {
-        return { ...current, categories: { data: request.data, sha: reply.sha } };
-      }
-      if (request.kind === 'technologies') {
-        return { ...current, technologies: { data: request.data, sha: reply.sha } };
-      }
-      return current;
-    });
-  }
-
-  async function finishWrite(
-    section: CmsSection,
-    request: CmsWriteRequest,
-    reply: CmsApiReply,
-    preferredSlug?: string,
-  ) {
-    busyRef.current = true;
-    setBusySection(section);
-    try {
-      reflectCommittedWrite(request, reply);
-      const refreshed = await refreshSnapshot({ discardSection: section, preferredSlug });
-      const writeVerb =
-        request.kind === 'project' && request.expectedSha === null ? 'created' : 'saved';
-      const text =
-        request.kind === 'delete-project'
-          ? `Project “${request.slug}” was deleted.`
-          : section === 'projects'
-            ? `Project ${writeVerb}.`
-            : section === 'site'
-              ? 'Site profile saved.'
-              : section === 'categories'
-                ? 'Categories saved.'
-                : section === 'technologies'
-                  ? 'Technologies saved.'
-                  : 'Design selection saved.';
-      const refreshNote = !refreshed
-        ? ' The commit succeeded, but the latest repository snapshot could not be loaded; refresh before editing again.'
-        : reply.cache === 'pending'
-          ? ' Public refresh is pending.'
-          : reply.cache === 'refreshed'
-            ? ' Cache invalidation was accepted. Visitors may briefly see the previous version while regeneration runs.'
-            : '';
-      setSectionMessage(section, {
-        tone: refreshed ? 'success' : 'error',
-        text: `${text}${refreshNote}`,
-        commitUrl: safeCommitUrl(reply.commitUrl),
-        cache: reply.cache,
-        ...(reply.cache === 'pending'
-          ? {
-              revalidateTarget:
-                request.kind === 'site'
-                  ? 'site'
-                  : request.kind === 'designs'
-                    ? 'designs'
-                    : request.kind === 'categories' || request.kind === 'technologies'
-                      ? 'taxonomy'
-                      : 'project',
-              ...(request.kind === 'project' || request.kind === 'delete-project'
-                ? { revalidateSlug: request.slug }
-                : {}),
-            }
-          : {}),
-      });
-    } finally {
-      busyRef.current = false;
-      setBusySection(null);
-    }
   }
 
   async function saveProject(data: ProjectDocument) {
@@ -476,6 +371,13 @@ export function CmsEditor() {
       return;
     }
     const current = snapshot?.projects.find((project) => project.slug === slug);
+    if (!selectedProjectSlug && current) {
+      setSectionMessage('projects', {
+        tone: 'error',
+        text: 'A project with this URL slug already exists. Choose another slug.',
+      });
+      return;
+    }
     if (selectedProjectSlug && !current) {
       setSectionMessage('projects', {
         tone: 'error',
@@ -483,77 +385,81 @@ export function CmsEditor() {
       });
       return;
     }
-    const request: CmsWriteRequest = {
-      kind: 'project',
-      slug,
-      expectedSha: selectedProjectSlug ? (current?.sha ?? null) : null,
-      data,
-    };
-    const reply = await sendMutation('projects', request, slug);
-    if (!reply) {
+    const saved = await updateDraft((value) => ({
+      ...stageProject(value, slug, selectedProjectSlug ? current?.sha || null : null, data),
+      newProject: undefined,
+    }));
+    if (!saved) {
       return;
     }
+    setSnapshot((value) => value && applyDraft(value, getDraft()));
     projectForm.reset(data);
     setSelectedProjectSlug(slug);
     setNewProjectSlug('');
-    await finishWrite('projects', request, reply, slug);
+    setSectionMessage('projects', { tone: 'success', text: 'Project saved to the browser draft.' });
   }
 
   async function saveSite(data: SiteDocument) {
     if (!snapshot) {
       return;
     }
-    const request: CmsWriteRequest = { kind: 'site', expectedSha: snapshot.site.sha, data };
-    const reply = await sendMutation('site', request);
-    if (!reply) {
+    if (
+      !(await updateDraft((value) => ({
+        ...value,
+        site: { expectedSha: value.site?.expectedSha ?? snapshot.site.sha, data },
+      })))
+    ) {
       return;
     }
     siteForm.reset(data);
-    await finishWrite('site', request, reply);
+    setSnapshot((value) => value && applyDraft(value, getDraft()));
+    setSectionMessage('site', {
+      tone: 'success',
+      text: 'Site profile saved to the browser draft.',
+    });
   }
 
   async function saveCategories(data: Categories) {
     if (!snapshot) {
       return;
     }
-    const request: CmsWriteRequest = {
-      kind: 'categories',
-      expectedSha: snapshot.categories.sha,
-      data,
-    };
-    const reply = await sendMutation('categories', request);
-    if (!reply) {
+    if (
+      !(await updateDraft((value) => ({
+        ...value,
+        categories: { expectedSha: value.categories?.expectedSha ?? snapshot.categories.sha, data },
+      })))
+    ) {
       return;
     }
     categoriesForm.reset(data);
-    await finishWrite('categories', request, reply);
+    setSnapshot((value) => value && applyDraft(value, getDraft()));
+    setSectionMessage('categories', {
+      tone: 'success',
+      text: 'Categories saved to the browser draft.',
+    });
   }
 
   async function saveTechnologies(data: Technologies) {
     if (!snapshot) {
       return;
     }
-    const request: CmsWriteRequest = {
-      kind: 'technologies',
-      expectedSha: snapshot.technologies.sha,
-      data,
-    };
-    const reply = await sendMutation('technologies', request);
-    if (!reply) {
+    if (
+      !(await updateDraft((value) => ({
+        ...value,
+        technologies: {
+          expectedSha: value.technologies?.expectedSha ?? snapshot.technologies.sha,
+          data,
+        },
+      })))
+    ) {
       return;
     }
     technologiesForm.reset(data);
-    await finishWrite('technologies', request, reply);
-  }
-
-  async function saveDesigns(selection: { expectedSha: string; designs: string[] }) {
-    const request: CmsWriteRequest = { kind: 'designs', ...selection };
-    const reply = await sendMutation('designs', request);
-    if (!reply) {
-      return null;
-    }
-    await finishWrite('designs', request, reply);
-    return reply;
+    setSnapshot((value) => value && applyDraft(value, getDraft()));
+    setSectionMessage('technologies', {
+      tone: 'success',
+      text: 'Technologies saved to the browser draft.',
+    });
   }
 
   async function deleteProject() {
@@ -561,28 +467,48 @@ export function CmsEditor() {
     if (!current) {
       return;
     }
-    const hasDraft = projectForm.formState.isDirty;
-    const detail = hasDraft ? ' Unsaved edits to this project will also be discarded.' : '';
     if (
-      !window.confirm(
-        `Delete “${current.data.title}” (${current.slug}) from the content repository?${detail} This cannot be undone.`,
-      )
+      !(await confirm({
+        title: 'Remove this project?',
+        description: `“${current.data.title}” will be removed when you submit the draft.`,
+        confirmLabel: 'Remove project',
+      }))
     ) {
       return;
     }
-    const request: CmsWriteRequest = {
-      kind: 'delete-project',
-      slug: current.slug,
-      expectedSha: current.sha,
-    };
-    const reply = await sendMutation('projects', request, current.slug);
-    if (!reply) {
+    const saved = await updateDraft((value) => {
+      const staged = value.projects.upsert.find((project) => project.slug === current.slug);
+      const expectedSha = staged ? staged.expectedSha : current.sha || null;
+      return {
+        ...value,
+        projects: {
+          upsert: value.projects.upsert.filter((project) => project.slug !== current.slug),
+          delete: expectedSha
+            ? [
+                ...value.projects.delete.filter((project) => project.slug !== current.slug),
+                { slug: current.slug, expectedSha },
+              ]
+            : value.projects.delete,
+        },
+      };
+    });
+    if (!saved) {
       return;
     }
+    setSnapshot(
+      (value) =>
+        value && {
+          ...value,
+          projects: value.projects.filter((project) => project.slug !== current.slug),
+        },
+    );
     projectForm.reset(emptyProject());
     setSelectedProjectSlug('');
     setNewProjectSlug('');
-    await finishWrite('projects', request, reply, '');
+    setSectionMessage('projects', {
+      tone: 'success',
+      text: 'Project removal saved to the browser draft.',
+    });
   }
 
   async function initializeRepository() {
@@ -626,46 +552,21 @@ export function CmsEditor() {
     }
   }
 
-  async function uploadImage(file: File, slug: string, scope: 'project' | 'technology') {
+  async function uploadImage(
+    file: File,
+    target: { kind: 'project' | 'technology'; projectSlug?: string },
+  ) {
     if (busyRef.current) {
-      return;
+      throw new Error('Wait for the current image to finish.');
     }
     busyRef.current = true;
     setBusySection('images');
-    setUploadResult(undefined);
     clearSectionMessage('images');
     try {
-      const content = await base64Content(file);
-      const response = await fetch('/api/cms/media', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, filename: file.name, mime: file.type, content }),
-      });
-      const body = await readJson(response);
-      const serverMessage = errorFrom(body);
-      if (!response.ok || serverMessage || typeof body.path !== 'string') {
-        throw new Error(
-          serverMessage ||
-            (typeof body.message === 'string'
-              ? body.message
-              : `Image upload failed (${response.status}). Choose the image again and retry.`),
-        );
-      }
-      const result: ImageUploadResult = {
-        path: body.path,
-        commitUrl: typeof body.commitUrl === 'string' ? body.commitUrl : '',
-        scope,
-        slug,
-      };
-      setUploadResult(result);
-      const refreshed = await refreshSnapshot();
-      setSectionMessage('images', {
-        tone: 'success',
-        text: refreshed
-          ? 'Image uploaded. Add its path to a project or technology draft, then save that content separately.'
-          : 'Image uploaded, but the latest content snapshot could not be loaded. The path is still available below.',
-        commitUrl: safeCommitUrl(result.commitUrl),
-      });
+      const slug = target.kind === 'technology' ? 'technologies' : target.projectSlug || '';
+      const result = await draftStore.stageMedia(file, target.kind, slug);
+      setSectionMessage('images', { tone: 'success', text: 'Image saved to the browser draft.' });
+      return result;
     } catch (error) {
       setSectionMessage('images', {
         tone: 'error',
@@ -674,91 +575,402 @@ export function CmsEditor() {
             ? error.message
             : 'Image upload failed. Choose the image again and retry.',
       });
+      throw error;
     } finally {
       busyRef.current = false;
       setBusySection(null);
     }
   }
 
-  async function retryRevalidation(section: CmsSection) {
-    const prior = messages[section];
-    let target: 'project' | 'site' | 'taxonomy' | 'designs' | undefined = prior?.revalidateTarget;
-    let slug = prior?.revalidateSlug;
-    if (!target && section === 'projects') {
-      target = 'project';
-      slug = selectedProjectSlug || newProjectSlug.trim() || prior?.conflictSlug;
-    } else if (!target && section === 'site') {
-      target = 'site';
-    } else if (!target && (section === 'categories' || section === 'technologies')) {
-      target = 'taxonomy';
-    } else if (!target && section === 'designs') {
-      target = 'designs';
+  async function prepareDraft(): Promise<CmsDraft> {
+    if (!snapshot) {
+      throw new Error('Load the repository before submitting.');
     }
-    if (!target) {
-      return;
+    let next = getDraft();
+    if (projectForm.formState.isDirty) {
+      if (selectedProjectSlug) {
+        const current = snapshot.projects.find((project) => project.slug === selectedProjectSlug);
+        next = stageProject(
+          next,
+          selectedProjectSlug,
+          current?.sha || null,
+          projectForm.getValues(),
+        );
+      } else {
+        next = { ...next, newProject: { slug: newProjectSlug, data: projectForm.getValues() } };
+      }
     }
-    const reply = await sendMutation(
-      section,
-      {
-        kind: 'revalidate',
-        target,
-        ...(target === 'project' && slug ? { slug } : {}),
-      },
-      undefined,
-      { target, slug, commitUrl: prior?.commitUrl },
-    );
-    if (reply) {
-      setSectionMessage(section, {
-        tone: 'success',
-        text:
-          reply.cache === 'pending'
-            ? 'Public refresh is still pending. You can retry again.'
-            : 'Public cache invalidation was accepted. Visitors may briefly see the previous version while regeneration runs.',
-        commitUrl: safeCommitUrl(reply.commitUrl) || prior?.commitUrl,
-        cache: reply.cache,
-        revalidateTarget: target,
-        revalidateSlug: slug,
-      });
+    if (siteForm.formState.isDirty) {
+      next = {
+        ...next,
+        site: {
+          expectedSha: next.site?.expectedSha ?? snapshot.site.sha,
+          data: siteForm.getValues(),
+        },
+      };
     }
+    if (categoriesForm.formState.isDirty) {
+      next = {
+        ...next,
+        categories: {
+          expectedSha: next.categories?.expectedSha ?? snapshot.categories.sha,
+          data: categoriesForm.getValues(),
+        },
+      };
+    }
+    if (technologiesForm.formState.isDirty) {
+      next = {
+        ...next,
+        technologies: {
+          expectedSha: next.technologies?.expectedSha ?? snapshot.technologies.sha,
+          data: technologiesForm.getValues(),
+        },
+      };
+    }
+    let promotedSlug: string | undefined;
+    if (next.newProject) {
+      const slug = next.newProject.slug.trim();
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+        throw new Error('Enter a valid URL slug for the new project before submitting.');
+      }
+      if (snapshot.projects.some((project) => project.slug === slug)) {
+        throw new Error(
+          `A project with the URL slug “${slug}” already exists. Choose another slug.`,
+        );
+      }
+      next = { ...stageProject(next, slug, null, next.newProject.data), newProject: undefined };
+      promotedSlug = slug;
+    }
+    if (!hasDraftChanges(next)) {
+      throw new Error('There are no changes to submit.');
+    }
+    const candidate = {
+      kind: 'finalize',
+      repositoryKey: next.repository,
+      projects: next.projects,
+      ...(next.site && { site: next.site }),
+      ...(next.categories && { categories: next.categories }),
+      ...(next.technologies && { technologies: next.technologies }),
+      ...(next.designs && { designs: next.designs }),
+      media: next.media.map((item) => ({ ...item, blobSha: '0'.repeat(40) })),
+    };
+    const validation = finalizeCmsDraftSchema.safeParse(candidate);
+    if (!validation.success) {
+      const issue = validation.error.issues[0];
+      const section = issue.path[0];
+      let label = 'draft';
+      if (
+        section === 'projects' &&
+        issue.path[1] === 'upsert' &&
+        typeof issue.path[2] === 'number'
+      ) {
+        const invalid = next.projects.upsert[issue.path[2]];
+        if (invalid) {
+          const newProject = getDraft().newProject;
+          const editingNew = newProject?.slug.trim() === invalid.slug;
+          setSelectedProjectSlug(editingNew ? '' : invalid.slug);
+          setNewProjectSlug(editingNew ? invalid.slug : '');
+          projectForm.reset(invalid.data);
+          setActiveSection('projects');
+          requestAnimationFrame(() => void projectForm.trigger(undefined, { shouldFocus: true }));
+          label = `project “${invalid.data.title || invalid.slug}”`;
+        }
+      } else if (section === 'site') {
+        setActiveSection('site');
+        requestAnimationFrame(() => void siteForm.trigger(undefined, { shouldFocus: true }));
+        label = 'site profile';
+      } else if (section === 'categories') {
+        setActiveSection('categories');
+        requestAnimationFrame(() => void categoriesForm.trigger(undefined, { shouldFocus: true }));
+        label = 'categories';
+      } else if (section === 'technologies') {
+        setActiveSection('technologies');
+        requestAnimationFrame(
+          () => void technologiesForm.trigger(undefined, { shouldFocus: true }),
+        );
+        label = 'technologies';
+      } else if (section === 'designs') {
+        setActiveSection('designs');
+        label = 'design selection';
+      }
+      throw new Error(`Check the ${label}: ${issue.message}`);
+    }
+    const view = applyDraft(snapshot, next);
+    const referencedImages = new Set([
+      ...view.projects.flatMap(({ data }) => [data.media.cover, ...data.media.gallery]),
+      ...Object.values(view.technologies.data).flatMap(({ icon }) => (icon ? [icon] : [])),
+    ]);
+    const unusedImage = next.media.find(({ path }) => !referencedImages.has(path));
+    if (unusedImage) {
+      setActiveSection('images');
+      throw new Error(
+        `Attach ${unusedImage.filename} to a project or technology, or remove it from the draft before submitting.`,
+      );
+    }
+    if (!(await updateDraft(() => next))) {
+      throw new Error('The draft could not be saved in this browser. Free storage and retry.');
+    }
+    if (promotedSlug) {
+      setSnapshot((current) => current && applyDraft(current, next));
+      if (!selectedProjectSlug && newProjectSlug.trim() === promotedSlug) {
+        setSelectedProjectSlug(promotedSlug);
+        setNewProjectSlug('');
+        const promoted = next.projects.upsert.find((project) => project.slug === promotedSlug);
+        if (promoted) {
+          projectForm.reset(promoted.data);
+        }
+      }
+    }
+    return next;
   }
 
-  async function reloadConflict(section: CmsSection) {
+  async function submitDraft() {
     if (busyRef.current) {
       return;
     }
     busyRef.current = true;
-    setBusySection(section);
+    setBusySection('submit');
+    setMessages({});
+    setFinalMessage(undefined);
+    let prepared: CmsDraft;
     try {
-      if (section === 'designs') {
-        setSectionMessage(section, undefined);
-        setDiscardVersions((current) => ({ ...current, [section]: current[section] + 1 }));
+      prepared = await prepareDraft();
+    } catch (error) {
+      setFinalMessage({
+        tone: 'error',
+        text: error instanceof Error ? error.message : 'Check the draft before submitting.',
+      });
+      busyRef.current = false;
+      setBusySection(null);
+      return;
+    }
+    if (
+      !(await confirm({
+        title: 'Submit all changes?',
+        description:
+          'All draft changes and selected images will be published together in one commit to the public content repository.',
+        confirmLabel: 'Submit changes',
+      }))
+    ) {
+      busyRef.current = false;
+      setBusySection(null);
+      return;
+    }
+    setConflicts([]);
+    try {
+      const media: Array<(typeof prepared.media)[number] & { blobSha: string }> = [];
+      for (const item of prepared.media) {
+        const content = await draftStore.readMedia(item.path);
+        if (!content) {
+          throw new Error(
+            `The saved image ${item.filename} is unavailable in this browser. Add it again before submitting.`,
+          );
+        }
+        const response = await fetch('/api/cms/media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scope: item.scope,
+            slug: item.slug,
+            filename: item.filename,
+            mime: item.mime,
+            content,
+          }),
+        });
+        const body = await readJson(response);
+        if (!response.ok || errorFrom(body)) {
+          throw new Error(errorFrom(body) || `Could not prepare ${item.filename}.`);
+        }
+        if (
+          body.path !== item.path ||
+          typeof body.blobSha !== 'string' ||
+          !/^[a-f0-9]{40}$/i.test(body.blobSha)
+        ) {
+          throw new Error(`The server returned an invalid result for ${item.filename}.`);
+        }
+        media.push({ ...item, blobSha: body.blobSha });
+      }
+      const response = await fetch('/api/cms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'finalize',
+          repositoryKey: prepared.repository,
+          projects: prepared.projects,
+          ...(prepared.site && { site: prepared.site }),
+          ...(prepared.categories && { categories: prepared.categories }),
+          ...(prepared.technologies && { technologies: prepared.technologies }),
+          ...(prepared.designs && { designs: prepared.designs }),
+          media,
+        }),
+      });
+      const body = await readJson(response);
+      if (response.status === 409) {
+        try {
+          setConflicts(await loadConflictReview(body, prepared));
+          setFinalMessage({
+            tone: 'conflict',
+            text: 'The repository changed. Review the latest content below; your browser draft is intact.',
+          });
+        } catch (error) {
+          setFinalMessage({
+            tone: 'error',
+            text:
+              error instanceof Error
+                ? error.message
+                : 'The repository changed. Your draft is intact.',
+          });
+        }
         return;
       }
-      const preferredSlug = section === 'projects' ? messages.projects?.conflictSlug : undefined;
-      const refreshed = await refreshSnapshot({ discardSection: section, preferredSlug });
-      if (refreshed) {
-        setSectionMessage(section, undefined);
-        setDiscardVersions((current) => ({ ...current, [section]: current[section] + 1 }));
+      if (!response.ok || errorFrom(body)) {
+        throw new Error(errorFrom(body) || 'The draft could not be submitted.');
       }
+      const commitUrl =
+        typeof body.commitUrl === 'string' ? safeCommitUrl(body.commitUrl) : undefined;
+      const pendingRefresh = body.cache !== 'refreshed';
+      projectForm.reset(projectForm.getValues());
+      siteForm.reset(siteForm.getValues());
+      categoriesForm.reset(categoriesForm.getValues());
+      technologiesForm.reset(technologiesForm.getValues());
+      setNewProjectSlug('');
+      const cleared = await updateDraft(() => ({
+        ...emptyDraft(prepared.repository),
+        ...(pendingRefresh && { pendingRefresh: { commitUrl } }),
+      }));
+      if (cleared) {
+        await draftStore.removeMedia(prepared.media.map((item) => item.path));
+      }
+      setFinalMessage({
+        tone: cleared ? 'success' : 'error',
+        text: !cleared
+          ? 'The commit succeeded, but the browser could not clear its saved draft. Discard the old draft before editing again.'
+          : pendingRefresh
+            ? 'The commit succeeded. Public refresh is pending; retry it without submitting again.'
+            : 'All changes were submitted in one commit. Public content is refreshing.',
+        commitUrl,
+        ...(pendingRefresh && { cache: 'pending' as const }),
+      });
+      loadedSnapshotRef.current = false;
+      setDiscardVersions(
+        (value) =>
+          Object.fromEntries(
+            Object.entries(value).map(([key, version]) => [key, version + 1]),
+          ) as Record<CmsSection, number>,
+      );
+      await refreshSnapshot({ initial: true });
+    } catch (error) {
+      setFinalMessage({
+        tone: 'error',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Submission failed. Your draft is still saved in this browser.',
+      });
     } finally {
       busyRef.current = false;
       setBusySection(null);
     }
   }
 
-  function selectProject(slug: string) {
+  async function acceptReviewedVersions() {
+    if (!conflicts.length || conflicts.some((item) => !item.canRebase)) {
+      return;
+    }
+    if (
+      !(await confirm({
+        title: 'Use reviewed versions as baseline?',
+        description:
+          'Your draft will replace the reviewed fields on the next submission. Any further repository changes will still require review.',
+        confirmLabel: 'Use reviewed versions',
+      }))
+    ) {
+      return;
+    }
+    if (await updateDraft((value) => rebaseReviewedVersions(value, conflicts))) {
+      setConflicts([]);
+      setFinalMessage({
+        tone: 'success',
+        text: 'Reviewed versions are the new baseline. Submit again when ready.',
+      });
+      await refreshSnapshot();
+    }
+  }
+
+  async function discardDraft() {
+    if (busyRef.current) {
+      return;
+    }
+    if (
+      !(await confirm({
+        title: 'Discard browser draft?',
+        description: 'All unsubmitted changes and staged images in this browser will be removed.',
+        confirmLabel: 'Discard draft',
+      }))
+    ) {
+      return;
+    }
+    busyRef.current = true;
+    setBusySection('submit');
+    try {
+      if (!(await draftStore.clear())) {
+        return;
+      }
+      projectForm.reset(emptyProject());
+      siteForm.reset(emptySite());
+      categoriesForm.reset({});
+      technologiesForm.reset({});
+      setNewProjectSlug('');
+      loadedSnapshotRef.current = false;
+      setConflicts([]);
+      setDiscardVersions(
+        (value) =>
+          Object.fromEntries(
+            Object.entries(value).map(([key, version]) => [key, version + 1]),
+          ) as Record<CmsSection, number>,
+      );
+      setFinalMessage({ tone: 'success', text: 'Browser draft discarded.' });
+      await refreshSnapshot({ initial: true });
+    } finally {
+      busyRef.current = false;
+      setBusySection(null);
+    }
+  }
+
+  async function selectProject(slug: string) {
     if (slug === selectedProjectSlug) {
       return;
     }
-    const hasDraft =
-      projectForm.formState.isDirty || (!selectedProjectSlug && Boolean(newProjectSlug.trim()));
-    if (hasDraft && !window.confirm('Discard the unsaved project draft and switch projects?')) {
-      return;
+    if (
+      snapshot &&
+      (projectForm.formState.isDirty || (!selectedProjectSlug && newProjectSlug.trim()))
+    ) {
+      const data = projectForm.getValues();
+      let saved: boolean;
+      if (selectedProjectSlug) {
+        const sha =
+          snapshot.projects.find((project) => project.slug === selectedProjectSlug)?.sha || null;
+        saved = await updateDraft((value) => stageProject(value, selectedProjectSlug, sha, data));
+      } else {
+        saved = await updateDraft((value) => ({
+          ...value,
+          newProject: { slug: newProjectSlug, data },
+        }));
+      }
+      if (!saved) {
+        setSectionMessage('projects', {
+          tone: 'error',
+          text: 'The project draft could not be saved in this browser. Resolve the storage issue before switching projects.',
+        });
+        return;
+      }
     }
     setSelectedProjectSlug(slug);
-    setNewProjectSlug('');
-    const next = snapshot?.projects.find((project) => project.slug === slug);
-    projectForm.reset(next?.data || emptyProject());
+    const savedNew = !slug ? getDraft().newProject : undefined;
+    setNewProjectSlug(savedNew?.slug || '');
+    const view = snapshot && applyDraft(snapshot, getDraft());
+    const next = view?.projects.find((project) => project.slug === slug);
+    projectForm.reset(savedNew?.data || next?.data || emptyProject());
     clearSectionMessage('projects');
   }
 
@@ -777,11 +989,35 @@ export function CmsEditor() {
   }
 
   async function refreshPublicContent() {
-    setPublicRefreshMessage('');
-    const reply = await sendMutation('site', { kind: 'revalidate', target: 'all' });
-    setPublicRefreshMessage(
-      reply ? 'Public content refresh requested.' : 'Public content refresh failed. Try again.',
-    );
+    if (busyRef.current) {
+      return;
+    }
+    busyRef.current = true;
+    setBusySection('site');
+    try {
+      const response = await fetch('/api/cms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'revalidate', target: 'all' }),
+      });
+      const body = await readJson(response);
+      if (!response.ok || errorFrom(body) || body.cache === 'pending') {
+        throw new Error(errorFrom(body) || 'Public content refresh is still pending.');
+      }
+      if (getDraft().pendingRefresh) {
+        await updateDraft((value) => ({ ...value, pendingRefresh: undefined }));
+      }
+      setFinalMessage({ tone: 'success', text: 'Public content refresh requested.' });
+    } catch (error) {
+      setFinalMessage({
+        tone: 'error',
+        text: `${error instanceof Error ? error.message : 'Public content refresh failed.'} You can retry without creating another commit.`,
+        ...(getDraft().pendingRefresh && { cache: 'pending' as const }),
+      });
+    } finally {
+      busyRef.current = false;
+      setBusySection(null);
+    }
   }
 
   const pending = busySection !== null;
@@ -824,6 +1060,16 @@ export function CmsEditor() {
           >
             Retry loading
           </button>
+          {(hasDraftChanges(draft) || draftStore.error) && (
+            <button
+              type="button"
+              className="button button-outline"
+              onClick={() => void discardDraft()}
+              disabled={pending}
+            >
+              Discard browser draft
+            </button>
+          )}
         </section>
       )}
 
@@ -854,15 +1100,84 @@ export function CmsEditor() {
 
       {loadState === 'ready' && snapshot && (
         <>
-          <button
-            type="button"
-            className="button button-outline"
-            disabled={pending}
-            onClick={() => void refreshPublicContent()}
-          >
-            Refresh public content
-          </button>
-          <p role="status">{publicRefreshMessage}</p>
+          <div className="cms-editor-actions cms-editor-publish-actions">
+            <button
+              type="button"
+              className="button"
+              disabled={pending || !hasUnsavedChanges}
+              onClick={() => void submitDraft()}
+            >
+              {busySection === 'submit' ? 'Submitting…' : 'Submit all changes'}
+            </button>
+            <button
+              type="button"
+              className="button button-outline"
+              disabled={pending || !hasUnsavedChanges}
+              onClick={() => void discardDraft()}
+            >
+              Discard browser draft
+            </button>
+            <button
+              type="button"
+              className="button button-outline"
+              disabled={pending}
+              onClick={() => void refreshPublicContent()}
+            >
+              {draft.pendingRefresh ? 'Retry public refresh' : 'Refresh public content'}
+            </button>
+          </div>
+          <p className="cms-editor-draft-state">
+            {draftStore.saving
+              ? 'Saving draft in this browser…'
+              : draftStore.error
+                ? 'The browser draft could not be saved.'
+                : 'Changes are saved in this browser until you submit them together.'}
+          </p>
+          {draftStore.error && (
+            <p className="cms-editor-field-error" role="alert">
+              {draftStore.error}
+            </p>
+          )}
+          {conflicts.length > 0 && (
+            <section className="cms-editor-conflicts" aria-labelledby="cms-conflicts-heading">
+              <h3 id="cms-conflicts-heading">Review conflicting changes</h3>
+              <p>
+                Compare your draft with the latest repository content before choosing what to do.
+                Nothing has been committed.
+              </p>
+              {conflicts.some((item) => item.path === '@repository') && (
+                <p>
+                  Return to the repository and branch where this draft was created, or discard the
+                  draft before editing the new target.
+                </p>
+              )}
+              {conflicts.map((item) => (
+                <details key={item.path}>
+                  <summary>{item.path}</summary>
+                  <p>Latest repository version</p>
+                  <pre>
+                    {typeof item.latest === 'string'
+                      ? item.latest
+                      : JSON.stringify(item.latest, null, 2)}
+                  </pre>
+                  <p>Your draft</p>
+                  <pre>
+                    {typeof item.draft === 'string'
+                      ? item.draft
+                      : JSON.stringify(item.draft, null, 2)}
+                  </pre>
+                </details>
+              ))}
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={() => void acceptReviewedVersions()}
+                disabled={pending || conflicts.some((item) => !item.canRebase)}
+              >
+                Use reviewed versions as baseline
+              </button>
+            </section>
+          )}
           {loadError && (
             <div className="cms-editor-message cms-editor-message-error" role="alert">
               <p>{loadError}</p>
@@ -906,8 +1221,7 @@ export function CmsEditor() {
             feedback={
               <CmsMessage
                 message={messages.projects}
-                onReload={() => void reloadConflict('projects')}
-                onRetry={() => void retryRevalidation('projects')}
+                onDismiss={() => clearSectionMessage('projects')}
                 pending={pending}
               />
             }
@@ -928,8 +1242,7 @@ export function CmsEditor() {
             feedback={
               <CmsMessage
                 message={messages.site}
-                onReload={() => void reloadConflict('site')}
-                onRetry={() => void retryRevalidation('site')}
+                onDismiss={() => clearSectionMessage('site')}
                 pending={pending}
               />
             }
@@ -944,8 +1257,7 @@ export function CmsEditor() {
             feedback={
               <CmsMessage
                 message={messages.categories}
-                onReload={() => void reloadConflict('categories')}
-                onRetry={() => void retryRevalidation('categories')}
+                onDismiss={() => clearSectionMessage('categories')}
                 pending={pending}
               />
             }
@@ -960,8 +1272,7 @@ export function CmsEditor() {
             feedback={
               <CmsMessage
                 message={messages.technologies}
-                onReload={() => void reloadConflict('technologies')}
-                onRetry={() => void retryRevalidation('technologies')}
+                onDismiss={() => clearSectionMessage('technologies')}
                 pending={pending}
               />
             }
@@ -975,14 +1286,11 @@ export function CmsEditor() {
             feedback={
               <CmsMessage
                 message={messages.designs}
-                onReload={() => void reloadConflict('designs')}
-                onRetry={() => void retryRevalidation('designs')}
+                onDismiss={() => clearSectionMessage('designs')}
                 pending={pending}
               />
             }
-            onSave={saveDesigns}
             onClearMessage={() => clearSectionMessage('designs')}
-            onDirtyChange={setDesignsDirty}
           />
           <ImagesPanel
             key={`images:${discardVersions.images}`}
@@ -995,17 +1303,22 @@ export function CmsEditor() {
             feedback={
               <CmsMessage
                 message={messages.images}
-                onReload={() => void reloadConflict('images')}
-                onRetry={() => void retryRevalidation('images')}
+                onDismiss={() => clearSectionMessage('images')}
                 pending={pending}
               />
             }
-            result={uploadResult}
             onUpload={uploadImage}
             onClearMessage={() => clearSectionMessage('images')}
           />
         </>
       )}
+      <CmsMessage
+        message={finalMessage}
+        onDismiss={() => setFinalMessage(undefined)}
+        onRetry={() => void refreshPublicContent()}
+        pending={pending}
+      />
+      {confirmationDialog}
     </section>
   );
 }

@@ -12,8 +12,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .cms-editor-checkbox-list,
-  .cms-editor-check-grid {
+  .cms-editor-checkbox-list {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3) var(--space-5);
@@ -38,12 +37,60 @@
       accent-color: var(--accent);
     }
   }
-}
 
-@media (width >= 48rem) {
-  .cms-editor .cms-editor-project-panel {
-    .cms-editor-check-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  .cms-editor-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cms-editor-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+    border: 1px solid var(--control-border);
+    border-radius: 999px;
+    background: var(--background);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 550;
+  }
+
+  .cms-editor-chip-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .cms-editor-chip-remove {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 2.25rem;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: var(--surface-high);
+    color: var(--text);
+    font-size: 1.25rem;
+    line-height: 1;
+
+    &:hover:not(:disabled) {
+      border-color: var(--control-border);
+      color: var(--accent);
     }
+  }
+
+  .cms-editor-tag-add-row {
+    max-width: 42rem;
   }
 }

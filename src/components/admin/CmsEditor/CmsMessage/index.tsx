@@ -2,7 +2,7 @@ import { safeCommitUrl } from '../utils';
 import type { CmsMessageProps } from './type';
 import './style.css';
 
-export function CmsMessage({ message, onReload, onRetry, pending = false }: CmsMessageProps) {
+export function CmsMessage({ message, onRetry, onDismiss, pending = false }: CmsMessageProps) {
   if (!message) {
     return null;
   }
@@ -11,7 +11,7 @@ export function CmsMessage({ message, onReload, onRetry, pending = false }: CmsM
   const commitUrl = message.commitUrl ? safeCommitUrl(message.commitUrl) : undefined;
 
   return (
-    <div className={`cms-editor-message cms-editor-message-${message.tone}`} role={role}>
+    <div className={`cms-editor-message cms-editor-message-${message.tone} cms-toast`} role={role}>
       <p>{message.text}</p>
       {commitUrl && (
         <a href={commitUrl} target="_blank" rel="noreferrer">
@@ -28,14 +28,14 @@ export function CmsMessage({ message, onReload, onRetry, pending = false }: CmsM
           Retry public refresh
         </button>
       )}
-      {message.tone === 'conflict' && onReload && (
+      {onDismiss && (
         <button
           type="button"
           className="cms-editor-text-button"
-          onClick={onReload}
-          disabled={pending}
+          onClick={onDismiss}
+          aria-label="Dismiss notification"
         >
-          Reload repository version and discard this draft
+          Dismiss
         </button>
       )}
     </div>

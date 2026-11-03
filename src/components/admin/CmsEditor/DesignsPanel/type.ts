@@ -1,4 +1,3 @@
-import type { CmsApiReply } from '../type';
 import type { ReactNode } from 'react';
 
 export type DribbbleShot = {
@@ -12,7 +11,5 @@ export type DesignsPanelProps = {
   active: boolean;
   pending: boolean;
   feedback: ReactNode;
-  onSave: (selection: { expectedSha: string; designs: string[] }) => Promise<CmsApiReply | null>;
   onClearMessage: () => void;
-  onDirtyChange: (dirty: boolean) => void;
 };

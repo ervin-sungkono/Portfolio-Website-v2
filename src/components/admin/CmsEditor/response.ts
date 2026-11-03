@@ -66,7 +66,3 @@ export function parseSnapshot(value: Record<string, unknown>): CmsSnapshot {
     }),
   };
 }
-
-export function cacheState(value: unknown): 'refreshed' | 'pending' | undefined {
-  return value === 'refreshed' || value === 'pending' ? value : undefined;
-}

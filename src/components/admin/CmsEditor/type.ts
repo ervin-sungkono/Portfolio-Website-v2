@@ -12,44 +12,12 @@ export type CmsSnapshot = {
   projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
 };
 
-export type CmsWriteRequest =
-  | { kind: 'project'; slug: string; expectedSha: string | null; data: ProjectDocument }
-  | { kind: 'site'; expectedSha: string; data: SiteDocument }
-  | { kind: 'categories'; expectedSha: string; data: Categories }
-  | { kind: 'technologies'; expectedSha: string; data: Technologies }
-  | { kind: 'designs'; expectedSha: string; designs: string[] }
-  | { kind: 'delete-project'; slug: string; expectedSha: string }
-  | {
-      kind: 'revalidate';
-      target: 'project' | 'site' | 'taxonomy' | 'designs' | 'all';
-      slug?: string;
-    };
-
 export type EditorMessage = {
   tone: 'success' | 'error' | 'conflict';
   text: string;
   commitUrl?: string;
   cache?: 'refreshed' | 'pending';
-  conflictSlug?: string;
-  revalidateTarget?: 'project' | 'site' | 'taxonomy' | 'designs';
-  revalidateSlug?: string;
-};
-
-export type CmsApiReply = {
-  error?: string;
-  message?: string;
-  commitUrl?: string;
-  sha?: string;
-  cache?: 'refreshed' | 'pending';
-  path?: string;
-};
-
-export type ImageUploadResult = {
-  path: string;
-  commitUrl: string;
-  scope: 'project' | 'technology';
-  slug: string;
 };
 
 export type LoadState = 'loading' | 'ready' | 'needs-initialization' | 'error';
-export type BusySection = CmsSection | 'initialize' | null;
+export type BusySection = CmsSection | 'initialize' | 'submit' | null;

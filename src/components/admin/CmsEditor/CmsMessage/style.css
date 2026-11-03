@@ -1,4 +1,15 @@
 .cms-editor {
+  .cms-toast {
+    position: fixed;
+    z-index: 70;
+    inset: auto var(--space-4) var(--space-4) auto;
+    width: min(32rem, calc(100vw - 2 * var(--space-4)));
+    max-height: min(50dvh, 24rem);
+    overflow: auto;
+    box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 18%);
+    margin: 0;
+  }
+
   .cms-editor-message {
     padding: var(--space-4);
     border: 1px solid var(--line);
