@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
 import localFont from 'next/font/local';
 import { ThemeProvider } from 'next-themes';
 import '@/styles/globals.css';
@@ -70,7 +71,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             Skip to Content
           </a>
           <Header name={content?.profile.name ?? 'Portfolio'} />
-          <MotionEnhancements />
+          <Suspense fallback={null}>
+            <MotionEnhancements />
+          </Suspense>
           <main id="main" tabIndex={-1}>
             {children}
           </main>
