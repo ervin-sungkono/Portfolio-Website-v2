@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { motion, useScroll } from 'motion/react';
 import './style.css';
@@ -9,6 +10,7 @@ const DesktopCursor = dynamic(() => import('../DesktopCursor'), { ssr: false });
 
 export function MotionEnhancements() {
   const [desktop, setDesktop] = useState(false);
+  const pathname = usePathname();
   const { scrollYProgress } = useScroll();
   useEffect(() => {
     const media = window.matchMedia(
@@ -28,7 +30,7 @@ export function MotionEnhancements() {
         className="motion-enhancements-progress"
         style={{ scaleX: scrollYProgress }}
       />
-      {desktop && <DesktopCursor />}
+      {desktop && pathname !== '/admin' && !pathname.startsWith('/admin/') && <DesktopCursor />}
     </>
   );
 }
