@@ -24,11 +24,6 @@ export type GitHubContent = {
   download_url?: string | null;
 };
 export type GitHubDirectoryEntry = Omit<GitHubContent, 'content' | 'encoding'>;
-export type GitHubWriteResult = {
-  content: GitHubContent | null;
-  commit: { sha: string; html_url: string };
-};
-
 export function getGitHubPat(): string {
   const token = process.env.GITHUB_PAT?.trim();
   if (!token) {

@@ -25,7 +25,6 @@ import {
   type Technologies,
 } from './schemas.ts';
 
-const cmsIdentity = { name: 'Portfolio CMS', email: 'cms@portfolio.local' };
 const projectSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const allowedMediaSize = 1_048_576;
 
@@ -103,8 +102,12 @@ export async function resolveRepository(token?: string): Promise<RepositoryConte
   return { owner, name: repository, defaultBranch: metadata.default_branch };
 }
 
-function rawMediaUrl(repository: RepositoryContext, path: string): string {
-  const branch = encodeURIComponent(repository.defaultBranch);
+function rawMediaUrl(
+  repository: RepositoryContext,
+  path: string,
+  ref = repository.defaultBranch,
+): string {
+  const branch = encodeURIComponent(ref);
   const encodedPath = path.split('/').map(encodeURIComponent).join('/');
   return `https://raw.githubusercontent.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.name)}/${branch}/${encodedPath}`;
 }
@@ -113,9 +116,10 @@ export async function readContentFile(
   repository: RepositoryContext,
   path: string,
   token?: string,
+  ref = repository.defaultBranch,
 ): Promise<ContentFile | null> {
   const item = await githubJson<GitHubContent>(
-    `${contentsPath(repository.owner, repository.name, path)}?ref=${encodeURIComponent(repository.defaultBranch)}`,
+    `${contentsPath(repository.owner, repository.name, path)}?ref=${encodeURIComponent(ref)}`,
     { token, allowNotFound: true },
   );
   if (!item) {
@@ -132,7 +136,7 @@ export async function readContentFile(
   if (item.encoding === 'base64' && item.content) {
     bytes = Buffer.from(item.content.replace(/\s/g, ''), 'base64');
   } else {
-    bytes = await githubBytes(rawMediaUrl(repository, path), allowedMediaSize);
+    bytes = await githubBytes(rawMediaUrl(repository, path, ref), allowedMediaSize);
   }
   if (bytes.byteLength > allowedMediaSize) {
     throw unsupported(`The content file ${path} exceeds the CMS size limit.`);
@@ -144,9 +148,10 @@ export async function listContentDirectory(
   repository: RepositoryContext,
   path: string,
   token?: string,
+  ref = repository.defaultBranch,
 ): Promise<GitHubDirectoryEntry[] | null> {
   const value = await githubJson<GitHubDirectoryEntry | GitHubDirectoryEntry[]>(
-    `${contentsPath(repository.owner, repository.name, path)}?ref=${encodeURIComponent(repository.defaultBranch)}`,
+    `${contentsPath(repository.owner, repository.name, path)}?ref=${encodeURIComponent(ref)}`,
     { token, allowNotFound: true },
   );
   if (!value) {
@@ -163,8 +168,9 @@ async function requiredDocument<T>(
   path: string,
   schema: { safeParse: (value: unknown) => { success: boolean; data?: T } },
   token?: string,
+  ref = repository.defaultBranch,
 ): Promise<RegistryDocument<T>> {
-  const file = await readContentFile(repository, path, token);
+  const file = await readContentFile(repository, path, token, ref);
   if (!file) {
     throw new CmsError(
       'not_found',
@@ -179,6 +185,22 @@ export async function readPortfolio(token: string): Promise<{
   repository: RepositoryContext;
   data: PortfolioDocument;
   sha: string;
+}>;
+export async function readPortfolio(
+  token: string,
+  ref: string,
+): Promise<{
+  repository: RepositoryContext;
+  data: PortfolioDocument;
+  sha: string;
+}>;
+export async function readPortfolio(
+  token: string,
+  ref?: string,
+): Promise<{
+  repository: RepositoryContext;
+  data: PortfolioDocument;
+  sha: string;
 }> {
   const repository = await resolveRepository(token);
   const portfolio = await requiredDocument(
@@ -186,6 +208,7 @@ export async function readPortfolio(token: string): Promise<{
     'content/portfolio.json',
     portfolioSchema,
     token,
+    ref,
   );
   return { repository, ...portfolio };
 }
@@ -243,10 +266,11 @@ async function verifyMedia(
   repository: RepositoryContext,
   path: string,
   errorCode: CmsErrorCode,
+  ref: string,
 ): Promise<void> {
   let bytes: Uint8Array;
   try {
-    bytes = await githubBytes(rawMediaUrl(repository, path));
+    bytes = await githubBytes(rawMediaUrl(repository, path, ref));
   } catch (error) {
     if (error instanceof CmsError && (error.code === 'not_found' || error.code === 'validation')) {
       const message =
@@ -272,6 +296,7 @@ export async function validateReferences(
   categories: Categories,
   technologies: Technologies,
   errorCode: CmsErrorCode = 'unsupported_repository',
+  options: { ref?: string; stagedMedia?: ReadonlyMap<string, Uint8Array> } = {},
 ): Promise<void> {
   const paths = new Set<string>();
   const repositoryIds = new Set<number>();
@@ -316,17 +341,39 @@ export async function validateReferences(
       paths.add(icon);
     }
   }
-  await Promise.all([...paths].map((path) => verifyMedia(repository, path, errorCode)));
+  const ref = options.ref ?? repository.defaultBranch;
+  const stagedMedia = options.stagedMedia ?? new Map<string, Uint8Array>();
+  await Promise.all(
+    [...paths].map(async (path) => {
+      const staged = stagedMedia.get(path);
+      if (staged) {
+        if (!isValidImageBytes(path, staged)) {
+          throw new CmsError(
+            errorCode,
+            `The referenced media file ${path} is invalid or too large.`,
+            errorCode === 'validation' ? 400 : 409,
+          );
+        }
+        return;
+      }
+      await verifyMedia(repository, path, errorCode, ref);
+    }),
+  );
 }
 
-export async function getSnapshot(token?: string): Promise<CmsSnapshot> {
+export async function getSnapshot(
+  token?: string,
+  ref?: string,
+  validate = true,
+): Promise<CmsSnapshot> {
   const repository = await resolveRepository(token);
+  const revision = ref ?? repository.defaultBranch;
   const [site, categories, technologies] = await Promise.all([
-    requiredDocument(repository, 'content/site.json', siteSchema, token),
-    requiredDocument(repository, 'content/categories.json', categoriesSchema, token),
-    requiredDocument(repository, 'content/technologies.json', technologiesSchema, token),
+    requiredDocument(repository, 'content/site.json', siteSchema, token, revision),
+    requiredDocument(repository, 'content/categories.json', categoriesSchema, token, revision),
+    requiredDocument(repository, 'content/technologies.json', technologiesSchema, token, revision),
   ]);
-  const projectFiles = await listContentDirectory(repository, 'content/projects', token);
+  const projectFiles = await listContentDirectory(repository, 'content/projects', token, revision);
   const projects = await Promise.all(
     (projectFiles ?? []).map(async (entry) => {
       const match = /^([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(entry.name);
@@ -336,7 +383,7 @@ export async function getSnapshot(token?: string): Promise<CmsSnapshot> {
         );
       }
       const slug = match[1];
-      const file = await readContentFile(repository, entry.path, token);
+      const file = await readContentFile(repository, entry.path, token, revision);
       if (!file) {
         throw new CmsError('not_found', `Project ${slug} changed while the CMS was loading.`, 404);
       }
@@ -344,111 +391,26 @@ export async function getSnapshot(token?: string): Promise<CmsSnapshot> {
     }),
   );
   projects.sort((a, b) => a.slug.localeCompare(b.slug));
-  await validateReferences(repository, projects, categories.data, technologies.data);
+  if (validate) {
+    await validateReferences(repository, projects, categories.data, technologies.data, undefined, {
+      ref: revision,
+    });
+  }
   return { repository, site, categories, technologies, projects };
 }
 
 export async function readProjectMedia(
   repository: RepositoryContext,
   path: string,
+  ref?: string,
 ): Promise<Uint8Array> {
-  const bytes = await githubBytes(rawMediaUrl(repository, path));
+  const bytes = await githubBytes(rawMediaUrl(repository, path, ref));
   if (!isValidImageBytes(path, bytes)) {
     throw unsupported(`The media file ${path} is invalid or too large.`);
   }
   return bytes;
 }
 
-export async function writeContentFile(
-  repository: RepositoryContext,
-  path: string,
-  serializedContent: string,
-  expectedSha: string | null,
-  message: string,
-  token: string,
-): Promise<{ commitUrl: string; sha: string; contentSha: string }> {
-  return writeContentBytes(
-    repository,
-    path,
-    Buffer.from(serializedContent, 'utf8'),
-    expectedSha,
-    message,
-    token,
-  );
-}
-
-export async function writeContentBytes(
-  repository: RepositoryContext,
-  path: string,
-  bytes: Uint8Array,
-  expectedSha: string | null,
-  message: string,
-  token: string,
-): Promise<{ commitUrl: string; sha: string; contentSha: string }> {
-  const result = await githubJson<{
-    content: { sha: string };
-    commit: { sha: string; html_url: string };
-  }>(contentsPath(repository.owner, repository.name, path), {
-    token,
-    method: 'PUT',
-    body: {
-      message,
-      content: Buffer.from(bytes).toString('base64'),
-      branch: repository.defaultBranch,
-      ...(expectedSha ? { sha: expectedSha } : {}),
-      author: cmsIdentity,
-      committer: cmsIdentity,
-    },
-  });
-  if (!result?.commit?.sha || !result.commit.html_url || !result.content?.sha) {
-    throw new CmsError(
-      'github',
-      'GitHub accepted the write but returned incomplete commit details.',
-      502,
-    );
-  }
-  return {
-    commitUrl: result.commit.html_url,
-    sha: result.commit.sha,
-    contentSha: result.content.sha,
-  };
-}
-
-export async function deleteContentFile(
-  repository: RepositoryContext,
-  path: string,
-  expectedSha: string,
-  message: string,
-  token: string,
-): Promise<{ commitUrl: string; sha: string }> {
-  const result = await githubJson<{ commit: { sha: string; html_url: string } }>(
-    contentsPath(repository.owner, repository.name, path),
-    {
-      token,
-      method: 'DELETE',
-      body: {
-        message,
-        sha: expectedSha,
-        branch: repository.defaultBranch,
-        author: cmsIdentity,
-        committer: cmsIdentity,
-      },
-    },
-  );
-  if (!result?.commit?.sha || !result.commit.html_url) {
-    throw new CmsError(
-      'github',
-      'GitHub accepted the delete but returned incomplete commit details.',
-      502,
-    );
-  }
-  return { commitUrl: result.commit.html_url, sha: result.commit.sha };
-}
-
 export function isValidProjectSlug(value: string): boolean {
   return projectSlugPattern.test(value);
-}
-
-export function repositoryPath(repository: RepositoryContext, suffix: string): string {
-  return repoPath(repository.owner, repository.name, suffix);
 }

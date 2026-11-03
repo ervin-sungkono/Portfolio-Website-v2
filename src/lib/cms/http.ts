@@ -49,7 +49,10 @@ export function cmsResponse(data: unknown, status = 200) {
 
 export function cmsErrorResponse(error: unknown) {
   if (error instanceof CmsError) {
-    return cmsResponse({ error: error.message, code: error.code }, error.status);
+    return cmsResponse(
+      { error: error.message, code: error.code, ...(error.details ?? {}) },
+      error.status,
+    );
   }
   return cmsResponse(
     { error: 'The CMS request could not be completed. Your unsaved draft is unchanged.' },

@@ -13,12 +13,19 @@ export type CmsErrorCode =
 export class CmsError extends Error {
   readonly code: CmsErrorCode;
   readonly status: number;
+  readonly details?: Record<string, unknown>;
 
-  constructor(code: CmsErrorCode, message: string, status: number) {
+  constructor(
+    code: CmsErrorCode,
+    message: string,
+    status: number,
+    details?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = 'CmsError';
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 

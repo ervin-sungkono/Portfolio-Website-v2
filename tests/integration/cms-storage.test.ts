@@ -4,17 +4,16 @@ import { afterEach, test } from 'vitest';
 import { getCmsConfig } from '../../src/lib/cms/config.ts';
 import { CmsError } from '../../src/lib/cms/errors.ts';
 import { githubJson } from '../../src/lib/cms/github.ts';
-import { uploadMedia } from '../../src/lib/cms/media.ts';
+import { stageMediaBlob } from '../../src/lib/cms/media.ts';
 import { getSnapshot } from '../../src/lib/cms/repository.ts';
 import { initializeRepository } from '../../src/lib/cms/initialization.ts';
-import { publishContent, saveDesignSelection } from '../../src/lib/cms/content-mutations.ts';
 import {
   categoriesSchema,
+  finalizeCmsDraftSchema,
   projectSchema,
-  publishMutationSchema,
+  stageMediaBlobSchema,
   siteSchema,
   technologiesSchema,
-  uploadMediaSchema,
   type ProjectDocument,
 } from '../../src/lib/cms/schemas.ts';
 
@@ -49,37 +48,30 @@ const project = {
   links: { source: 'https://github.com/example/project' },
   media: { cover: 'media/projects/example-project/cover.png', gallery: [] as string[] },
 };
-const portfolio = {
-  schemaVersion: 2,
-  profile: {
-    name: 'Example Owner',
-    title: 'Engineer',
-    intro: 'Example profile',
-    linkedin: 'https://example.com/linkedin',
-    github: 'https://example.com/github',
-    dribbble: 'https://example.com/dribbble',
-    instagram: 'https://example.com/instagram',
-    cv: 'https://example.com/cv',
-    experiences: [],
-    education: { school: 'Example School', degree: 'Computing', years: '2020-2024' },
-  },
-  skills: [],
-  designs: ['1', '3'],
-  projectStudies: {},
-  portfolioSource: 'https://example.com/source',
-  portfolioSourceRef: 'example-ref',
-};
-
 type StoredFile = { bytes: Uint8Array; sha: string };
+type StoredCommit = {
+  treeSha: string;
+  parentSha: string | null;
+  message: string;
+  author: { name: string; email: string };
+  committer: { name: string; email: string };
+};
+type StoredTreeChange = { path: string; sha: string | null };
 type FakeState = {
   exists: boolean;
   private: boolean;
   branch: string;
+  branchRefStatus?: number;
+  branchSha: string;
+  treeSha: string;
   userId: number;
   files: Map<string, StoredFile>;
+  blobs: Map<string, Uint8Array>;
+  commits: Map<string, StoredCommit>;
+  trees: Map<string, StoredTreeChange[]>;
   calls: Array<{ url: URL; init: RequestInit & { next?: unknown } }>;
   nextSha: number;
-  forceWriteStatus?: number;
+  failCommitOnce?: boolean;
 };
 
 function restoreEnvironment() {
@@ -121,6 +113,12 @@ function fileRecord(value: unknown, sha = 'a'.repeat(40)): StoredFile {
   return { bytes, sha };
 }
 
+function gitBlobSha(bytes: Uint8Array): string {
+  return createHash('sha1')
+    .update(Buffer.concat([Buffer.from(`blob ${bytes.byteLength}\0`), Buffer.from(bytes)]))
+    .digest('hex');
+}
+
 function fileApiItem(path: string, stored: StoredFile) {
   return {
     type: 'file',
@@ -138,12 +136,32 @@ function createState(options: Partial<FakeState> = {}): FakeState {
     exists: true,
     private: false,
     branch: 'trunk',
+    branchSha: 'd'.repeat(40),
+    treeSha: 'e'.repeat(40),
     userId: ownerId,
     files: new Map(),
+    blobs: new Map(),
+    commits: new Map([
+      [
+        'd'.repeat(40),
+        {
+          treeSha: 'e'.repeat(40),
+          parentSha: null,
+          message: 'fixture: initial commit',
+          author: { name: 'Fixture', email: 'fixture@example.com' },
+          committer: { name: 'Fixture', email: 'fixture@example.com' },
+        },
+      ],
+    ]),
+    trees: new Map(),
     calls: [],
     nextSha: 1,
     ...options,
   };
+}
+
+function nextGitSha(state: FakeState): string {
+  return (state.nextSha++).toString(16).padStart(40, '0');
 }
 
 function installGithub(state: FakeState): void {
@@ -188,8 +206,18 @@ function installGithub(state: FakeState): void {
         auto_init: boolean;
       };
       assert.equal(body.private, false);
-      assert.equal(body.auto_init, false);
+      assert.equal(body.auto_init, true);
       state.exists = true;
+      state.files.set('README.md', fileRecord(`# ${body.name}\n`));
+      state.branchSha = nextGitSha(state);
+      state.treeSha = nextGitSha(state);
+      state.commits.set(state.branchSha, {
+        treeSha: state.treeSha,
+        parentSha: null,
+        message: 'Initial commit',
+        author: { name: 'GitHub', email: 'noreply@github.com' },
+        committer: { name: 'GitHub', email: 'noreply@github.com' },
+      });
       return jsonResponse({
         name: body.name,
         full_name: `owner/${body.name}`,
@@ -227,8 +255,22 @@ function installGithub(state: FakeState): void {
             full_name: `owner/${process.env.GITHUB_REPO}`,
             default_branch: state.branch,
             private: state.private,
+            node_id: 'fixture-repository-node-id',
           })
         : jsonResponse(null, 404);
+    }
+    if (url.pathname === `${repoPath}/git/ref/heads/${state.branch}` && method === 'GET') {
+      if (state.branchRefStatus) {
+        return jsonResponse({ message: 'Git reference is unavailable' }, state.branchRefStatus);
+      }
+      return jsonResponse({ object: { sha: state.branchSha, type: 'commit' } });
+    }
+    const gitCommitMatch = new RegExp(`^${repoPath}/git/commits/([a-f0-9]{40})$`).exec(
+      url.pathname,
+    );
+    if (gitCommitMatch && method === 'GET') {
+      const commit = state.commits.get(gitCommitMatch[1]);
+      return commit ? jsonResponse({ tree: { sha: commit.treeSha } }) : jsonResponse(null, 404);
     }
     if (url.pathname === `${repoPath}/commits` && method === 'GET') {
       return jsonResponse([
@@ -239,6 +281,102 @@ function installGithub(state: FakeState): void {
       ]);
     }
 
+    if (url.pathname === `${repoPath}/git/blobs` && method === 'POST') {
+      const body = JSON.parse(String(init.body)) as { content: string; encoding: string };
+      assert.equal(body.encoding, 'base64');
+      const bytes = Buffer.from(body.content, 'base64');
+      const sha = gitBlobSha(bytes);
+      state.blobs.set(sha, bytes);
+      return jsonResponse({ sha, size: bytes.byteLength });
+    }
+    if (url.pathname === `${repoPath}/git/trees` && method === 'POST') {
+      const body = JSON.parse(String(init.body)) as {
+        base_tree: string;
+        tree: Array<{ path: string; mode: string; type: string; sha: string | null }>;
+      };
+      assert.equal(body.base_tree, state.treeSha);
+      assert.ok(body.tree.length > 0);
+      assert.ok(body.tree.every(({ mode, type }) => mode === '100644' && type === 'blob'));
+      const sha = nextGitSha(state);
+      state.trees.set(
+        sha,
+        body.tree.map(({ path, sha: blobSha }) => ({ path, sha: blobSha })),
+      );
+      return jsonResponse({ sha });
+    }
+    if (url.pathname === `${repoPath}/git/commits` && method === 'POST') {
+      if (state.failCommitOnce) {
+        state.failCommitOnce = false;
+        return jsonResponse({ message: 'transient commit failure' }, 500);
+      }
+      const body = JSON.parse(String(init.body)) as {
+        message: string;
+        tree: string;
+        parents: string[];
+        author: { name: string; email: string };
+        committer: { name: string; email: string };
+      };
+      assert.equal(body.message, 'cms: initialize portfolio content');
+      assert.deepEqual(body.parents, [state.branchSha]);
+      assert.deepEqual(body.author, { name: 'Portfolio CMS', email: 'cms@portfolio.local' });
+      assert.deepEqual(body.committer, body.author);
+      const sha = nextGitSha(state);
+      state.commits.set(sha, {
+        treeSha: body.tree,
+        parentSha: body.parents[0],
+        message: body.message,
+        author: body.author,
+        committer: body.committer,
+      });
+      return jsonResponse({
+        sha,
+        html_url: `https://github.com/owner/${process.env.GITHUB_REPO}/commit/${sha}`,
+      });
+    }
+    if (url.hostname === 'api.github.com' && url.pathname === '/graphql' && method === 'POST') {
+      const body = JSON.parse(String(init.body)) as {
+        variables: {
+          input: {
+            repositoryId: string;
+            refUpdates: Array<{
+              name: string;
+              beforeOid: string;
+              afterOid: string;
+              force: boolean;
+            }>;
+            clientMutationId: string;
+          };
+        };
+      };
+      const input = body.variables.input;
+      assert.equal(input.repositoryId, 'fixture-repository-node-id');
+      assert.deepEqual(input.refUpdates, [
+        {
+          name: `refs/heads/${state.branch}`,
+          beforeOid: state.branchSha,
+          afterOid: input.clientMutationId,
+          force: false,
+        },
+      ]);
+      const commit = state.commits.get(input.clientMutationId);
+      assert.ok(commit);
+      assert.equal(commit.parentSha, state.branchSha);
+      const treeChanges = state.trees.get(commit.treeSha);
+      assert.ok(treeChanges);
+      for (const { path, sha } of treeChanges) {
+        if (sha === null) {
+          state.files.delete(path);
+          continue;
+        }
+        const bytes = state.blobs.get(sha);
+        assert.ok(bytes);
+        state.files.set(path, { bytes, sha });
+      }
+      state.branchSha = input.clientMutationId;
+      state.treeSha = commit.treeSha;
+      return jsonResponse({ data: { updateRefs: { clientMutationId: input.clientMutationId } } });
+    }
+
     if (url.pathname.startsWith(`${repoPath}/contents`)) {
       if (!state.exists) {
         return jsonResponse(null, 404);
@@ -247,7 +385,8 @@ function installGithub(state: FakeState): void {
         url.pathname.slice(`${repoPath}/contents`.length).replace(/^\//, ''),
       );
       if (method === 'GET') {
-        if (url.searchParams.get('ref') !== state.branch) {
+        const ref = url.searchParams.get('ref');
+        if (ref !== state.branch && ref !== state.branchSha && !state.commits.has(ref ?? '')) {
           return jsonResponse({ message: 'Missing branch ref' }, 400);
         }
         const stored = state.files.get(path);
@@ -279,9 +418,6 @@ function installGithub(state: FakeState): void {
         );
       }
       if (method === 'PUT') {
-        if (state.forceWriteStatus) {
-          return jsonResponse({ message: 'write rejected' }, state.forceWriteStatus);
-        }
         const body = JSON.parse(String(init.body)) as {
           content: string;
           branch: string;
@@ -359,16 +495,19 @@ test('shared schemas reject unknown fields, unsafe URLs, and future versions', (
     false,
   );
   assert.equal(
-    publishMutationSchema.safeParse({
-      kind: 'project',
-      slug: '../secret',
-      expectedSha: null,
-      data: project,
+    finalizeCmsDraftSchema.safeParse({
+      kind: 'finalize',
+      projects: {
+        upsert: [{ slug: '../secret', expectedSha: null, data: project }],
+        delete: [],
+      },
+      media: [],
     }).success,
     false,
   );
   assert.equal(
-    uploadMediaSchema.safeParse({
+    stageMediaBlobSchema.safeParse({
+      scope: 'project',
       slug: 'sample-project',
       filename: 'cover.png',
       mime: 'image/png',
@@ -442,6 +581,16 @@ test('compatible migrated repositories retain legacy asset URLs without bootstra
     state.calls.some(({ init }) => init.method === 'PUT'),
     false,
   );
+  assert.deepEqual(
+    JSON.parse(Buffer.from(state.files.get('content/project-index.json')!.bytes).toString('utf8')),
+    { schemaVersion: 1, projects: ['example-project'] },
+  );
+  assert.equal(
+    state.calls.filter(
+      ({ url, init }) => url.pathname.endsWith('/git/commits') && init.method === 'POST',
+    ).length,
+    1,
+  );
 
   const legacyOnly = createState();
   legacyOnly.files.set('images/legacy.png', fileRecord(png));
@@ -464,17 +613,56 @@ test('initialization creates a public repository and seeds it with custom CMS at
   assert.deepEqual([...state.files.keys()].sort(), [
     'README.md',
     'content/categories.json',
+    'content/project-index.json',
     'content/site.json',
     'content/technologies.json',
   ]);
-  const writes = state.calls.filter(
-    ({ url, init }) => url.pathname.includes('/contents/') && init.method === 'PUT',
-  );
-  assert.equal(writes.length, 4);
-  assert.ok(writes.every(({ init }) => init.cache === 'no-store'));
   assert.equal(
-    state.calls.some(({ url }) => url.pathname.includes('/git/')),
+    Buffer.from(state.files.get('README.md')!.bytes).toString('utf8'),
+    '# portfolio-content\n',
+  );
+  const contentReads = state.calls.filter(
+    ({ url, init }) => url.pathname.includes('/contents') && (init.method ?? 'GET') === 'GET',
+  );
+  assert.ok(contentReads.length > 0);
+  assert.ok(
+    contentReads.every(({ url }) => {
+      const ref = url.searchParams.get('ref');
+      return ref !== null && state.commits.has(ref);
+    }),
+    'initialization reads content from branch commit SHAs',
+  );
+  const cmsCommitCalls = state.calls.filter(
+    ({ url, init }) => url.pathname.endsWith('/git/commits') && init.method === 'POST',
+  );
+  assert.equal(cmsCommitCalls.length, 1);
+  assert.equal(
+    state.calls.filter(({ url, init }) => url.pathname === '/graphql' && init.method === 'POST')
+      .length,
+    1,
+  );
+  assert.equal(
+    state.calls.some(
+      ({ url, init }) => url.pathname.includes('/contents') && init.method === 'PUT',
+    ),
     false,
+  );
+  const initialCmsCommit = state.commits.get(state.branchSha);
+  assert.ok(initialCmsCommit);
+  assert.equal(initialCmsCommit.message, 'cms: initialize portfolio content');
+  assert.deepEqual(initialCmsCommit.author, {
+    name: 'Portfolio CMS',
+    email: 'cms@portfolio.local',
+  });
+  assert.deepEqual(initialCmsCommit.committer, initialCmsCommit.author);
+
+  await initializeRepository('owner-token');
+  assert.equal(
+    state.calls.filter(
+      ({ url, init }) => url.pathname.endsWith('/git/commits') && init.method === 'POST',
+    ).length,
+    1,
+    'a repeated initialization is a no-op',
   );
 });
 
@@ -507,6 +695,18 @@ test('initialization repairs only an exact known seed subset and refuses unrelat
   assert.equal(snapshot.site.sha, '6'.repeat(40));
   assert.ok(partial.files.has('content/categories.json'));
   assert.ok(partial.files.has('content/technologies.json'));
+  assert.deepEqual(
+    JSON.parse(
+      Buffer.from(partial.files.get('content/project-index.json')!.bytes).toString('utf8'),
+    ),
+    { schemaVersion: 1, projects: [] },
+  );
+  assert.equal(
+    partial.calls.filter(
+      ({ url, init }) => url.pathname.endsWith('/git/commits') && init.method === 'POST',
+    ).length,
+    1,
+  );
 
   const unrelated = createState();
   unrelated.files.set('data/old.json', fileRecord('{}'));
@@ -517,25 +717,66 @@ test('initialization repairs only an exact known seed subset and refuses unrelat
     return true;
   });
   assert.equal([...unrelated.files.keys()].length, 1);
-});
-
-test('owner identity, private repositories, and SHA conflicts stop writes safely', async () => {
-  setupEnvironment();
-  const wrongOwner = createState({ userId: 999 });
-  installGithub(wrongOwner);
-  await assert.rejects(
-    publishContent('other-token', { kind: 'site', expectedSha: null, data: site }),
-    (error: unknown) => {
-      assert.ok(error instanceof CmsError);
-      assert.equal(error.code, 'unauthorized');
-      return true;
-    },
-  );
   assert.equal(
-    wrongOwner.calls.some(({ init }) => init.method === 'PUT'),
+    unrelated.calls.some(
+      ({ url, init }) => url.pathname.endsWith('/git/commits') && init.method === 'POST',
+    ),
     false,
   );
+});
 
+test('initialization asks for an initial commit before handling a pre-existing empty repository', async () => {
+  setupEnvironment();
+  const emptyRepositories = [
+    createState({ branch: '' }),
+    createState({ branchRefStatus: 404 }),
+    createState({ branchRefStatus: 409 }),
+  ];
+
+  for (const emptyRepository of emptyRepositories) {
+    installGithub(emptyRepository);
+    await assert.rejects(initializeRepository('owner-token'), (error: unknown) => {
+      assert.ok(error instanceof CmsError);
+      assert.equal(error.code, 'not_found');
+      assert.match(error.message, /initial README commit/);
+      return true;
+    });
+    assert.equal(
+      emptyRepository.calls.some(({ init }) => init.method === 'POST'),
+      false,
+      'empty repositories are rejected before any GitHub write',
+    );
+  }
+});
+
+test('initialization retry accepts and preserves the auto-init README after a failed first attempt', async () => {
+  setupEnvironment();
+  const state = createState({ exists: false, failCommitOnce: true });
+  installGithub(state);
+
+  await assert.rejects(initializeRepository('owner-token'), { code: 'unavailable' });
+  const readme = Buffer.from(state.files.get('README.md')!.bytes);
+  assert.equal(readme.toString('utf8'), '# portfolio-content\n');
+  assert.deepEqual([...state.files.keys()], ['README.md']);
+
+  const snapshot = await initializeRepository('owner-token');
+
+  assert.equal(snapshot.site.data.siteTitle, 'Developer Portfolio');
+  assert.deepEqual(Buffer.from(state.files.get('README.md')!.bytes), readme);
+  assert.ok(state.files.has('content/categories.json'));
+  assert.ok(state.files.has('content/site.json'));
+  assert.ok(state.files.has('content/technologies.json'));
+  assert.ok(state.files.has('content/project-index.json'));
+  assert.equal(
+    state.calls.filter(({ url, init }) => url.pathname === '/graphql' && init.method === 'POST')
+      .length,
+    1,
+    'retry updates the branch with a single CMS commit',
+  );
+});
+
+test('private repositories are rejected by authenticated reads', async () => {
+  setupEnvironment();
   const privateRepo = createState({ private: true });
   installGithub(privateRepo);
   await assert.rejects(getSnapshot(), (error: unknown) => {
@@ -543,177 +784,17 @@ test('owner identity, private repositories, and SHA conflicts stop writes safely
     assert.equal(error.code, 'unsupported_repository');
     return true;
   });
-
-  const stale = createState();
-  addSeedContent(stale);
-  addProject(stale, 'example-project');
-  installGithub(stale);
-  await assert.rejects(
-    publishContent('owner-token', {
-      kind: 'project',
-      slug: 'example-project',
-      expectedSha: 'f'.repeat(40),
-      data: project,
-    }),
-    (error: unknown) => {
-      assert.ok(error instanceof CmsError);
-      assert.equal(error.code, 'conflict');
-      return true;
-    },
-  );
-  assert.equal(
-    stale.calls.some(({ init }) => init.method === 'PUT'),
-    false,
-  );
 });
 
-test('project publish validates current registries and media, then writes the matching branch and SHA', async () => {
-  setupEnvironment();
-  const state = createState();
-  addSeedContent(state);
-  state.files.set(project.media.cover, fileRecord(png));
-  installGithub(state);
-
-  const result = await publishContent('owner-token', {
-    kind: 'project',
-    slug: 'example-project',
-    expectedSha: null,
-    data: project,
-  });
-
-  assert.equal(
-    result.commitUrl,
-    `https://github.com/owner/portfolio-content/commit/${'c'.repeat(40)}`,
-  );
-  const write = state.calls.find(
-    ({ url, init }) =>
-      url.pathname.endsWith('/contents/content/projects/example-project.json') &&
-      init.method === 'PUT',
-  );
-  assert.ok(write);
-  const body = JSON.parse(String(write.init.body)) as {
-    branch: string;
-    sha?: string;
-    content: string;
-  };
-  assert.equal(body.branch, 'trunk');
-  assert.equal(body.sha, undefined);
-  assert.equal(
-    JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')).title,
-    project.title,
-  );
-});
-
-test('registry edits cannot orphan an existing project and concurrent writes return a conflict', async () => {
-  setupEnvironment();
-  const state = createState();
-  addSeedContent(state);
-  addProject(state, 'example-project');
-  installGithub(state);
-
-  await assert.rejects(
-    publishContent('owner-token', {
-      kind: 'categories',
-      expectedSha: '2'.repeat(40),
-      data: { mobile: { label: 'Mobile', sortOrder: 20 } },
-    }),
-    (error: unknown) => {
-      assert.ok(error instanceof CmsError);
-      assert.equal(error.code, 'validation');
-      assert.match(error.message, /category/);
-      return true;
-    },
-  );
-  assert.equal(
-    state.calls.some(({ init }) => init.method === 'PUT'),
-    false,
-  );
-
-  state.forceWriteStatus = 409;
-  await assert.rejects(
-    publishContent('owner-token', {
-      kind: 'project',
-      slug: 'example-project',
-      expectedSha: '4'.repeat(40),
-      data: { ...project, title: 'Updated title' },
-    }),
-    (error: unknown) => {
-      assert.ok(error instanceof CmsError);
-      assert.equal(error.code, 'conflict');
-      return true;
-    },
-  );
-});
-
-test('design selection preserves portfolio facts and rejects stale or unknown selections', async () => {
-  setupEnvironment();
-  const state = createState();
-  state.files.set('content/portfolio.json', fileRecord(JSON.stringify(portfolio), '9'.repeat(40)));
-  installGithub(state);
-
-  const saved = await saveDesignSelection('owner-token', '9'.repeat(40), ['2', '3']);
-  const stored = state.files.get('content/portfolio.json');
-  assert.ok(stored);
-  const actual = JSON.parse(Buffer.from(stored.bytes).toString('utf8'));
-  assert.deepEqual(actual, { ...portfolio, designs: ['2', '3'] });
-  assert.equal(saved.contentSha, stored.sha);
-
-  await assert.rejects(saveDesignSelection('owner-token', '9'.repeat(40), ['1']), {
-    code: 'conflict',
-  });
-  await assert.rejects(saveDesignSelection('owner-token', stored.sha, ['99']), {
-    code: 'validation',
-  });
-  assert.equal(state.calls.filter(({ init }) => init.method === 'PUT').length, 1);
-});
-
-test('project mappings must be accessible and cannot be assigned twice', async () => {
-  setupEnvironment();
-  const state = createState();
-  addSeedContent(state);
-  addProject(state, 'example-project', { ...project, githubRepositoryId: 310001 });
-  installGithub(state);
-
-  await assert.rejects(
-    publishContent('owner-token', {
-      kind: 'project',
-      slug: 'new-project',
-      expectedSha: null,
-      data: {
-        ...project,
-        githubRepositoryId: 999,
-        media: { cover: 'media/projects/new-project/cover.png', gallery: [] },
-      },
-    }),
-    { code: 'forbidden' },
-  );
-  await assert.rejects(
-    publishContent('owner-token', {
-      kind: 'project',
-      slug: 'new-project',
-      expectedSha: null,
-      data: {
-        ...project,
-        githubRepositoryId: 310001,
-        media: { cover: 'media/projects/new-project/cover.png', gallery: [] },
-      },
-    }),
-    { code: 'validation' },
-  );
-  assert.equal(
-    state.calls.some(({ init }) => init.method === 'PUT'),
-    false,
-  );
-});
-
-test('media uploads require matching raster bytes and store binary bytes with immutable names', async () => {
+test('media staging validates raster bytes and creates content-addressed Git blobs without moving the ref', async () => {
   setupEnvironment();
   const state = createState();
   installGithub(state);
   const content = Buffer.from(png).toString('base64');
 
   await assert.rejects(
-    uploadMedia('owner-token', {
+    stageMediaBlob('owner-token', {
+      scope: 'project',
       slug: '../escape',
       filename: 'cover.png',
       mime: 'image/png',
@@ -722,7 +803,8 @@ test('media uploads require matching raster bytes and store binary bytes with im
     /slug/,
   );
   await assert.rejects(
-    uploadMedia('owner-token', {
+    stageMediaBlob('owner-token', {
+      scope: 'project',
       slug: 'sample-project',
       filename: 'cover.jpg',
       mime: 'image/jpeg',
@@ -731,7 +813,8 @@ test('media uploads require matching raster bytes and store binary bytes with im
     /match its type/,
   );
 
-  const uploaded = await uploadMedia('owner-token', {
+  const uploaded = await stageMediaBlob('owner-token', {
+    scope: 'project',
     slug: 'sample-project',
     filename: 'Cover image.png',
     mime: 'image/png',
@@ -739,28 +822,45 @@ test('media uploads require matching raster bytes and store binary bytes with im
   });
   const expectedDigest = createHash('sha256').update(png).digest('hex');
   assert.ok(uploaded.path.startsWith(`media/projects/sample-project/${expectedDigest}-`));
-  assert.equal(uploaded.alreadyExists, false);
-  const stored = state.files.get(uploaded.path);
-  assert.ok(stored);
-  assert.deepEqual(new Uint8Array(stored.bytes), png);
+  assert.equal(uploaded.blobSha, gitBlobSha(png));
+  assert.ok(Buffer.from(state.blobs.get(uploaded.blobSha)!).equals(Buffer.from(png)));
+  assert.equal(state.files.has(uploaded.path), false);
 
-  const duplicate = await uploadMedia('owner-token', {
+  const duplicate = await stageMediaBlob('owner-token', {
+    scope: 'project',
     slug: 'sample-project',
     filename: 'Cover image.png',
     mime: 'image/png',
     content,
   });
-  assert.equal(duplicate.alreadyExists, true);
-  assert.equal(duplicate.sha, 'd'.repeat(40));
-  assert.equal(duplicate.contentSha, stored.sha);
+  assert.equal(duplicate.path, uploaded.path);
+  assert.equal(duplicate.blobSha, uploaded.blobSha);
 
-  const icon = await uploadMedia('owner-token', {
+  const icon = await stageMediaBlob('owner-token', {
+    scope: 'technology',
     slug: 'technologies',
     filename: 'React.png',
     mime: 'image/png',
     content,
   });
   assert.ok(icon.path.startsWith(`media/technologies/${expectedDigest}-`));
+  assert.equal(state.files.size, 0);
+  assert.equal(
+    state.calls.filter(
+      ({ url, init }) => url.pathname.endsWith('/git/blobs') && init.method === 'POST',
+    ).length,
+    3,
+  );
+  assert.equal(
+    state.calls.some(
+      ({ url, init }) =>
+        url.pathname.includes('/git/refs/') ||
+        url.pathname.endsWith('/git/trees') ||
+        url.pathname.endsWith('/git/commits') ||
+        init.method === 'PUT',
+    ),
+    false,
+  );
 });
 
 test('GitHub throttling becomes a safe actionable CMS error', async () => {

@@ -1,30 +1,35 @@
 import 'server-only';
 
-import { getSnapshot, readContentFile, writeContentFile } from './repository.ts';
+import { CmsError } from './errors.ts';
 import { projectIndexSchema } from './schemas.ts';
 
-// The public raw-content reader cannot list directories, so the CMS maintains this index.
-export async function synchronizeProjectIndex(token: string) {
-  const snapshot = await getSnapshot(token);
-  const path = 'content/project-index.json';
-  const existing = await readContentFile(snapshot.repository, path, token);
-  const projects = snapshot.projects.map(({ slug }) => slug).sort();
-  if (existing) {
-    try {
-      const previous = projectIndexSchema.safeParse(JSON.parse(existing.text));
-      if (previous.success && JSON.stringify(previous.data.projects) === JSON.stringify(projects)) {
-        return;
-      }
-    } catch {
-      // Replace an invalid index after validating the repository's actual project documents.
-    }
+export function serializeProjectIndex(projects: readonly string[]): string {
+  const sortedProjects = [...projects].sort();
+  const parsed = projectIndexSchema.safeParse({ schemaVersion: 1, projects: sortedProjects });
+  if (!parsed.success) {
+    throw new CmsError(
+      'unsupported_repository',
+      'The content repository has too many projects to build its public project index.',
+      409,
+    );
   }
-  await writeContentFile(
-    snapshot.repository,
-    path,
-    `${JSON.stringify({ schemaVersion: 1, projects }, null, 2)}\n`,
-    existing?.sha ?? null,
-    'cms: update public project index',
-    token,
-  );
+  return `${JSON.stringify(parsed.data, null, 2)}\n`;
+}
+
+export function isProjectIndexCurrent(
+  serialized: string | null,
+  projects: readonly string[],
+): boolean {
+  if (serialized === null) {
+    return false;
+  }
+  try {
+    const previous = projectIndexSchema.safeParse(JSON.parse(serialized));
+    const sortedProjects = [...projects].sort();
+    return (
+      previous.success && JSON.stringify(previous.data.projects) === JSON.stringify(sortedProjects)
+    );
+  } catch {
+    return false;
+  }
 }

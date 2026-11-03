@@ -146,19 +146,102 @@ const expectedSha = z
   .string()
   .regex(/^[a-f0-9]{40}$/i)
   .nullable();
+const commitSha = z.string().regex(/^[a-f0-9]{40}$/i);
 
-export const publishMutationSchema = z.discriminatedUnion('kind', [
-  z.strictObject({ kind: z.literal('project'), slug: idSchema, expectedSha, data: projectSchema }),
-  z.strictObject({ kind: z.literal('site'), expectedSha, data: siteSchema }),
-  z.strictObject({ kind: z.literal('categories'), expectedSha, data: categoriesSchema }),
-  z.strictObject({ kind: z.literal('technologies'), expectedSha, data: technologiesSchema }),
-]);
-
-export const uploadMediaSchema = z.strictObject({
+const mediaDraftMetadata = {
   slug: z.union([z.literal('technologies'), idSchema]),
   filename: z.string().min(1).max(255),
   mime: z.enum(['image/png', 'image/jpeg', 'image/webp']),
-  content: z.string().min(1).max(1_398_104),
+};
+const imageContent = z.string().min(1).max(1_398_104);
+
+export const stageMediaBlobSchema = z.discriminatedUnion('scope', [
+  z.strictObject({
+    scope: z.literal('project'),
+    ...mediaDraftMetadata,
+    content: imageContent,
+  }),
+  z.strictObject({
+    scope: z.literal('technology'),
+    slug: z.literal('technologies'),
+    filename: mediaDraftMetadata.filename,
+    mime: mediaDraftMetadata.mime,
+    content: imageContent,
+  }),
+]);
+
+const versionedSiteSchema = z.strictObject({ expectedSha: commitSha, data: siteSchema });
+const versionedCategoriesSchema = z.strictObject({
+  expectedSha: commitSha,
+  data: categoriesSchema,
+});
+const versionedTechnologiesSchema = z.strictObject({
+  expectedSha: commitSha,
+  data: technologiesSchema,
+});
+const projectDraftSchema = z.strictObject({
+  slug: idSchema,
+  expectedSha,
+  data: projectSchema,
+});
+const deletedProjectDraftSchema = z.strictObject({ slug: idSchema, expectedSha: commitSha });
+const projectDraftChangesSchema = z
+  .strictObject({
+    upsert: z.array(projectDraftSchema).max(500),
+    delete: z.array(deletedProjectDraftSchema).max(500),
+  })
+  .superRefine((projects, context) => {
+    const seen = new Set<string>();
+    for (const [index, project] of projects.upsert.entries()) {
+      if (seen.has(project.slug)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['upsert', index, 'slug'],
+          message: 'A project can only be submitted once.',
+        });
+      }
+      seen.add(project.slug);
+    }
+    for (const [index, project] of projects.delete.entries()) {
+      if (seen.has(project.slug)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['delete', index, 'slug'],
+          message: 'A project cannot be both saved and deleted.',
+        });
+      }
+      seen.add(project.slug);
+    }
+  });
+
+const stagedMediaBlobSchema = z.discriminatedUnion('scope', [
+  z.strictObject({
+    scope: z.literal('project'),
+    ...mediaDraftMetadata,
+    path: z.string().min(1).max(300),
+    blobSha: commitSha,
+  }),
+  z.strictObject({
+    scope: z.literal('technology'),
+    slug: z.literal('technologies'),
+    filename: mediaDraftMetadata.filename,
+    mime: mediaDraftMetadata.mime,
+    path: z.string().min(1).max(300),
+    blobSha: commitSha,
+  }),
+]);
+
+export const finalizeCmsDraftSchema = z.strictObject({
+  kind: z.literal('finalize'),
+  repositoryKey: z.string().min(1).max(300),
+  projects: projectDraftChangesSchema,
+  site: versionedSiteSchema.optional(),
+  categories: versionedCategoriesSchema.optional(),
+  technologies: versionedTechnologiesSchema.optional(),
+  designs: z
+    .strictObject({ expectedSha: commitSha, designs: portfolioSchema.shape.designs })
+    .optional(),
+  media: z.array(stagedMediaBlobSchema).max(100),
 });
 
 export type ProjectDocument = z.infer<typeof projectSchema>;
@@ -167,5 +250,4 @@ export type PortfolioDocument = z.infer<typeof portfolioSchema>;
 export type ProjectStudy = z.infer<typeof projectStudySchema>;
 export type Categories = z.infer<typeof categoriesSchema>;
 export type Technologies = z.infer<typeof technologiesSchema>;
-export type PublishMutation = z.infer<typeof publishMutationSchema>;
-export type UploadMediaDocument = z.infer<typeof uploadMediaSchema>;
+export type FinalizeCmsDraft = z.infer<typeof finalizeCmsDraftSchema>;
