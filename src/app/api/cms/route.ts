@@ -3,31 +3,20 @@ import { requireOwner } from '@/lib/cms/auth';
 import { CmsError } from '@/lib/cms/errors';
 import { assertCmsOwner } from '@/lib/cms/github';
 import { cmsErrorResponse, cmsResponse, readCmsJson, requireSameOrigin } from '@/lib/cms/http';
-import { invalidateContent } from '@/lib/cms/cache';
+import { invalidateContent, invalidateContentBatch } from '@/lib/cms/cache';
 import { publishAndRevalidate } from '@/lib/cms/publishing';
 import { getSnapshot } from '@/lib/cms/repository';
 import { initializeRepository } from '@/lib/cms/initialization';
-import { deleteProject, publishContent, saveDesignSelection } from '@/lib/cms/content-mutations';
-import { portfolioSchema, publishMutationSchema } from '@/lib/cms/schemas';
-import { synchronizeProjectIndex } from '@/lib/cms/project-index';
+import { finalizeCmsDraft } from '@/lib/cms/draft-finalization';
+import { finalizeCmsDraftSchema } from '@/lib/cms/schemas';
 
 const slug = z
   .string()
   .max(100)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const operationSchema = z.union([
-  publishMutationSchema,
+  finalizeCmsDraftSchema,
   z.strictObject({ kind: z.literal('initialize') }),
-  z.strictObject({
-    kind: z.literal('designs'),
-    expectedSha: z.string().regex(/^[a-f0-9]{40}$/i),
-    designs: portfolioSchema.shape.designs,
-  }),
-  z.strictObject({
-    kind: z.literal('delete-project'),
-    slug,
-    expectedSha: z.string().regex(/^[a-f0-9]{40}$/i),
-  }),
   z
     .strictObject({
       kind: z.literal('revalidate'),
@@ -56,7 +45,7 @@ export async function POST(request: Request) {
   try {
     requireSameOrigin(request);
     const token = await requireOwner(request);
-    const parsed = operationSchema.safeParse(await readCmsJson(request));
+    const parsed = operationSchema.safeParse(await readCmsJson(request, 4_400_000));
     if (!parsed.success) {
       return cmsResponse(
         { error: parsed.error.issues[0]?.message ?? 'Check the submitted content.' },
@@ -64,67 +53,39 @@ export async function POST(request: Request) {
       );
     }
     const operation = parsed.data;
+    if (operation.kind === 'finalize') {
+      const invalidations = [
+        ...[...operation.projects.upsert, ...operation.projects.delete].map(({ slug }) => ({
+          target: 'project' as const,
+          slug,
+        })),
+        ...(operation.site ? [{ target: 'site' as const }] : []),
+        ...(operation.categories || operation.technologies
+          ? [{ target: 'taxonomy' as const }]
+          : []),
+        ...(operation.designs ? [{ target: 'designs' as const }] : []),
+      ];
+      return cmsResponse(
+        await publishAndRevalidate(
+          () => finalizeCmsDraft(token, operation),
+          () => invalidateContentBatch(invalidations),
+        ),
+      );
+    }
     if (operation.kind === 'initialize') {
       return cmsResponse(
         await publishAndRevalidate(
           () => initializeRepository(token),
-          async () => {
-            await synchronizeProjectIndex(token);
-            invalidateContent('all');
-          },
+          () => invalidateContent('all'),
         ),
       );
     }
     if (operation.kind === 'revalidate') {
       await assertCmsOwner(token);
-      if (operation.target === 'project' || operation.target === 'all') {
-        await synchronizeProjectIndex(token);
-      }
       invalidateContent(operation.target, operation.slug);
       return cmsResponse({ cache: 'refreshed' });
     }
-    if (operation.kind === 'delete-project') {
-      return cmsResponse(
-        await publishAndRevalidate(
-          () => deleteProject(token, operation.slug, operation.expectedSha),
-          async () => {
-            await synchronizeProjectIndex(token);
-            invalidateContent('project', operation.slug);
-          },
-        ),
-      );
-    }
-    if (operation.kind === 'designs') {
-      return cmsResponse(
-        await publishAndRevalidate(
-          async () => {
-            const result = await saveDesignSelection(
-              token,
-              operation.expectedSha,
-              operation.designs,
-            );
-            return { ...result, commitSha: result.sha, sha: result.contentSha };
-          },
-          () => invalidateContent('designs'),
-        ),
-      );
-    }
-    const target =
-      operation.kind === 'project' ? 'project' : operation.kind === 'site' ? 'site' : 'taxonomy';
-    return cmsResponse(
-      await publishAndRevalidate(
-        async () => {
-          const result = await publishContent(token, operation);
-          return { ...result, commitSha: result.sha, sha: result.contentSha };
-        },
-        async () => {
-          if (operation.kind === 'project') {
-            await synchronizeProjectIndex(token);
-          }
-          invalidateContent(target, operation.kind === 'project' ? operation.slug : undefined);
-        },
-      ),
-    );
+    return cmsResponse({ error: 'Use final submit to publish CMS changes.' }, 405);
   } catch (error) {
     return cmsErrorResponse(error);
   }
