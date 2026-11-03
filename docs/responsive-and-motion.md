@@ -1,6 +1,6 @@
 # Visual system, responsive layout, and motion
 
-Reviewed against the working tree on **23 October 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
+Updated for the current component and CMS behavior on **3 November 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
 
 ## Visual system
 
@@ -24,16 +24,15 @@ Modular screenshots use proportional cover cropping without inset padding or let
 
 ## Page composition and layout
 
-| Surface         | Current composition                                                                                                                             |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Home            | Sticky project-preview hero, asymmetric five-part selected work, engineering evidence, experience timeline, curated artwork, and contact close. |
-| Projects        | Three featured entries plus the remaining archive; GET filters search the whole collection without duplicates.                                  |
-| Project details | Natural-ratio screenshot, overview, documented implementation/tradeoffs, attribution, and related projects.                                     |
-| Engineering     | Numbered evidence panels, architecture boundaries, and native sticky introductions.                                                             |
-| About           | Profile introduction, experience timeline, and grouped existing skills.                                                                         |
-| Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                                                            |
-| Contact         | Editorial introduction and the labelled form with validation and status feedback.                                                               |
-| Not found       | Standalone viewport-height recovery page with its own particles and pause control.                                                              |
+| Surface         | Current composition                                                                                            |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| Home            | Sticky project-preview hero, selected project grid, experience timeline, curated artwork, and contact close.   |
+| Projects        | Three featured entries plus the remaining archive; GET filters search the whole collection without duplicates. |
+| Project details | Natural-ratio screenshot, overview, documented implementation/tradeoffs, attribution, and related projects.    |
+| About           | Profile introduction, experience timeline, and grouped existing skills.                                        |
+| Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                           |
+| Contact         | Editorial introduction and the labelled form with validation and status feedback.                              |
+| Not found       | Viewport-height recovery section with links to home and projects.                                              |
 
 The container caps at **75rem**. Layout starts stacked and uses content-fit thresholds:
 
@@ -52,43 +51,50 @@ Preserve skip navigation, landmarks, heading order, keyboard access, visible foc
 
 Mobile navigation is a disclosure. Its toggle precedes its links in DOM and visual order; Escape closes it and returns focus to the toggle; focus leaving the header closes it. It does not use a modal focus trap. All links must remain reachable on short screens and with enlarged text.
 
-Theme labels describe the destination action and theme choice persists. Project actions include the project name and avoid redundant title/arrow links. Form fields retain associated labels, `aria-describedby` errors, first-error focus, polite status, and drafts on failure. Submission details live in [architecture](architecture.md#contact-integration).
+Theme labels describe the destination action and theme choice persists. Project actions include the project name and avoid redundant title/arrow links. Contact fields retain associated labels, `aria-describedby` errors, first-error focus, polite status, and drafts on failure; contact delivery behavior lives in [architecture](architecture.md#contact-integration). CMS editing behavior is described below and in [architecture](architecture.md#github-cms).
 
 For UI changes, exercise both themes and keyboard navigation at **320, 390, 820, 1024, and 1440px**, plus text enlargement/reflow, short viewports, coarse pointers, reduced motion, and no JavaScript. Root-font enlargement is distinct from actual browser zoom. Automated results do not establish full accessibility conformance.
 
+## CMS editor
+
+The owner workspace uses the existing rem tokens and themes, native labelled controls, wrapping navigation buttons, and content-fit grids. Projects, site profile, categories, technologies, and images are structured forms with shared Zod validation. Repository import reuses the project and image controls; a private-source warning precedes saving private-repository metadata or staging its images. Designs use labelled show/hide checkboxes, with unavailable selected IDs still removable.
+
+Per-section saves keep project, site-profile, category, and technology changes in browser Cache Storage; design toggles save to that same draft automatically. Image staging stores files and paths in the browser draft, supports multiple files, and lets the owner remove a staged image before submission. The draft restores after a reload in the same browser profile, subject to browser quota, eviction, and clearing. Editing requires a secure context and Web Locks support; only one `/admin` or `/admin/import` tab per origin may edit at a time. A browser before-unload prompt warns while a draft write is pending or needs retry. **Submit all changes** asks for confirmation, stages the remaining image blobs, and sends the full draft in one commit. A SHA conflict keeps the draft and presents the current repository version beside it; the owner must choose **Use reviewed versions as baseline** before submitting the revised draft. A cache-only retry after a successful commit does not submit content again.
+
+Invalid fields expose associated messages and receive first-error focus. The workspace adds no decorative motion, modal focus trap, or wheel handling. Check the dated [verification](verification.md) before inferring responsive/accessibility coverage.
+
 ## Motion boundaries
 
-Native scrolling controls the document. There is no section snapping, wheel interception, artificial scroll smoothing, or nearest-section settling. Motion remains an enhancement over visible server HTML. Motion components are colocated under `src/components/<Component>/`; see [code boundaries](architecture.md#code-boundaries).
+Native scrolling controls the document. There is no section snapping, wheel interception, artificial scroll smoothing, or nearest-section settling. Motion remains an enhancement over visible server HTML. Motion components live with their shared, layout, or home responsibilities; see [code boundaries](architecture.md#code-boundaries).
 
 | Component            | Behavior and boundary                                                                                                                                 |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Reveal`             | One entry animation: 10px travel over 0.35 seconds. Focus completes an active reveal; reduced motion skips it. Content is visible without JavaScript. |
 | `PointerSurface`     | Bounded image tilt up to 4 degrees, using springs for a desktop mouse with fine-pointer/hover capability. Pointer exit/cancel returns to neutral.     |
-| `MotionEnhancements` | Scroll progress and conditional cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.                           |
+| `MotionEnhancements` | Scroll progress and conditional public-page cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.               |
 | `ScrollHero`         | Desktop content-fit sticky scene with a reversible project crossfade.                                                                                 |
 | `ParallaxImage`      | Bounded image-only travel inside a clipped frame, with matching overscan.                                                                             |
 | `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |
-| `ParticleAccent`     | Selectively loaded decorative engine with separate normal-page and 404 compositions.                                                                  |
 
 Keep continuous pointer/scroll values out of React state. Discrete state may select a project, focus hold, or motion eligibility. Clean up media subscriptions, observers, listeners, animation frames, and engine instances.
 
 ## Hero crossfade and image parallax
 
-`src/lib/motion/use-scroll-motion.ts` enables scroll motion only with **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. `ScrollHero` additionally measures whether its content fits below the header. The eligible scene reserves one viewport for reading plus half a viewport of scroll travel, then releases into normal flow.
+`src/lib/hooks/use-scroll-motion.ts` enables scroll motion only with **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. `src/components/home/ScrollHero` additionally measures whether its content fits below the header. With multiple slides, the eligible scene reserves one viewport for reading plus half a small viewport (`50svh`) of scroll travel per transition, then releases into normal flow. The component accepts a collection of slides; zero slides show the empty-state message and one slide remains visible in normal flow.
 
-The hero crossfades **WeTrack into ChatGPT Clone**. The latter still uses an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; the active project switches at the midpoint. Copy, frame geometry, and actions stay stationary. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
+The homepage currently supplies its first two featured projects from the CMS: **WeTrack and ChatGPT Clone** in the published content. The second preview remains an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; for two slides the active project switches at the midpoint. More slides divide that interval into successive transitions. Copy, frame geometry, and actions stay stationary. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
 
-Only one preview is interactive and exposed to assistive technology: the other is inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Otherwise, phone/tablet, coarse-pointer, short/oversized, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel.
+Only one preview is interactive and exposed to assistive technology: the others are inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Otherwise, phone/tablet, coarse-pointer, short/oversized, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel.
 
-| Image surface                                                              | Travel                             |
-| -------------------------------------------------------------------------- | ---------------------------------- |
-| Homepage lead project                                                      | ±1.5rem.                           |
-| Two supporting homepage projects                                           | ±1rem, retained after crop review. |
-| One homepage AudioWaves artwork preview                                    | ±1.5rem.                           |
-| Archive, filtered, and related-project cards                               | Shared default ±1rem.              |
-| Other homepage artwork, full Design grid, detail screenshots, About avatar | Static.                            |
+| Image surface                                                    | Travel                             |
+| ---------------------------------------------------------------- | ---------------------------------- |
+| Homepage lead project                                            | ±1.5rem.                           |
+| Two supporting homepage projects                                 | ±1rem, retained after crop review. |
+| One homepage AudioWaves artwork preview                          | ±1.5rem.                           |
+| Archive, filtered, and related-project cards                     | Shared default ±1rem.              |
+| Other homepage artwork, full Design grid, and detail screenshots | Static.                            |
 
-Each moving plane extends its travel distance above and below the frame: a frame of height `H` with ±`d` travel needs a plane of `H + 2d`. Overscan also crops content, so review both endpoints for technical UI, lettering, and focal subjects before increasing travel. The selected homepage project cards omit whole-link tilt. Readable copy, navigation, filters, forms, and feedback do not receive scroll transforms. Native sticky experience/engineering introductions remain independent of these effects.
+Each moving plane extends its travel distance above and below the frame: a frame of height `H` with ±`d` travel needs a plane of `H + 2d`. Overscan also crops content, so review both endpoints for technical UI, lettering, and focal subjects before increasing travel. The selected homepage project cards omit whole-link tilt. Readable copy, navigation, filters, forms, and feedback do not receive scroll transforms. The experience introduction's native sticky behavior remains independent of these effects.
 
 ## Desktop cursor
 
@@ -96,22 +102,6 @@ On eligible desktop fine-pointer/hover screens, the idle cursor has an **8px plu
 
 The center follows raw pointer Motion values without interpolation, position springs, or delayed movement. Shape changes take 140ms; target-frame morphs take 160ms. A requestAnimationFrame loop follows live target geometry while hovered or completing a transition, with scroll/resize refreshes and cleanup. Continuous coordinates do not enter React state.
 
-The native cursor is hidden only while the replacement is active. Text-entry fields, contenteditable regions, disabled controls, iframes, pointer exit/cancel, window blur, document hiding, reduced motion, and cleanup restore it. Small/coarse-pointer and no-JavaScript contexts retain native interaction. The overlay cannot capture clicks and is hidden from assistive technology. The `html` background token keeps difference blending visible against the isolated body's painted background in both themes.
-
-## Particle fields
-
-`ParticleAccent` dynamically loads the tsParticles 4.4 engine, basic circle/movement features, interactivity, repulse, and links plugins. It does not load the full bundle or a React adapter. Reduced motion and data saver skip loading; live reduced-motion changes destroy the field. Canvas content is decorative, hidden from assistive technology, and cannot capture clicks.
-
-| Setting               | Normal pages                                                                         | Standalone 404                                                    |
-| --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| Coverage              | One fixed inset-zero field behind all normal routes throughout scrolling/navigation. | One field behind the standalone recovery composition.             |
-| Particles             | 44 from 48rem width, 18 below.                                                       | Up to 56 on larger fine-pointer screens, 24 elsewhere.            |
-| Frame cap             | 20fps.                                                                               | 30fps.                                                            |
-| Lines and interaction | Faint nearby connectors; no repulsion or click spawning.                             | No connectors; gentle repulsion only on eligible desktop screens. |
-| Manual pause          | No normal-page pause button, as requested.                                           | Keyboard-accessible pause/resume.                                 |
-
-Both disable retina scaling and bound particle counts. Normal-page connector distances are 160px/110px with 0.75px lines and 0.18 link opacity before field opacity. Body isolation places the field above the background and behind content; opaque cards, header, menu, and form retain readability. Touch and enlarged text retain full-viewport coverage with the smaller composition where applicable.
-
-Hidden tabs and offscreen fields pause. Route observation destroys the shared field while the standalone 404 marker is present and restores it on recovery; CSS suppresses overlap during transitions. The 404 preserves its visitor's pause choice through visibility/theme changes and can paint a static frame in the new palette. Its dynamic-viewport minimum height grows for short screens or enlarged content. Engine instances, media/theme/route/visibility observers, and listeners clean up.
+The native cursor is hidden only while the replacement is active. Admin routes always retain the native cursor. Text-entry fields, contenteditable regions, disabled controls, iframes, pointer exit/cancel, window blur, document hiding, reduced motion, and cleanup restore it. Small/coarse-pointer and no-JavaScript contexts retain native interaction. The overlay cannot capture clicks and is hidden from assistive technology. The `html` background token keeps difference blending visible against the isolated body's painted background in both themes.
 
 Historical browser coverage and the limits of fixture-based image reviews are recorded once in [verification](verification.md). Bounded engine settings are safeguards rather than measured battery, accessibility, or field-performance results.

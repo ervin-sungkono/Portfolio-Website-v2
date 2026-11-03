@@ -1,8 +1,8 @@
 # Ervin Cahyadinata Sungkono's Portfolio
 
-Phase 1 rework of the original portfolio using Next.js 16.4 App Router, React, and strict TypeScript. Existing projects, artwork, public routes, CV, social links, and team credits are preserved. Pages render on the server with focused client components for navigation, contact, and decorative motion.
+Portfolio built with Next.js 16.4 App Router, React, and strict TypeScript. Public pages render on the server with focused client components for navigation, contact, and decorative motion. The owner can manage published projects, homepage copy, taxonomy, and images through a GitHub-backed `/admin` workspace without a database or separate backend.
 
-Public component work starts from `dev` after [PR #2](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/2) merged. The CMS feature is reviewed separately in [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3). See the [dated repository snapshot](docs/verification.md#repository-snapshot--23-october-2026) before treating recorded results as current checks.
+Development starts from `dev`. The previous Neon-based [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3) was closed without merging; this implementation follows the separate public GitHub content repository architecture. See [verification](docs/verification.md) for dated checks and remaining integration work.
 
 ## Development
 
@@ -14,10 +14,12 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Production credentials are only needed for live contact integration. The available checks are:
+Configure the server-side GitHub PAT and content repository before reading public content locally; the Dribbble token supplies selected design details. Owner sign-in also needs the Auth.js settings. See [CMS setup](docs/architecture.md#github-cms). Contact provider credentials are needed only for live contact integration. ESLint applies the Next.js Core Web Vitals and TypeScript recommendations; Stylelint applies the standard CSS rules. Both enforce LF line endings and final newlines, while `.editorconfig` and `.gitattributes` set the repository defaults. The available checks are:
 
 ```sh
 npm run typecheck
+npm run typecheck:tests
+npm run lint
 npm run lint:css
 npm test
 npm run build
@@ -25,33 +27,46 @@ npm run format:check
 git diff --check
 ```
 
+`npm test` runs Vitest's logic and handler integration tests without a running server. Tests use mocked providers and isolated GitHub fixtures. Test files are organized under `tests/unit`, `tests/integration`, `tests/e2e`, and `tests/support`. `npm run typecheck:tests` checks test TypeScript separately from the application.
+
 Run `npm start` after a production build to serve it locally. GitHub Actions runs the configured checks with Node.js 24. Text files use LF endings through `.gitattributes`. See [verification coverage](docs/verification.md#repeatable-checks) for what each command checks.
 
 ### Browser regressions
 
-The Playwright suite covers contact/API boundaries, project recovery without JavaScript, the desktop cursor, and hero/parallax behavior. It runs against a production build. Install Chromium once:
+The Playwright suite covers contact form behavior, project recovery without JavaScript, theme selection, the desktop cursor, and hero/parallax behavior. It normally runs against a production build. Install Chromium once:
 
 ```sh
 npx playwright install chromium
 ```
 
-Build with the dummy public CAPTCHA key, then run the suite:
+For the public regression suite, use the read-only fixture for GitHub identity and an empty Dribbble response. It reads the actual public `web-assets/master` documents and needs network access, but no production API credentials. Build with the dummy public CAPTCHA key, then run the suite:
 
 ```sh
-NEXT_PUBLIC_RECAPTCHA_KEY=review-test-key npm run build
-npm run test:browser
+(
+  export NEXT_PUBLIC_RECAPTCHA_KEY=review-test-key GITHUB_PAT=fixture-public-token GITHUB_REPO=web-assets DRIBBBLE_TOKEN=fixture-dribbble-token
+  export NODE_OPTIONS=--import=./tests/support/fixtures/public-runtime.mjs
+  npm run build
+  npm run test:browser
+)
 ```
 
 In PowerShell:
 
 ```powershell
-$env:NEXT_PUBLIC_RECAPTCHA_KEY = 'review-test-key'
-npm run build
-npm run test:browser
-Remove-Item Env:NEXT_PUBLIC_RECAPTCHA_KEY
+powershell -NoProfile -Command {
+  $env:NEXT_PUBLIC_RECAPTCHA_KEY = 'review-test-key'
+  $env:GITHUB_PAT = 'fixture-public-token'
+  $env:GITHUB_REPO = 'web-assets'
+  $env:DRIBBBLE_TOKEN = 'fixture-dribbble-token'
+  $env:NODE_OPTIONS = '--import=./tests/support/fixtures/public-runtime.mjs'
+  npm run build
+  npm run test:browser
+}
 ```
 
-The test server clears provider secrets and form tests mock CAPTCHA/delivery; no real email is sent. Rebuild with the real public site key before deploying a build that needs live CAPTCHA. Set `PLAYWRIGHT_EXECUTABLE_PATH` to a system Chromium executable if the bundled browser is unavailable. This suite is focused regression coverage, rather than a full accessibility or responsive audit.
+The public fixture does not test real OAuth or Dribbble. Form tests mock CAPTCHA/delivery; no real email is sent. Rebuild without the fixture and with the real public site key before deploying a build that needs live CAPTCHA. Set `PLAYWRIGHT_EXECUTABLE_PATH` to a system Chromium executable if the bundled browser is unavailable. This suite is focused regression coverage, rather than a full accessibility or responsive audit.
+
+To exercise the public browser suite against an already-running `http://localhost:3000`, use `npm run test:live`. It does not start or restart the server; contact form requests are intercepted. Assertions that name projects assume the expected portfolio content is present in that server's configuration.
 
 ## Documentation
 
@@ -67,6 +82,18 @@ The documentation was consolidated on **23 October 2026 (Asia/Jakarta)**. Each t
 
 ## Updating content
 
-Edit `src/content/profile.ts`, `projects.json`, `designs.json`, and `engineering.ts`; collection access belongs in `src/lib/content.ts`. Featured projects are the first three entries in `projects.json`. Keep public slugs, original assets/links, team attribution, the full name **Ervin Cahyadinata Sungkono**, and the public origin **https://ervincs.com** consistent.
+Portfolio content is read from the configured public GitHub repository at build time and after on-demand revalidation. The owner workspace edits projects, homepage copy, taxonomy, and the selected Dribbble shot IDs; `/admin/import` maps accessible GitHub repositories into project drafts. Profile, skills, project walkthroughs, and the ordered design selection are in `content/portfolio.json`. Design titles, links, and images come from Dribbble at runtime. There is no checked-in application data fallback. For direct GitHub edits to project files, update `content/project-index.json` when adding or removing a project, then use **Refresh public content**; refresh only invalidates caches and does not rebuild the index.
 
-Contact variables and provider behavior are documented in [contact integration](docs/architecture.md#contact-integration) and `.env.example`. CMS work and professional content expansion remain deferred. Read [AGENTS.md](AGENTS.md) before implementation work.
+Edits in the owner workspace stay in this browser's Cache Storage until **Submit all changes**. They remain after a reload in the same browser profile, but are not uploaded or synchronized to another browser or device before submission. CMS editing requires a secure browser context with Web Locks support and allows one `/admin` or `/admin/import` tab per origin at a time. A browser prompt warns before leaving while a draft save is pending or still needs a retry. Browser storage quotas, eviction, or clearing site data can still remove a draft. The final action confirms and publishes the saved content and selected images in one Git commit. A content conflict keeps the local draft available for review; after a commit succeeds, **Retry public refresh** only retries cache invalidation and does not submit another commit.
+
+Follow [GitHub CMS setup and operation](docs/architecture.md#github-cms) for credentials, initialization, importing, and publishing. For a legacy content review, use the [LLM mapping instructions](docs/web-assets-migration-agent.md). The content repository must be separate from the application and must not be a Vercel deployment source. Content publishes invalidate ISR without redeploying.
+
+Run `npm run test:cms:browser` for the isolated production CMS browser workflow, `npm run test:http:fixture` for its real HTTP boundary checks, or `npm run test:cms:fixture` for both. They use simulated GitHub storage and encrypted test sessions, never a real GitHub write or email. The runner builds `.next` in the checkout where it is invoked and uses port 3104. If a development server is using that checkout's `.next`, run the fixture from an isolated copy and rebuild normally afterward.
+
+These commands require Node.js 24. For example, copy the repository to `artifacts/cms-verification`, open a shell in that copy, then run:
+
+```powershell
+npm run test:cms:fixture
+```
+
+Contact variables and provider behavior are documented in [contact integration](docs/architecture.md#contact-integration) and `.env.example`. Professional content expansion remains deferred. Read [AGENTS.md](AGENTS.md) before implementation work.

@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
 
 export default defineConfig({
-  testDir: './tests/browser',
+  testDir: './tests/e2e/public',
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
@@ -27,6 +27,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
+      PORT: '3103',
       NEXT_PUBLIC_RECAPTCHA_KEY: 'review-test-key',
       EMAIL: '',
       EMAIL_PASS: '',

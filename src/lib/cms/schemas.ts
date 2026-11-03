@@ -1,0 +1,253 @@
+import { z } from 'zod';
+
+const idSchema = z
+  .string()
+  .max(100)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const text = (max: number) => z.string().trim().min(1).max(max);
+const imagePath = z
+  .string()
+  .regex(
+    /^media\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-zA-Z0-9][a-zA-Z0-9._-]*\.(?:png|jpe?g|webp)$/i,
+  );
+const technologyIconPath = z
+  .string()
+  .regex(/^media\/technologies\/[a-zA-Z0-9][a-zA-Z0-9._-]*\.(?:png|jpe?g|webp|svg)$/i);
+
+const httpsUrl = z
+  .string()
+  .url()
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && !url.username && !url.password;
+    } catch {
+      return false;
+    }
+  }, 'Use a valid HTTPS URL.');
+
+const unique = <T extends string>(items: T[]) => new Set(items).size === items.length;
+
+export const projectSchema = z.strictObject({
+  schemaVersion: z.literal(2),
+  githubRepositoryId: z.number().int().safe().positive().nullable(),
+  title: text(120),
+  summary: text(240),
+  description: text(10_000),
+  published: z.boolean(),
+  featured: z.boolean(),
+  sortOrder: z.number().int().min(0).max(100_000),
+  year: z.number().int().min(1900).max(2200),
+  categories: z.array(idSchema).min(1).max(20).refine(unique, 'Categories must be unique.'),
+  technologies: z.array(idSchema).max(40).refine(unique, 'Technologies must be unique.'),
+  tags: z
+    .array(text(40))
+    .max(30)
+    .refine((items) => unique(items.map((item) => item.toLowerCase())), 'Tags must be unique.'),
+  links: z.strictObject({ demo: httpsUrl.optional(), source: httpsUrl.optional() }),
+  media: z.strictObject({
+    cover: imagePath,
+    gallery: z.array(imagePath).max(30).refine(unique, 'Gallery paths must be unique.'),
+  }),
+});
+
+export const siteSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  siteTitle: text(120),
+  headline: text(240),
+  introduction: text(5_000),
+  socialLinks: z
+    .array(z.strictObject({ label: text(60), url: httpsUrl }))
+    .max(20)
+    .refine(
+      (items) => unique(items.map(({ label }) => label.toLowerCase())),
+      'Social link labels must be unique.',
+    ),
+});
+
+const projectStudySchema = z.strictObject({
+  focus: text(200),
+  context: text(5_000),
+  challenge: text(5_000),
+  highlights: z.array(text(1_000)).max(30),
+  decisions: z
+    .array(
+      z.strictObject({
+        title: text(200),
+        implementation: text(5_000),
+        tradeoff: text(5_000),
+      }),
+    )
+    .max(30),
+  nextStep: text(5_000),
+  reference: z.strictObject({ label: text(200), href: httpsUrl }),
+});
+
+export const portfolioSchema = z.strictObject({
+  schemaVersion: z.literal(2),
+  profile: z.strictObject({
+    name: text(120),
+    title: text(120),
+    linkedin: httpsUrl,
+    github: httpsUrl,
+    dribbble: httpsUrl,
+    instagram: httpsUrl,
+    cv: httpsUrl,
+    intro: text(5_000),
+    experiences: z
+      .array(
+        z.strictObject({
+          company: text(200),
+          role: text(200),
+          start: z.string().regex(/^\d{4}-\d{2}$/),
+          end: z
+            .string()
+            .regex(/^\d{4}-\d{2}$/)
+            .nullable(),
+          description: text(5_000),
+        }),
+      )
+      .max(100),
+    education: z.strictObject({ school: text(200), degree: text(200), years: text(100) }),
+  }),
+  skills: z
+    .array(
+      z.strictObject({
+        label: text(100),
+        icon: z.string().regex(/^[a-z0-9-]+$/),
+      }),
+    )
+    .max(100),
+  designs: z
+    .array(z.string().regex(/^[1-9]\d*$/))
+    .max(500)
+    .refine(unique, 'Design IDs must be unique.'),
+  projectStudies: z.record(idSchema, projectStudySchema),
+  portfolioSource: httpsUrl,
+  portfolioSourceRef: text(200),
+});
+
+export const categoriesSchema = z.record(
+  idSchema,
+  z.strictObject({ label: text(80), sortOrder: z.number().int().min(0).max(100_000) }),
+);
+
+export const technologiesSchema = z.record(
+  idSchema,
+  z.strictObject({ label: text(80), icon: technologyIconPath.optional() }),
+);
+
+export const projectIndexSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  projects: z.array(idSchema).max(500).refine(unique, 'Project slugs must be unique.'),
+});
+
+const expectedSha = z
+  .string()
+  .regex(/^[a-f0-9]{40}$/i)
+  .nullable();
+const commitSha = z.string().regex(/^[a-f0-9]{40}$/i);
+
+const mediaDraftMetadata = {
+  slug: z.union([z.literal('technologies'), idSchema]),
+  filename: z.string().min(1).max(255),
+  mime: z.enum(['image/png', 'image/jpeg', 'image/webp']),
+};
+const imageContent = z.string().min(1).max(1_398_104);
+
+export const stageMediaBlobSchema = z.discriminatedUnion('scope', [
+  z.strictObject({
+    scope: z.literal('project'),
+    ...mediaDraftMetadata,
+    content: imageContent,
+  }),
+  z.strictObject({
+    scope: z.literal('technology'),
+    slug: z.literal('technologies'),
+    filename: mediaDraftMetadata.filename,
+    mime: mediaDraftMetadata.mime,
+    content: imageContent,
+  }),
+]);
+
+const versionedSiteSchema = z.strictObject({ expectedSha: commitSha, data: siteSchema });
+const versionedCategoriesSchema = z.strictObject({
+  expectedSha: commitSha,
+  data: categoriesSchema,
+});
+const versionedTechnologiesSchema = z.strictObject({
+  expectedSha: commitSha,
+  data: technologiesSchema,
+});
+const projectDraftSchema = z.strictObject({
+  slug: idSchema,
+  expectedSha,
+  data: projectSchema,
+});
+const deletedProjectDraftSchema = z.strictObject({ slug: idSchema, expectedSha: commitSha });
+const projectDraftChangesSchema = z
+  .strictObject({
+    upsert: z.array(projectDraftSchema).max(500),
+    delete: z.array(deletedProjectDraftSchema).max(500),
+  })
+  .superRefine((projects, context) => {
+    const seen = new Set<string>();
+    for (const [index, project] of projects.upsert.entries()) {
+      if (seen.has(project.slug)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['upsert', index, 'slug'],
+          message: 'A project can only be submitted once.',
+        });
+      }
+      seen.add(project.slug);
+    }
+    for (const [index, project] of projects.delete.entries()) {
+      if (seen.has(project.slug)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['delete', index, 'slug'],
+          message: 'A project cannot be both saved and deleted.',
+        });
+      }
+      seen.add(project.slug);
+    }
+  });
+
+const stagedMediaBlobSchema = z.discriminatedUnion('scope', [
+  z.strictObject({
+    scope: z.literal('project'),
+    ...mediaDraftMetadata,
+    path: z.string().min(1).max(300),
+    blobSha: commitSha,
+  }),
+  z.strictObject({
+    scope: z.literal('technology'),
+    slug: z.literal('technologies'),
+    filename: mediaDraftMetadata.filename,
+    mime: mediaDraftMetadata.mime,
+    path: z.string().min(1).max(300),
+    blobSha: commitSha,
+  }),
+]);
+
+export const finalizeCmsDraftSchema = z.strictObject({
+  kind: z.literal('finalize'),
+  repositoryKey: z.string().min(1).max(300),
+  projects: projectDraftChangesSchema,
+  site: versionedSiteSchema.optional(),
+  categories: versionedCategoriesSchema.optional(),
+  technologies: versionedTechnologiesSchema.optional(),
+  designs: z
+    .strictObject({ expectedSha: commitSha, designs: portfolioSchema.shape.designs })
+    .optional(),
+  media: z.array(stagedMediaBlobSchema).max(100),
+});
+
+export type ProjectDocument = z.infer<typeof projectSchema>;
+export type SiteDocument = z.infer<typeof siteSchema>;
+export type PortfolioDocument = z.infer<typeof portfolioSchema>;
+export type ProjectStudy = z.infer<typeof projectStudySchema>;
+export type Categories = z.infer<typeof categoriesSchema>;
+export type Technologies = z.infer<typeof technologiesSchema>;
+export type FinalizeCmsDraft = z.infer<typeof finalizeCmsDraftSchema>;

@@ -1,0 +1,47 @@
+.cms-editor .cms-editor-category-panel {
+  .cms-editor-form > fieldset {
+    gap: var(--space-4);
+  }
+
+  .cms-editor-stack {
+    gap: var(--space-3);
+  }
+
+  .cms-editor-repeat-row {
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .cms-editor-id-field {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+
+    > span:first-child {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: var(--text-xs);
+    }
+
+    code {
+      min-height: 0;
+    }
+  }
+
+  .cms-editor-order-field {
+    max-width: 12rem;
+  }
+
+  .cms-editor-add-row {
+    gap: var(--space-3);
+  }
+}
+
+@media (width >= 48rem) {
+  .cms-editor .cms-editor-category-panel {
+    .cms-editor-category-row {
+      grid-template-columns: minmax(5rem, 0.65fr) minmax(0, 1.8fr) minmax(7rem, 0.6fr) auto;
+    }
+  }
+}

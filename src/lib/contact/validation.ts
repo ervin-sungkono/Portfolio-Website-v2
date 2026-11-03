@@ -14,13 +14,18 @@ export function validateContact(input: unknown): { data: ContactMessage; errors:
   ) as ContactMessage;
   const errors: ContactErrors = {};
   for (const field of contactFields) {
-    if (!data[field]) errors[field] = `Enter your ${field === 'subject' ? 'subject' : field}.`;
-    else if (data[field].length > limits[field])
+    if (!data[field]) {
+      errors[field] = `Enter your ${field === 'subject' ? 'subject' : field}.`;
+    } else if (data[field].length > limits[field]) {
       errors[field] = `Use no more than ${limits[field]} characters.`;
+    }
   }
-  if (data.email && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || /[\r\n]/.test(data.email)))
+  if (data.email && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || /[\r\n]/.test(data.email))) {
     errors.email = 'Enter a valid email address.';
-  if (/[\r\n]/.test(data.subject)) errors.subject = 'Keep the subject on one line.';
+  }
+  if (/[\r\n]/.test(data.subject)) {
+    errors.subject = 'Keep the subject on one line.';
+  }
   return { data, errors };
 }
 

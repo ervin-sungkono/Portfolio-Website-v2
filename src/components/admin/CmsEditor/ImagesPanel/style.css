@@ -1,0 +1,64 @@
+.cms-editor .cms-editor-images-panel {
+  .cms-editor-upload-form {
+    max-width: 44rem;
+    margin-bottom: var(--space-6);
+
+    > fieldset {
+      gap: var(--space-5);
+    }
+  }
+
+  .cms-editor-images-status {
+    margin: 0 0 var(--space-5);
+  }
+
+  .cms-editor-staged-images {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
+
+    h3 {
+      margin: 0;
+      font-size: var(--text-title);
+    }
+
+    ul {
+      display: grid;
+      gap: var(--space-4);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      display: grid;
+      gap: var(--space-4);
+      min-width: 0;
+      padding: var(--space-4);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--background);
+    }
+
+    .cms-editor-staged-image-info {
+      display: grid;
+      gap: var(--space-2);
+      min-width: 0;
+    }
+
+    .cms-editor-staged-image-info > span {
+      color: var(--muted);
+      font-size: var(--text-sm);
+    }
+
+    code {
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .cms-editor-technology-picker {
+    width: min(100%, 22rem);
+  }
+}

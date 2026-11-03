@@ -2,9 +2,22 @@
 
 import { MoonIcon, SunIcon } from '@phosphor-icons/react';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { Theme } from './type';
 import './style.css';
+
+function subscribeToNothing() {
+  return () => {};
+}
+
+function getClientSnapshot() {
+  return true;
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 function syncThemeColor(theme: Theme) {
   document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
@@ -15,24 +28,22 @@ function syncThemeColor(theme: Theme) {
 
 export function ThemeToggle() {
   const pathname = usePathname();
-  const [theme, setTheme] = useState<Theme | null>(null);
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(subscribeToNothing, getClientSnapshot, getServerSnapshot);
+  const theme: Theme | null =
+    mounted && (resolvedTheme === 'dark' || resolvedTheme === 'light') ? resolvedTheme : null;
 
   useEffect(() => {
-    const currentTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-    setTheme(currentTheme);
-    syncThemeColor(currentTheme);
-  }, [pathname]);
+    if (resolvedTheme === 'dark' || resolvedTheme === 'light') {
+      syncThemeColor(resolvedTheme);
+    }
+  }, [pathname, resolvedTheme]);
 
   function toggleTheme() {
-    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = nextTheme;
-    setTheme(nextTheme);
-    syncThemeColor(nextTheme);
-    try {
-      localStorage.setItem('portfolio-theme', nextTheme);
-    } catch {
-      /* Theme still works without storage. */
+    if (!theme) {
+      return;
     }
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   }
 
   return (

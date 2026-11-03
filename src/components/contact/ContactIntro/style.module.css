@@ -1,0 +1,11 @@
+.headingCopy {
+  min-width: 0;
+
+  h1 {
+    max-width: 16ch;
+  }
+}
+
+.heading .headingCopy > p:not(.eyebrow) {
+  max-width: 48ch;
+}

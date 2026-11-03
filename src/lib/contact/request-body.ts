@@ -2,14 +2,18 @@
 export const MAX_CONTACT_BODY_BYTES = 64 * 1024;
 
 export async function readContactBody(body: ReadableStream<Uint8Array> | null): Promise<unknown> {
-  if (!body) throw new Error('Invalid body');
+  if (!body) {
+    throw new Error('Invalid body');
+  }
   const reader = body.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;
 
   while (true) {
     const { value, done } = await reader.read();
-    if (done) break;
+    if (done) {
+      break;
+    }
     size += value.byteLength;
     if (size > MAX_CONTACT_BODY_BYTES) {
       try {

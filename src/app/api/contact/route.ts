@@ -7,18 +7,19 @@ import {
   verifyCaptcha,
 } from '@/lib/contact/service';
 
-export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin)
+  if (origin && origin !== new URL(request.url).origin) {
     return Response.json(
       { success: false, message: 'Please submit the form from this website.' },
       { status: 403 },
     );
-  if (!request.headers.get('content-type')?.includes('application/json'))
+  }
+  if (!request.headers.get('content-type')?.includes('application/json')) {
     return Response.json({ success: false, message: 'Send a JSON request.' }, { status: 415 });
+  }
   let input: Record<string, unknown>;
   try {
     input = (await readContactBody(request.body)) as Record<string, unknown>;
@@ -31,20 +32,23 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (!input || typeof input !== 'object' || Array.isArray(input))
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
     return Response.json({ success: false, message: 'Enter a valid message.' }, { status: 400 });
+  }
   const { data, errors } = validateContact(input);
-  if (Object.keys(errors).length)
+  if (Object.keys(errors).length) {
     return Response.json(
       { success: false, message: 'Check the highlighted fields.', errors },
       { status: 400 },
     );
-  if (input.website)
+  }
+  if (input.website) {
     return Response.json(
       { success: false, message: 'The submission could not be accepted.' },
       { status: 400 },
     );
-  if (!mailConfigured() || !captchaSecret() || !process.env.NEXT_PUBLIC_RECAPTCHA_KEY)
+  }
+  if (!mailConfigured() || !captchaSecret() || !process.env.NEXT_PUBLIC_RECAPTCHA_KEY) {
     return Response.json(
       {
         success: false,
@@ -52,14 +56,16 @@ export async function POST(request: Request) {
       },
       { status: 503 },
     );
+  }
   try {
     if (
       !(await verifyCaptcha(typeof input.recaptcha_token === 'string' ? input.recaptcha_token : ''))
-    )
+    ) {
       return Response.json(
         { success: false, message: 'Verification expired. Please submit the form again.' },
         { status: 400 },
       );
+    }
     await sendContactEmail(data);
     return Response.json({
       success: true,

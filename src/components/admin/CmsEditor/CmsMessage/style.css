@@ -1,0 +1,58 @@
+.cms-editor {
+  .cms-toast {
+    position: fixed;
+    z-index: 70;
+    inset: auto var(--space-4) var(--space-4) auto;
+    width: min(32rem, calc(100vw - 2 * var(--space-4)));
+    max-height: min(50dvh, 24rem);
+    overflow: auto;
+    box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 18%);
+    margin: 0;
+  }
+
+  .cms-editor-message {
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--background);
+    overflow-wrap: anywhere;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    margin-bottom: var(--space-5);
+
+    p {
+      flex: 1 1 18rem;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    a,
+    .cms-editor-text-button {
+      min-height: 2.75rem;
+      display: inline-flex;
+      align-items: center;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    a:hover,
+    .cms-editor-text-button:hover:not(:disabled) {
+      color: var(--accent);
+    }
+  }
+
+  .cms-editor-message-success {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .cms-editor-message-error,
+  .cms-editor-message-conflict {
+    border-color: #ae3939;
+  }
+}
