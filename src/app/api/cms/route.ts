@@ -4,7 +4,7 @@ import { CmsError } from '@/lib/cms/errors';
 import { assertCmsOwner } from '@/lib/cms/github';
 import { cmsErrorResponse, cmsResponse, readCmsJson, requireSameOrigin } from '@/lib/cms/http';
 import { invalidateContent, invalidateContentBatch } from '@/lib/cms/cache';
-import { publishAndRevalidate } from '@/lib/cms/publishing';
+import { publishAndRevalidate, type CacheTarget } from '@/lib/cms/publishing';
 import { getSnapshot } from '@/lib/cms/repository';
 import { initializeRepository } from '@/lib/cms/initialization';
 import { finalizeCmsDraft } from '@/lib/cms/draft-finalization';
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
     const operation = parsed.data;
     if (operation.kind === 'finalize') {
-      const invalidations = [
+      const invalidations: Array<{ target: CacheTarget; slug?: string }> = [
         ...[...operation.projects.upsert, ...operation.projects.delete].map(({ slug }) => ({
           target: 'project' as const,
           slug,
@@ -65,6 +65,9 @@ export async function POST(request: Request) {
           : []),
         ...(operation.designs ? [{ target: 'designs' as const }] : []),
       ];
+      if (operation.deleteMedia?.length && !invalidations.length) {
+        invalidations.push({ target: 'all' as const });
+      }
       return cmsResponse(
         await publishAndRevalidate(
           () => finalizeCmsDraft(token, operation),

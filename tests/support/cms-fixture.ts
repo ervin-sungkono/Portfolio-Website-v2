@@ -1,6 +1,6 @@
 import { encode } from 'next-auth/jwt';
 
-export const cmsBaseUrl = 'http://localhost:3104';
+export const cmsBaseUrl = `http://localhost:${process.env.CMS_FIXTURE_PORT ?? '3104'}`;
 export const cmsPatUserId = '42424242';
 export const cmsPat = 'fixture-owner-token';
 export const cmsAuthSecret = 'cms-browser-fixture-secret-with-at-least-thirty-two-characters';

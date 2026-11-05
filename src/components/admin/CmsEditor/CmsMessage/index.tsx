@@ -1,3 +1,4 @@
+import { Button } from '@/components/common/Button';
 import { safeCommitUrl } from '../utils';
 import type { CmsMessageProps } from './type';
 import './style.css';
@@ -19,14 +20,16 @@ export function CmsMessage({ message, onDismiss }: CmsMessageProps) {
         </a>
       )}
       {onDismiss && (
-        <button
+        <Button
+          kind="action"
           type="button"
           className="cms-editor-text-button"
+          variant="text"
           onClick={onDismiss}
           aria-label="Dismiss notification"
         >
           Dismiss
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Button } from '@/components/common/Button';
 import type { Confirmation } from './type';
 import './style.css';
 
@@ -67,18 +68,25 @@ export function useConfirmDialog() {
         <>
           <h2 id={`${id}-title`}>{confirmation.title}</h2>
           <p id={`${id}-description`}>{confirmation.description}</p>
+          {confirmation.details}
           <div className="cms-confirm-actions">
-            <button
+            <Button
+              kind="action"
               ref={cancel}
               type="button"
-              className="button button-outline"
+              variant="outline"
               onClick={() => finish(false)}
             >
               Cancel
-            </button>
-            <button type="button" className="button" onClick={() => finish(true)}>
+            </Button>
+            <Button
+              kind="action"
+              type="button"
+              className={confirmation.danger ? 'cms-confirm-danger' : undefined}
+              onClick={() => finish(true)}
+            >
               {confirmation.confirmLabel ?? 'Confirm'}
-            </button>
+            </Button>
           </div>
         </>
       )}

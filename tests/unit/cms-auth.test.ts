@@ -43,29 +43,21 @@ test('sign-in matches the OAuth account to the live PAT identity', async () => {
   );
 });
 
-test('JWT callback stores only the GitHub ID and ignores session updates', async () => {
+test('JWT callback does not store provider credentials and ignores session updates', async () => {
   const token = await callbacks.jwt!({ token: {}, account } as Parameters<
     NonNullable<typeof callbacks.jwt>
   >[0]);
   assert.equal(token?.githubId, owner);
-  assert.equal(token?.githubAccessToken, undefined);
-  assert.equal(token?.githubExpiresAt, undefined);
+  assert.equal(JSON.stringify(token).includes(account.access_token), false);
 
   const updated = await callbacks.jwt!({
     token,
     user: { id: owner },
     trigger: 'update',
-    session: { githubId: '99999999', githubAccessToken: 'injected' },
+    session: { githubId: '99999999', access_token: 'injected' },
   } as Parameters<NonNullable<typeof callbacks.jwt>>[0]);
   assert.equal(updated?.githubId, owner);
-  assert.equal(updated?.githubAccessToken, undefined);
-  assert.equal(
-    await callbacks.jwt!({
-      token: { ...token, githubAccessToken: 'legacy-oauth-token' },
-      user: { id: owner },
-    } as Parameters<NonNullable<typeof callbacks.jwt>>[0]),
-    null,
-  );
+  assert.equal(JSON.stringify(updated).includes('injected'), false);
 
   assert.equal(
     await callbacks.jwt!({
@@ -89,11 +81,11 @@ test('session JSON never exposes GitHub tokens or arbitrary JWT/session fields',
     session: {
       expires: '2099-01-01',
       user: { name: 'Owner', email: 'fixture@example.com' },
-      githubAccessToken: 'must-not-leak',
+      access_token: 'must-not-leak',
     },
     token: {
       githubId: owner,
-      githubAccessToken: account.access_token,
+      access_token: account.access_token,
       otherSecret: 'must-not-leak',
     },
   } as unknown as Parameters<NonNullable<typeof callbacks.session>>[0]);
@@ -108,10 +100,7 @@ test('session JSON never exposes GitHub tokens or arbitrary JWT/session fields',
 test('owner guard reads only the authenticated GitHub ID from the session', () => {
   assert.throws(() => ownerSessionId(null), { status: 401 });
   assert.throws(() => ownerSessionId({}), { status: 401 });
-  assert.throws(() => ownerSessionId({ githubId: owner, githubAccessToken: 'legacy' }), {
-    status: 401,
-  });
-  assert.throws(() => ownerSessionId({ githubId: owner, githubExpiresAt: 123 }), { status: 401 });
+  assert.throws(() => ownerSessionId({ githubId: '0' }), { status: 401 });
   assert.equal(ownerSessionId({ githubId: owner }), owner);
 });
 
@@ -133,19 +122,6 @@ test('Auth.js encrypts a credential-free session and supports server-only cookie
   });
   assert.equal(ownerSessionId(token), owner);
 
-  const legacyEncrypted = await encode({
-    token: { githubId: owner, githubAccessToken: account.access_token },
-    secret,
-    salt,
-    maxAge: 60,
-  });
-  const legacyToken = await getToken({
-    req: { headers: new Headers({ cookie: `${salt}=${legacyEncrypted}` }) },
-    secret,
-    salt,
-    cookieName: salt,
-  });
-  assert.throws(() => ownerSessionId(legacyToken), { status: 401 });
   assert.equal(
     await getToken({
       req: { headers: new Headers({ cookie: `${salt}=${encrypted}` }) },

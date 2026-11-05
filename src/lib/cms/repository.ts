@@ -15,7 +15,9 @@ import {
 import {
   categoriesSchema,
   portfolioSchema,
+  projectIndexSchema,
   projectSchema,
+  cmsMediaPathSchema,
   siteSchema,
   technologiesSchema,
   type Categories,
@@ -27,6 +29,9 @@ import {
 
 const projectSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const allowedMediaSize = 1_048_576;
+const commitShaPattern = /^[a-f0-9]{40}$/i;
+
+export type ExistingCmsMedia = { path: string; sha: string };
 
 export type RepositoryContext = {
   owner: string;
@@ -42,7 +47,7 @@ export type CmsSnapshot = {
   projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
 };
 
-export type ContentFile = { text: string; sha: string; size: number };
+type ContentFile = { text: string; sha: string; size: number };
 
 type RegistryDocument<T> = { data: T; sha: string };
 
@@ -161,6 +166,55 @@ export async function listContentDirectory(
     throw unsupported(`Expected a directory at ${path} in the content repository.`);
   }
   return value;
+}
+
+export async function listExistingMedia(
+  repository: RepositoryContext,
+  token: string,
+  ref: string,
+): Promise<ExistingCmsMedia[]> {
+  const [projectDirectories, technologyFiles] = await Promise.all([
+    listContentDirectory(repository, 'media/projects', token, ref),
+    listContentDirectory(repository, 'media/technologies', token, ref),
+  ]);
+  const media: ExistingCmsMedia[] = [];
+  const directories = (projectDirectories ?? []).filter(
+    (directory) =>
+      directory.type === 'dir' &&
+      directory.name.length <= 100 &&
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(directory.name) &&
+      directory.path === `media/projects/${directory.name}`,
+  );
+  for (let offset = 0; offset < directories.length; offset += 8) {
+    const batch = directories.slice(offset, offset + 8);
+    const fileLists = await Promise.all(
+      batch.map((directory) => listContentDirectory(repository, directory.path, token, ref)),
+    );
+    for (const [index, files] of fileLists.entries()) {
+      const path = batch[index].path;
+      for (const file of files ?? []) {
+        if (
+          file.type === 'file' &&
+          file.path === `${path}/${file.name}` &&
+          cmsMediaPathSchema.safeParse(file.path).success &&
+          commitShaPattern.test(file.sha)
+        ) {
+          media.push({ path: file.path, sha: file.sha });
+        }
+      }
+    }
+  }
+  for (const file of technologyFiles ?? []) {
+    if (
+      file.type === 'file' &&
+      file.path === `media/technologies/${file.name}` &&
+      cmsMediaPathSchema.safeParse(file.path).success &&
+      commitShaPattern.test(file.sha)
+    ) {
+      media.push({ path: file.path, sha: file.sha });
+    }
+  }
+  return media.sort((left, right) => left.path.localeCompare(right.path));
 }
 
 async function requiredDocument<T>(
@@ -399,18 +453,37 @@ export async function getSnapshot(
   return { repository, site, categories, technologies, projects };
 }
 
-export async function readProjectMedia(
-  repository: RepositoryContext,
-  path: string,
-  ref?: string,
-): Promise<Uint8Array> {
-  const bytes = await githubBytes(rawMediaUrl(repository, path, ref));
-  if (!isValidImageBytes(path, bytes)) {
-    throw unsupported(`The media file ${path} is invalid or too large.`);
-  }
-  return bytes;
-}
-
 export function isValidProjectSlug(value: string): boolean {
   return projectSlugPattern.test(value);
+}
+
+export class ProjectIndex {
+  static serialize(projects: readonly string[]): string {
+    const sortedProjects = [...projects].sort();
+    const parsed = projectIndexSchema.safeParse({ schemaVersion: 1, projects: sortedProjects });
+    if (!parsed.success) {
+      throw new CmsError(
+        'unsupported_repository',
+        'The content repository has too many projects to build its public project index.',
+        409,
+      );
+    }
+    return `${JSON.stringify(parsed.data, null, 2)}\n`;
+  }
+
+  static isCurrent(serialized: string | null, projects: readonly string[]): boolean {
+    if (serialized === null) {
+      return false;
+    }
+    try {
+      const previous = projectIndexSchema.safeParse(JSON.parse(serialized));
+      const sortedProjects = [...projects].sort();
+      return (
+        previous.success &&
+        JSON.stringify(previous.data.projects) === JSON.stringify(sortedProjects)
+      );
+    } catch {
+      return false;
+    }
+  }
 }

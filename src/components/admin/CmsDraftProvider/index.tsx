@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/common/Button';
 import { mediaPathForDigest, type CmsImageMime, type CmsMediaScope } from '@/lib/cms/media-path';
 import { emptyDraft, type CmsDraft } from './type';
 import './style.css';
@@ -70,9 +71,9 @@ function DraftAccessGate({ state }: { state: AccessState }) {
         <h1 id="cms-draft-gate-heading">{message.heading}</h1>
         <p role={loading ? 'status' : 'alert'}>{message.body}</p>
         {message.action && (
-          <button className="button" type="button" onClick={() => window.location.reload()}>
+          <Button kind="action" type="button" onClick={() => window.location.reload()}>
             {message.action}
-          </button>
+          </Button>
         )}
       </section>
     </div>

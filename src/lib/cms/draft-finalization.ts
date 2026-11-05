@@ -11,17 +11,18 @@ import {
   updateGitBranch,
 } from './git-data.ts';
 import { assertCmsOwner } from './github.ts';
-import { getOwnerRepository } from './github-repositories.ts';
+import { listOwnerRepositories } from './github-repositories.ts';
 import { readAndVerifyStagedMedia, type StagedMediaBlob } from './media.ts';
-import { isProjectIndexCurrent, serializeProjectIndex } from './project-index.ts';
 import {
   getSnapshot,
   readContentFile,
   readPortfolio,
   resolveRepository,
+  listExistingMedia,
   validateReferences,
   type CmsSnapshot,
   type RepositoryContext,
+  ProjectIndex,
 } from './repository.ts';
 import {
   categoriesSchema,
@@ -33,6 +34,7 @@ import {
   type Categories,
   type FinalizeCmsDraft,
   type ProjectDocument,
+  type SiteDocument,
   type Technologies,
 } from './schemas.ts';
 
@@ -65,6 +67,19 @@ function changedProjectMap(snapshot: CmsSnapshot, draft: FinalizeCmsDraft) {
   return projects;
 }
 
+function validateHeroProjectReferences(
+  site: SiteDocument,
+  projects: ReadonlyMap<string, ProjectDocument>,
+) {
+  for (const slug of site.heroProjectSlugs ?? []) {
+    if (!projects.get(slug)?.published) {
+      throw validationError(
+        `Hero highlight ${slug} must refer to an existing published project. Remove it from the selection or publish the project.`,
+      );
+    }
+  }
+}
+
 function validateDraftShape(input: unknown): FinalizeCmsDraft {
   const parsed = finalizeCmsDraftSchema.safeParse(input);
   if (!parsed.success) {
@@ -84,13 +99,19 @@ function assertHasChanges(draft: FinalizeCmsDraft) {
     !draft.categories &&
     !draft.technologies &&
     !draft.designs &&
-    !draft.media.length
+    !draft.media.length &&
+    !draft.deleteMedia?.length
   ) {
     throw validationError('There are no draft changes to submit.');
   }
 }
 
-function checkExpectedShas(snapshot: CmsSnapshot, draft: FinalizeCmsDraft, portfolioSha?: string) {
+function checkExpectedShas(
+  snapshot: CmsSnapshot,
+  draft: FinalizeCmsDraft,
+  portfolioSha?: string,
+  mediaShas: ReadonlyMap<string, string> = new Map(),
+) {
   const conflicts: DraftConflict[] = [];
   const projects = new Map(snapshot.projects.map(({ slug, sha }) => [slug, sha]));
   for (const item of draft.projects.upsert) {
@@ -130,6 +151,12 @@ function checkExpectedShas(snapshot: CmsSnapshot, draft: FinalizeCmsDraft, portf
       currentSha: portfolioSha,
     });
   }
+  for (const item of draft.deleteMedia ?? []) {
+    const currentSha = mediaShas.get(item.path) ?? null;
+    if (currentSha !== item.expectedSha) {
+      conflicts.push({ path: item.path, expectedSha: item.expectedSha, currentSha });
+    }
+  }
   if (conflicts.length) {
     throw conflictError(conflicts);
   }
@@ -152,8 +179,8 @@ async function addProjectIndexIfNeeded(
   const path = 'content/project-index.json';
   const existing = await readContentFile(repository, path, token, ref);
   const slugs = [...projects.keys()];
-  if (!isProjectIndexCurrent(existing?.text ?? null, slugs)) {
-    addFile(files, path, Buffer.from(serializeProjectIndex(slugs), 'utf8'));
+  if (!ProjectIndex.isCurrent(existing?.text ?? null, slugs)) {
+    addFile(files, path, Buffer.from(ProjectIndex.serialize(slugs), 'utf8'));
   }
 }
 
@@ -221,20 +248,48 @@ export async function finalizeCmsDraft(
   const branch = await getGitBranchState(repository, token);
   const snapshot = await getSnapshot(token, branch.commitSha, false);
   const portfolio = draft.designs ? await readPortfolio(token, branch.commitSha) : undefined;
-  checkExpectedShas(snapshot, draft, portfolio?.sha);
+  const deleteMedia = draft.deleteMedia ?? [];
+  const deletingPaths = new Set(deleteMedia.map(({ path }) => path));
+  if (draft.media.some(({ path }) => deletingPaths.has(path))) {
+    throw validationError(
+      'A media file cannot be staged for upload and deletion in the same draft.',
+    );
+  }
+  const existingMedia = deleteMedia.length
+    ? await listExistingMedia(repository, token, branch.commitSha)
+    : [];
+  checkExpectedShas(
+    snapshot,
+    draft,
+    portfolio?.sha,
+    new Map(existingMedia.map(({ path, sha }) => [path, sha])),
+  );
 
   const nextProjects = changedProjectMap(snapshot, draft);
   const nextCategories: Categories = draft.categories?.data ?? snapshot.categories.data;
   const nextTechnologies: Technologies = draft.technologies?.data ?? snapshot.technologies.data;
+  const nextSite = draft.site?.data ?? snapshot.site.data;
   const currentProjects = new Map(snapshot.projects.map(({ slug, data }) => [slug, data]));
+  validateHeroProjectReferences(nextSite, nextProjects);
 
-  for (const item of draft.projects.upsert) {
+  const repositoryIdsToValidate = draft.projects.upsert.flatMap((item) => {
     const before = currentProjects.get(item.slug);
     if (
       item.data.githubRepositoryId !== null &&
       before?.githubRepositoryId !== item.data.githubRepositoryId
     ) {
-      await getOwnerRepository(token, item.data.githubRepositoryId);
+      return [item.data.githubRepositoryId];
+    }
+    return [];
+  });
+  if (repositoryIdsToValidate.length) {
+    const availableIds = new Set((await listOwnerRepositories(token)).map(({ id }) => id));
+    if (repositoryIdsToValidate.some((id) => !availableIds.has(id))) {
+      throw new CmsError(
+        'forbidden',
+        'The selected repository is not accessible to the configured GitHub account.',
+        403,
+      );
     }
   }
 
@@ -282,6 +337,14 @@ export async function finalizeCmsDraft(
       referencedMedia.add(technology.icon);
     }
   }
+  const referencedDeletions = deleteMedia
+    .map(({ path }) => path)
+    .filter((path) => referencedMedia.has(path));
+  if (referencedDeletions.length) {
+    throw validationError(
+      `Remove deleted media from the resulting project or technology documents first: ${referencedDeletions.join(', ')}.`,
+    );
+  }
   const unreferencedMedia = [...mediaBlobs.keys()].filter((path) => !referencedMedia.has(path));
   if (unreferencedMedia.length) {
     throw validationError(
@@ -301,6 +364,9 @@ export async function finalizeCmsDraft(
   const files = new Map<string, PendingFile>();
   const deletedPaths = new Set<string>();
   setUpdatedDocuments(snapshot, draft, nextProjects, files, deletedPaths);
+  for (const item of deleteMedia) {
+    deletedPaths.add(item.path);
+  }
   if (
     draft.designs &&
     nextPortfolio &&

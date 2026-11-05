@@ -1,8 +1,67 @@
-.cms-editor .cms-editor-site-panel {
-  .cms-editor-form > fieldset {
-    gap: var(--space-4);
+.cms-site-profile-inline-wizard {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+
+  > header p {
+    max-width: 65ch;
+    margin: var(--space-2) 0 0;
+    color: var(--muted);
+    line-height: 1.6;
   }
 
+  > header h3 {
+    margin: 0;
+    font-size: var(--text-title);
+  }
+
+  > nav ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  > nav li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: var(--text-xs);
+
+    &[aria-current='step'] {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+      font-weight: 750;
+    }
+
+    span {
+      display: grid;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 1px solid currentcolor;
+      border-radius: 50%;
+    }
+  }
+
+  .cms-editor-form-group {
+    display: grid;
+    gap: var(--space-6);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+}
+
+.cms-editor .cms-editor-site-panel {
   .cms-editor-grid {
     gap: var(--space-4);
   }
@@ -14,6 +73,75 @@
 
   .cms-editor-stack {
     gap: var(--space-3);
+  }
+
+  .cms-editor-hero-projects {
+    .cms-editor-hint {
+      margin: 0;
+    }
+  }
+
+  .cms-editor-hero-choice-list,
+  .cms-editor-hero-order-list {
+    display: grid;
+    gap: var(--space-3);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cms-editor-hero-choice {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--control-border);
+    border-radius: 7px;
+    background: var(--background);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+
+    input {
+      width: 1rem;
+      height: 1rem;
+      margin: 0.2rem 0 0;
+      accent-color: var(--accent);
+    }
+  }
+
+  .cms-editor-hero-choice-copy {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .cms-editor-hero-order-list {
+    list-style: decimal;
+    padding-inline-start: var(--space-5);
+  }
+
+  .cms-editor-hero-order {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--background);
+    overflow-wrap: anywhere;
+  }
+
+  .cms-editor-hero-order-number {
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-weight: 750;
   }
 
   .cms-editor-social-row {
@@ -28,5 +156,19 @@
     .cms-editor-social-row {
       grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1.3fr) auto;
     }
+
+    .cms-editor-hero-order {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+}
+
+@media (width >= 64rem) and (height >= 44rem) {
+  .cms-site-profile-inline-step {
+    max-block-size: max(6rem, calc(100dvh - 42rem));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding-inline-end: var(--space-3);
   }
 }

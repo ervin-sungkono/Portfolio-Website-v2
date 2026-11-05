@@ -5,6 +5,7 @@ import {
   cmsPatUserId as ownerId,
   cmsSessionCookie,
 } from '../../support/cms-fixture';
+import { CmsEditorPage } from '../../support/cms-editor-page';
 
 type DraftSafetyWindow = Window & {
   __gateDraftWrites?: boolean;
@@ -51,14 +52,21 @@ test('one tab owns the browser draft and a locked tab cannot replace it', async 
   const ownerPage = await context.newPage();
   await ownerPage.goto('/admin');
   await expect(ownerPage.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await ownerPage.getByLabel('Choose a project').selectOption('fixture-project');
-  await ownerPage
+  const ownerEditor = new CmsEditorPage(ownerPage);
+  await ownerPage.getByRole('button', { name: 'Projects', exact: true }).click();
+  const ownerProjectTable = ownerPage.getByRole('table', { name: 'Current projects' });
+  await expect(ownerProjectTable.getByRole('row', { name: /fixture-project/ })).toBeVisible();
+  const ownerDialog = await ownerEditor.openProjectForm('fixture-project');
+  await ownerDialog
     .getByLabel('Summary', { exact: true })
     .fill('Saved while one browser tab owns the draft.');
-  await ownerPage.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await ownerEditor.advanceProjectWizardToSave(ownerDialog);
+  await ownerDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
   await expect(
-    ownerPage.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
+    ownerDialog.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
   ).toBeVisible();
+  await ownerPage.keyboard.press('Escape');
+  await expect(ownerDialog).not.toBeVisible();
   const savedBeforeLock = await readSavedDraft(ownerPage);
 
   const lockedPage = await context.newPage();
@@ -89,8 +97,9 @@ test('one tab owns the browser draft and a locked tab cannot replace it', async 
   ).toBeVisible();
   await lockedPage.goto('/admin');
   await expect(lockedPage.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await lockedPage.getByLabel('Choose a project').selectOption('fixture-project');
-  await expect(lockedPage.getByLabel('Summary', { exact: true })).toHaveValue(
+  const lockedEditor = new CmsEditorPage(lockedPage);
+  const restoredDialog = await lockedEditor.openProjectForm('fixture-project');
+  await expect(restoredDialog.getByLabel('Summary', { exact: true })).toHaveValue(
     'Saved while one browser tab owns the draft.',
   );
   await context.close();
@@ -157,14 +166,12 @@ test('the provider warns during queued writes and after a failed save until pers
 
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
+  const editor = new CmsEditorPage(page);
+  const projectDialog = await editor.openProjectForm('fixture-project');
   await expect
     .poll(() => page.evaluate(() => (window as DraftSafetyWindow).__draftWritesInFlight))
     .toBe(0);
   expect(await hasBeforeUnloadWarning(page)).toBe(false);
-  await page.getByLabel('Choose a project').selectOption('fixture-project');
-  await expect
-    .poll(() => page.evaluate(() => (window as DraftSafetyWindow).__draftWritesInFlight))
-    .toBe(0);
   await page.evaluate(() => {
     const guardedWindow = window as DraftSafetyWindow;
     let release!: () => void;
@@ -175,10 +182,11 @@ test('the provider warns during queued writes and after a failed save until pers
     guardedWindow.__gateDraftWrites = true;
     guardedWindow.__draftWriteStarted = false;
   });
-  await page
+  await projectDialog
     .getByLabel('Summary', { exact: true })
     .fill('A local save that is still waiting for Cache Storage.');
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await editor.advanceProjectWizardToSave(projectDialog);
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
   await page.waitForFunction(() => (window as DraftSafetyWindow).__draftWriteStarted);
   await expect(page.getByText(/Saving draft in this browser/)).toBeVisible();
   expect(await hasBeforeUnloadWarning(page)).toBe(true);
@@ -197,10 +205,12 @@ test('the provider warns during queued writes and after a failed save until pers
     guardedWindow.__draftWriteStarted = false;
     guardedWindow.__failDraftWrites = true;
   });
-  await page
+  await editor.returnProjectWizardToDetails(projectDialog);
+  await projectDialog
     .getByLabel('Summary', { exact: true })
     .fill('A draft update whose storage write fails.');
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await editor.advanceProjectWizardToSave(projectDialog);
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
   await page.waitForFunction(() => (window as DraftSafetyWindow).__draftWriteStarted);
   await expect(
     page.getByRole('alert').filter({ hasText: 'The browser could not save this draft.' }),
@@ -212,10 +222,12 @@ test('the provider warns during queued writes and after a failed save until pers
     guardedWindow.__draftWriteStarted = false;
     guardedWindow.__failDraftWrites = false;
   });
-  await page
+  await editor.returnProjectWizardToDetails(projectDialog);
+  await projectDialog
     .getByLabel('Summary', { exact: true })
     .fill('A later local save successfully persists the draft.');
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await editor.advanceProjectWizardToSave(projectDialog);
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
   await page.waitForFunction(() => (window as DraftSafetyWindow).__draftWriteStarted);
   await expect(
     page.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),

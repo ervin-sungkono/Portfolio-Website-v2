@@ -29,7 +29,7 @@ async function selectedDesignIds(context: BrowserContext) {
 }
 
 async function submitAllChanges(page: Page) {
-  await page.getByRole('button', { name: 'Submit all changes', exact: true }).click();
+  await page.getByRole('button', { name: 'Submit draft', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('heading', { name: 'Submit all changes?' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Submit changes', exact: true }).click();
@@ -55,12 +55,50 @@ test('owner shows and hides Dribbble shots, and the public design pages follow t
   const page = await context.newPage();
   const editor = new CmsEditorPage(page);
   const publicPage = await context.newPage();
+  await publicPage.emulateMedia({ reducedMotion: 'no-preference' });
 
   await editor.open();
   await page.getByRole('button', { name: 'Designs', exact: true }).click();
   const panel = page.locator('#cms-editor-designs-panel');
   await expect(panel.getByRole('heading', { name: 'Design Selection' })).toBeVisible();
   await expect(panel.getByText('Fixture Design 1', { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 1100 });
+
+  const designGrid = panel.locator('.cms-editor-designs-grid[aria-label="Dribbble shots"]');
+  const designLayout = await designGrid.evaluate((grid) => {
+    const workspace = grid.closest<HTMLElement>('.cms-editor-workspace');
+    const originalCards = Array.from(grid.children);
+    if (!workspace || !originalCards.length) {
+      return false;
+    }
+    for (let index = 0; index < 12; index += 1) {
+      grid.append(originalCards[index % originalCards.length].cloneNode(true));
+    }
+    workspace.scrollTop = workspace.scrollHeight;
+    const unspanned = Array.from(grid.querySelectorAll('.cms-editor-design-card')).every((card) => {
+      const style = getComputedStyle(card);
+      return style.gridColumnStart === 'auto' && style.gridColumnEnd === 'auto';
+    });
+    const metrics = {
+      rows: getComputedStyle(grid).gridAutoRows,
+      maxHeight: getComputedStyle(grid).maxHeight,
+      overflow: getComputedStyle(workspace).overflowY,
+      scrollHeight: workspace.scrollHeight,
+      clientHeight: workspace.clientHeight,
+      scrollTop: workspace.scrollTop,
+    };
+    grid.replaceChildren(...originalCards);
+    workspace.scrollTop = 0;
+    return { unspanned, metrics };
+  });
+  expect(designLayout).toMatchObject({
+    unspanned: true,
+    metrics: { rows: 'auto', maxHeight: 'none', overflow: 'auto' },
+  });
+  if (typeof designLayout === 'object') {
+    expect(designLayout.metrics.scrollHeight).toBeGreaterThan(designLayout.metrics.clientHeight);
+    expect(designLayout.metrics.scrollTop).toBeGreaterThan(0);
+  }
 
   const firstShot = panel
     .locator('.cms-editor-design-card')
@@ -116,7 +154,24 @@ test('owner shows and hides Dribbble shots, and the public design pages follow t
   await expect(publicPage.getByRole('heading', { name: 'Fixture Design 2' })).toBeVisible();
   await expect(publicPage.getByRole('heading', { name: 'Fixture Design 1' })).toHaveCount(0);
 
+  const artworkSurface = publicPage
+    .locator('a[href*="dribbble.com/shots/"] .pointer-surface')
+    .first();
+  await artworkSurface.scrollIntoViewIfNeeded();
+  const restingTransform = await artworkSurface.evaluate(
+    (element) => getComputedStyle(element).transform,
+  );
+  const artworkBox = await artworkSurface.boundingBox();
+  expect(artworkBox).not.toBeNull();
+  await publicPage.mouse.move(
+    artworkBox!.x + artworkBox!.width * 0.8,
+    artworkBox!.y + artworkBox!.height * 0.2,
+  );
+  await expect
+    .poll(() => artworkSurface.evaluate((element) => getComputedStyle(element).transform))
+    .not.toBe(restingTransform);
   await publicPage.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(artworkSurface).toHaveCSS('transform', 'none');
   const artwork = publicPage.locator('main img').first();
   await expect(artwork).toBeVisible();
   await expect

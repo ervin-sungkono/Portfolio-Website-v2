@@ -6,6 +6,11 @@ if (Number(process.versions.node.split('.')[0]) < 24) {
   throw new Error('Run the CMS browser suite with Node.js 24.');
 }
 
+const portValue = process.env.CMS_FIXTURE_PORT ?? '3104';
+if (!/^\d+$/.test(portValue) || Number(portValue) < 1 || Number(portValue) > 65535) {
+  throw new Error('CMS_FIXTURE_PORT must be an integer from 1 to 65535.');
+}
+const port = Number(portValue);
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fixture = pathToFileURL(
   fileURLToPath(new URL('../tests/support/fixtures/cms-runtime.mjs', import.meta.url)),
@@ -15,7 +20,8 @@ const existingOptions = process.env.NODE_OPTIONS ?? '';
 const env = {
   ...process.env,
   NODE_ENV: 'production',
-  PORT: '3104',
+  PORT: String(port),
+  CMS_FIXTURE_PORT: String(port),
   NODE_DISABLE_COMPILE_CACHE: '1',
   NODE_OPTIONS: existingOptions.includes(fixture)
     ? existingOptions
@@ -55,7 +61,7 @@ async function assertPortAvailable() {
   const server = createServer();
   await new Promise((resolve, reject) => {
     server.once('error', reject);
-    server.listen(3104, '127.0.0.1', resolve);
+    server.listen(port, '127.0.0.1', resolve);
   });
   await new Promise((resolve, reject) =>
     server.close((error) => (error ? reject(error) : resolve())),
@@ -66,7 +72,7 @@ async function runHttpTests() {
   await assertPortAvailable();
   const server = spawn(
     process.execPath,
-    ['node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', '3104'],
+    ['node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', String(port)],
     { cwd: root, env, stdio: 'inherit' },
   );
   let serverError;
@@ -83,7 +89,7 @@ async function runHttpTests() {
       }
       try {
         const response = await fetch(
-          'http://127.0.0.1:3104/api/content/project?slug=fixture-project',
+          `http://127.0.0.1:${port}/api/content/project?slug=fixture-project`,
           {
             signal: AbortSignal.timeout(1000),
           },

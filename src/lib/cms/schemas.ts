@@ -13,6 +13,9 @@ const imagePath = z
 const technologyIconPath = z
   .string()
   .regex(/^media\/technologies\/[a-zA-Z0-9][a-zA-Z0-9._-]*\.(?:png|jpe?g|webp|svg)$/i);
+export const cmsMediaPathSchema = z
+  .union([imagePath, technologyIconPath])
+  .refine((path) => path.length <= 400, 'Media paths must be 400 characters or fewer.');
 
 const httpsUrl = z
   .string()
@@ -56,6 +59,11 @@ export const siteSchema = z.strictObject({
   siteTitle: text(120),
   headline: text(240),
   introduction: text(5_000),
+  heroProjectSlugs: z
+    .array(idSchema)
+    .max(3)
+    .refine(unique, 'Hero project slugs must be unique.')
+    .optional(),
   socialLinks: z
     .array(z.strictObject({ label: text(60), url: httpsUrl }))
     .max(20)
@@ -231,6 +239,8 @@ const stagedMediaBlobSchema = z.discriminatedUnion('scope', [
   }),
 ]);
 
+const deletedMediaSchema = z.strictObject({ path: cmsMediaPathSchema, expectedSha: commitSha });
+
 export const finalizeCmsDraftSchema = z.strictObject({
   kind: z.literal('finalize'),
   repositoryKey: z.string().min(1).max(300),
@@ -242,6 +252,23 @@ export const finalizeCmsDraftSchema = z.strictObject({
     .strictObject({ expectedSha: commitSha, designs: portfolioSchema.shape.designs })
     .optional(),
   media: z.array(stagedMediaBlobSchema).max(100),
+  deleteMedia: z
+    .array(deletedMediaSchema)
+    .max(500)
+    .superRefine((items, context) => {
+      const seen = new Set<string>();
+      for (const [index, item] of items.entries()) {
+        if (seen.has(item.path)) {
+          context.addIssue({
+            code: 'custom',
+            path: [index, 'path'],
+            message: 'A media file can only be deleted once.',
+          });
+        }
+        seen.add(item.path);
+      }
+    })
+    .optional(),
 });
 
 export type ProjectDocument = z.infer<typeof projectSchema>;

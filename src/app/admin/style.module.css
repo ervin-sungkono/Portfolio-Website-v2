@@ -1,0 +1,128 @@
+.page {
+  width: min(calc(100% - 2 * var(--space-5)), 92rem);
+  margin-inline: auto;
+  padding-block: var(--space-6) var(--space-12);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.625rem);
+    line-height: 1.2;
+  }
+}
+
+.notice {
+  max-width: 72ch;
+  margin: var(--space-1) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+:global(#cms-header-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+:global(#cms-header-actions .cms-header-danger-button) {
+  border-color: #ae3939;
+  color: #ae3939;
+}
+
+:global(#cms-header-actions .cms-header-danger-button:hover:not(:disabled)) {
+  background: #ae3939;
+  color: #fff;
+}
+
+:global(:root[data-theme='dark'] #cms-header-actions .cms-header-danger-button) {
+  border-color: #f1a4a4;
+  color: #f1a4a4;
+}
+
+:global(
+  :root[data-theme='dark'] #cms-header-actions .cms-header-danger-button:hover:not(:disabled)
+) {
+  border-color: #a63d3d;
+  background: #a63d3d;
+  color: #fff;
+}
+
+.loading {
+  color: var(--muted);
+}
+
+/* The App Router root layout is shared; scope chrome changes to this route shell. */
+:global(body:has(.admin-shell) .site-header),
+:global(body:has(.admin-shell) .site-footer) {
+  display: none;
+}
+
+.signOut {
+  color: #fff;
+  border-color: #b42318;
+  background: #b42318;
+
+  &:hover {
+    color: #fff;
+    border-color: #8f1d15;
+    background: #8f1d15;
+  }
+}
+
+@media (width >= 64rem) and (height >= 44rem) {
+  .page {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding-block: var(--space-4);
+  }
+
+  .header {
+    flex: 0 0 auto;
+    margin-bottom: var(--space-2);
+  }
+
+  .page > :global(.cms-editor) {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+@media (width < 48rem) {
+  .page {
+    width: min(calc(100% - 2 * var(--space-3)), 92rem);
+    padding-block: var(--space-3) var(--space-8);
+  }
+
+  .header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .headerActions {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+}

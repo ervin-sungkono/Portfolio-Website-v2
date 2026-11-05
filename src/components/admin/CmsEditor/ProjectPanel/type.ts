@@ -12,9 +12,11 @@ export type ProjectPanelProps = {
   pending: boolean;
   feedback: ReactNode;
   allowDelete?: boolean;
-  onSelectedSlugChange: (slug: string) => void;
+  openButtonLabel?: string;
+  showImportLink?: boolean;
+  onSelectedSlugChange: (slug: string) => Promise<boolean>;
   onNewSlugChange: (slug: string) => void;
   onSave: (data: ProjectDocument) => Promise<void>;
-  onDelete: () => void;
+  onDelete: () => Promise<boolean>;
   onClearMessage: () => void;
 };

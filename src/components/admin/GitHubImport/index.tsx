@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
+import { Button } from '@/components/common/Button';
+import { Select } from '@/components/common/Select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import {
@@ -12,190 +13,28 @@ import {
 } from '@/lib/cms/schemas';
 import { useConfirmDialog } from '../ConfirmDialog';
 import { useCmsDraft } from '../CmsDraftProvider';
-import type { CmsDraft } from '../CmsDraftProvider/type';
-import { applyDraft, repositoryKey, stageProject } from '../CmsEditor/draft';
+import { applyDraft, bindDraftRepository, repositoryKey } from '../CmsEditor/draft';
 import { CmsMessage } from '../CmsEditor/CmsMessage';
 import { ImagesPanel } from '../CmsEditor/ImagesPanel';
 import { ProjectPanel } from '../CmsEditor/ProjectPanel';
 import type { CmsSnapshot, EditorMessage } from '../CmsEditor/type';
 import { errorFrom, parseSnapshot, readJson } from '../CmsEditor/response';
 import type { ImportRepository } from './type';
+import {
+  emptyProject,
+  formatUpdatedAt,
+  isHttpsUrl,
+  parseRepositories,
+  projectSlugIsTaken,
+  slugFromRepository,
+  stageImportedProject,
+  suggestionsFromRepository,
+  withDraftNewProject,
+} from './repository-import';
 import '../CmsEditor/style.css';
 import './style.css';
 
 type SnapshotState = 'loading' | 'ready' | 'needs-initialization' | 'error';
-
-function emptyProject(repositoryId: number | null = null): ProjectDocument {
-  return {
-    schemaVersion: 2,
-    githubRepositoryId: repositoryId,
-    title: '',
-    summary: '',
-    description: '',
-    published: false,
-    featured: false,
-    sortOrder: 0,
-    year: new Date().getFullYear(),
-    categories: [],
-    technologies: [],
-    tags: [],
-    links: { demo: undefined, source: undefined },
-    media: { cover: '', gallery: [] },
-  };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function parseRepository(value: unknown): ImportRepository | null {
-  if (
-    !isRecord(value) ||
-    !Number.isSafeInteger(value.id) ||
-    !Number.isSafeInteger(value.ownerId) ||
-    typeof value.owner !== 'string' ||
-    typeof value.name !== 'string' ||
-    typeof value.fullName !== 'string' ||
-    typeof value.private !== 'boolean' ||
-    typeof value.htmlUrl !== 'string' ||
-    !(typeof value.description === 'string' || value.description === null) ||
-    !(typeof value.homepage === 'string' || value.homepage === null) ||
-    !Array.isArray(value.topics) ||
-    value.topics.some((topic) => typeof topic !== 'string') ||
-    typeof value.createdAt !== 'string' ||
-    typeof value.updatedAt !== 'string' ||
-    typeof value.defaultBranch !== 'string' ||
-    !(typeof value.language === 'string' || value.language === null) ||
-    typeof value.archived !== 'boolean' ||
-    typeof value.fork !== 'boolean' ||
-    typeof value.ownedByPatOwner !== 'boolean'
-  ) {
-    return null;
-  }
-  return value as ImportRepository;
-}
-
-function parseRepositories(value: unknown): ImportRepository[] {
-  if (!Array.isArray(value)) {
-    throw new Error('The repository list response is incomplete.');
-  }
-  const repositories = value.map(parseRepository);
-  if (repositories.some((repository) => !repository)) {
-    throw new Error('GitHub returned repository data the importer could not read.');
-  }
-  return repositories as ImportRepository[];
-}
-
-function slugFromRepository(name: string): string {
-  const slug = name
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80)
-    .replace(/-+$/g, '');
-  return slug || 'new-project';
-}
-
-function isHttpsUrl(value: string | null): value is string {
-  if (!value) {
-    return false;
-  }
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' && !url.username && !url.password;
-  } catch {
-    return false;
-  }
-}
-
-function suggestionsFromRepository(repository: ImportRepository): ProjectDocument {
-  const description = repository.description?.trim() ?? '';
-  const topics = repository.topics
-    .filter((topic) => topic.trim().length > 0 && topic.trim().length <= 40)
-    .slice(0, 30);
-  return {
-    ...emptyProject(repository.id),
-    title: repository.name,
-    summary: description.length <= 240 ? description : '',
-    description,
-    tags: topics,
-    links: {
-      source: repository.htmlUrl,
-      demo: isHttpsUrl(repository.homepage) ? repository.homepage : undefined,
-    },
-  };
-}
-
-function formatUpdatedAt(value: string): string {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
-}
-
-function withDraftNewProject(snapshot: CmsSnapshot, draft: CmsDraft) {
-  if (
-    !draft.newProject ||
-    snapshot.projects.some((project) => project.slug === draft.newProject?.slug)
-  ) {
-    return snapshot;
-  }
-  return {
-    ...snapshot,
-    projects: [
-      ...snapshot.projects,
-      { slug: draft.newProject.slug, data: draft.newProject.data, sha: '' },
-    ],
-  };
-}
-
-function projectSlugIsTaken(
-  snapshot: CmsSnapshot | null,
-  draft: CmsDraft,
-  slug: string,
-  repositoryId: number,
-) {
-  return Boolean(
-    snapshot?.projects.some((project) => project.slug === slug) ||
-      draft.projects.upsert.some((project) => project.slug === slug) ||
-      (draft.newProject?.slug === slug &&
-        draft.newProject.data.githubRepositoryId !== repositoryId),
-  );
-}
-
-function stageImportedProject(
-  draft: CmsDraft,
-  slug: string,
-  expectedSha: string | null,
-  data: ProjectDocument,
-  isNewProject: boolean,
-): CmsDraft {
-  if (!isNewProject) {
-    const next = stageProject(draft, slug, expectedSha, data);
-    return draft.newProject?.slug === slug ? { ...next, newProject: undefined } : next;
-  }
-
-  const imported = { slug, data };
-  if (draft.newProject && JSON.stringify(draft.newProject) === JSON.stringify(imported)) {
-    return draft;
-  }
-
-  let next = draft;
-  if (
-    draft.newProject &&
-    draft.newProject.slug !== slug &&
-    draft.newProject.data.githubRepositoryId !== data.githubRepositoryId
-  ) {
-    next = stageProject(next, draft.newProject.slug, null, draft.newProject.data);
-  }
-  if (
-    draft.newProject?.slug === slug &&
-    draft.newProject.data.githubRepositoryId !== data.githubRepositoryId
-  ) {
-    return draft;
-  }
-  return { ...next, newProject: imported };
-}
 
 export function GitHubImport() {
   const draftStore = useCmsDraft();
@@ -228,6 +67,7 @@ export function GitHubImport() {
   const privateAcknowledgement = useRef<HTMLInputElement>(null);
   const snapshotRef = useRef<CmsSnapshot | null>(null);
   const autoSavedProjectRef = useRef('');
+  const touchedProjectRef = useRef({ key: '', dirty: false });
 
   const selectedRepository = useMemo(
     () => repositories.find((repository) => repository.id === selectedRepositoryId) ?? null,
@@ -255,7 +95,7 @@ export function GitHubImport() {
       const current = snapshotRef.current?.projects.find((project) => project.slug === slug);
       const expectedSha = selectedProjectSlug ? current?.sha || null : null;
       return updateDraft((draft) =>
-        stageImportedProject(draft, slug, expectedSha, data, !selectedProjectSlug),
+        stageImportedProject(draft, slug, expectedSha, data, !selectedProjectSlug, current),
       );
     },
     [getDraft, newProjectSlug, selectedProjectSlug, selectedRepositoryId, updateDraft],
@@ -288,16 +128,20 @@ export function GitHubImport() {
       const remote = parseSnapshot(body);
       const key = repositoryKey(remote);
       const storedDraft = getDraft();
-      if (storedDraft.repository && storedDraft.repository !== key) {
+      const bound = bindDraftRepository(storedDraft, key);
+      if (!bound) {
         throw new Error(
           'The saved browser draft belongs to a different content repository. Return to that account or discard the draft before importing.',
         );
       }
       if (
-        !storedDraft.repository &&
-        !(await updateDraft((current) => ({ ...current, repository: key })))
+        bound !== storedDraft &&
+        !(await updateDraft((current) => bindDraftRepository(current, key) ?? current))
       ) {
         throw new Error('The browser could not save the draft. Check site storage and retry.');
+      }
+      if (getDraft().repository !== key) {
+        throw new Error('The saved browser draft belongs to a different content repository.');
       }
       const currentDraft = getDraft();
       const next = withDraftNewProject(applyDraft(remote, currentDraft), currentDraft);
@@ -366,6 +210,14 @@ export function GitHubImport() {
   }, [draftReady, loadRepositories, loadSnapshot]);
 
   useEffect(() => {
+    const projectKey = `${selectedRepositoryId ?? ''}:${selectedProjectSlug}`;
+    if (touchedProjectRef.current.key !== projectKey) {
+      touchedProjectRef.current = { key: projectKey, dirty: false };
+    }
+    if (formIsDirty) {
+      touchedProjectRef.current.dirty = true;
+    }
+    const wasDirty = touchedProjectRef.current.dirty;
     const slug = selectedProjectSlug || newProjectSlug.trim();
     const alreadyStaged =
       draftStore.draft.projects.upsert.some(
@@ -383,11 +235,15 @@ export function GitHubImport() {
       !snapshot ||
       !selectedRepository ||
       (!formIsDirty &&
+        !wasDirty &&
         (Boolean(selectedProjectSlug) ||
           newProjectSlug.trim() === slugFromRepository(selectedRepository.name))) ||
       (selectedRepository.private && !privateAcknowledged)
     ) {
       return;
+    }
+    if (!formIsDirty) {
+      touchedProjectRef.current.dirty = false;
     }
     void persistProjectDraft(formValues).then((saved) => {
       if (!saved || alreadyStaged || alreadyInSnapshot) {
@@ -410,6 +266,7 @@ export function GitHubImport() {
     persistProjectDraft,
     privateAcknowledged,
     selectedRepository,
+    selectedRepositoryId,
     selectedProjectSlug,
     newProjectSlug,
     snapshot,
@@ -502,10 +359,10 @@ export function GitHubImport() {
 
   async function chooseProject(slug: string) {
     if (!snapshot || !selectedRepository) {
-      return;
+      return false;
     }
     if (slug === selectedProjectSlug) {
-      return;
+      return true;
     }
     if (formIsDirty) {
       const saved =
@@ -517,7 +374,7 @@ export function GitHubImport() {
           tone: 'error',
           text: 'The current project draft could not be saved in this browser. Resolve the storage issue before choosing another project.',
         });
-        return;
+        return false;
       }
       if (
         !(await confirm({
@@ -528,7 +385,7 @@ export function GitHubImport() {
           confirmLabel: 'Choose project',
         }))
       ) {
-        return;
+        return false;
       }
     }
     clearMessage();
@@ -537,7 +394,7 @@ export function GitHubImport() {
       setSelectedProjectSlug('');
       setNewProjectSlug(slugFromRepository(selectedRepository.name));
       form.reset(suggestionsFromRepository(selectedRepository));
-      return;
+      return true;
     }
     const currentDraft = getDraft();
     const currentSnapshot = withDraftNewProject(
@@ -548,7 +405,7 @@ export function GitHubImport() {
     const project = currentSnapshot.projects.find((entry) => entry.slug === slug);
     if (!project) {
       showMessage({ tone: 'error', text: 'That project is no longer in the loaded snapshot.' });
-      return;
+      return false;
     }
     if (
       project.data.githubRepositoryId !== null &&
@@ -560,7 +417,7 @@ export function GitHubImport() {
         confirmLabel: 'Replace mapping',
       }))
     ) {
-      return;
+      return false;
     }
     const duplicate = currentSnapshot.projects.some(
       (entry) =>
@@ -571,7 +428,7 @@ export function GitHubImport() {
         tone: 'error',
         text: 'Another project already maps to this GitHub repository ID.',
       });
-      return;
+      return false;
     }
     setSelectedProjectSlug(project.slug);
     setNewProjectSlug('');
@@ -579,6 +436,7 @@ export function GitHubImport() {
     if (project.data.githubRepositoryId !== selectedRepository.id) {
       form.setValue('githubRepositoryId', selectedRepository.id, { shouldDirty: true });
     }
+    return true;
   }
 
   function applyVerifiedFields() {
@@ -756,9 +614,11 @@ export function GitHubImport() {
           is saved with the project; imported details are suggestions you can review and edit.
           Changes are stored in this browser draft until you submit them in the portfolio editor.
         </p>
-        <Link
-          className="text-link"
+        <Button
+          kind="link"
+          variant="text"
           href="/admin"
+          showArrow={false}
           aria-disabled={isUploading || isSaving}
           onClick={(event) => {
             if (isUploading || isSaving) {
@@ -767,7 +627,7 @@ export function GitHubImport() {
           }}
         >
           Back to portfolio editor
-        </Link>
+        </Button>
       </div>
 
       <section
@@ -779,41 +639,39 @@ export function GitHubImport() {
             <p className="eyebrow">Repository source</p>
             <h2 id="github-import-repository-heading">Choose a repository</h2>
           </div>
-          <button
-            className="button button-outline"
+          <Button
+            kind="action"
+            variant="outline"
             type="button"
             onClick={() => void loadRepositories(true)}
             disabled={isRefreshingRepositories}
           >
             {isRefreshingRepositories ? 'Refreshing…' : 'Refresh repository metadata'}
-          </button>
+          </Button>
         </div>
 
         <div className="github-import-repository-controls">
-          <label className="cms-editor-field">
-            <span>Accessible GitHub repositories</span>
-            <select
-              value={selectedRepository ? selectedRepository.id : ''}
-              onChange={(event) => {
-                if (event.target.value) {
-                  void chooseRepository(Number(event.target.value));
+          <div className="cms-editor-field">
+            <span id="github-import-repository-label">Accessible GitHub repositories</span>
+            <Select
+              aria-labelledby="github-import-repository-label"
+              aria-describedby="github-import-repository-help"
+              value={selectedRepository ? String(selectedRepository.id) : ''}
+              onValueChange={(repositoryId) => {
+                if (repositoryId) {
+                  void chooseRepository(Number(repositoryId));
                 }
               }}
               disabled={
                 snapshotState !== 'ready' || isRefreshingRepositories || !repositories.length
               }
-              aria-describedby="github-import-repository-help"
-            >
-              <option value="">Select a repository</option>
-              {repositories.map((repository) => (
-                <option value={repository.id} key={repository.id}>
-                  {repository.private ? 'Private · ' : 'Public · '}
-                  {repository.fullName}
-                  {repository.archived ? ' · archived' : ''}
-                </option>
-              ))}
-            </select>
-          </label>
+              placeholder="Select a repository"
+              options={repositories.map((repository) => ({
+                value: String(repository.id),
+                label: `${repository.private ? 'Private · ' : 'Public · '}${repository.fullName}${repository.archived ? ' · archived' : ''}`,
+              }))}
+            />
+          </div>
           <p className="cms-editor-hint" id="github-import-repository-help">
             Public and private repositories are listed. Refresh updates the review details and
             leaves the current project draft untouched.
@@ -824,13 +682,15 @@ export function GitHubImport() {
         {snapshotState === 'error' && (
           <div className="cms-editor-message cms-editor-message-error" role="alert">
             <p>{snapshotError}</p>
-            <button
+            <Button
+              kind="action"
               className="cms-editor-text-button"
+              variant="text"
               type="button"
               onClick={() => void loadSnapshot()}
             >
               Retry loading projects
-            </button>
+            </Button>
           </div>
         )}
         {snapshotState === 'needs-initialization' && (
@@ -839,9 +699,9 @@ export function GitHubImport() {
             <p>
               {snapshotError || 'Initialize the public content repository before mapping projects.'}
             </p>
-            <Link className="button" href="/admin">
+            <Button kind="link" href="/admin" showArrow={false}>
               Open portfolio editor setup
-            </Link>
+            </Button>
           </div>
         )}
         {repositoryError && (
@@ -978,14 +838,15 @@ export function GitHubImport() {
                 prefill blank project fields. Categories, technologies, year, and images remain for
                 you to choose.
               </p>
-              <button
-                className="button button-outline"
+              <Button
+                kind="action"
+                variant="outline"
                 type="button"
                 onClick={applyVerifiedFields}
                 disabled={isSaving || (selectedRepository.private && !privateAcknowledged)}
               >
                 Apply verified fields to blank fields
-              </button>
+              </Button>
             </div>
           )}
           <ImagesPanel
@@ -1020,10 +881,11 @@ export function GitHubImport() {
               }
               feedback={projectFeedback}
               allowDelete={false}
+              openButtonLabel="Review project details"
               onSelectedSlugChange={chooseProject}
               onNewSlugChange={setNewProjectSlug}
               onSave={saveProject}
-              onDelete={() => undefined}
+              onDelete={async () => false}
               onClearMessage={() => setMessage(undefined)}
             />
           )}

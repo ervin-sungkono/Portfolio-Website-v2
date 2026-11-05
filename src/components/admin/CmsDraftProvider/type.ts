@@ -9,6 +9,7 @@ export type DraftMedia = {
   mime: 'image/png' | 'image/jpeg' | 'image/webp';
   path: string;
 };
+export type DraftMediaDeletion = { path: string; expectedSha: string };
 
 export type CmsDraft = {
   repository: string;
@@ -18,6 +19,7 @@ export type CmsDraft = {
   technologies?: DraftDocument<Technologies>;
   designs?: { expectedSha: string; designs: string[] };
   media: DraftMedia[];
+  deleteMedia?: DraftMediaDeletion[];
   newProject?: { slug: string; data: ProjectDocument };
   pendingRefresh?: { commitUrl?: string };
 };

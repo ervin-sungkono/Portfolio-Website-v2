@@ -104,6 +104,7 @@ async function readPublicContent(owner: string, name: string, branch: string) {
         gallery: data.media.gallery.map((path) => mediaUrl(owner, name, revision, path)),
         topics: data.technologies.map((id) => technologies[id].label),
         category: data.categories.map((id) => categories[id].label).join(' / '),
+        year: data.year,
         categories: data.categories.map((id) => categories[id].label),
         tags: data.tags,
         source: data.links.source ?? null,

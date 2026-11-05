@@ -64,6 +64,52 @@ export function hasDraftChanges(draft: CmsDraft) {
       draft.technologies ||
       draft.designs ||
       draft.media.length ||
+      draft.deleteMedia?.length ||
       draft.newProject,
   );
+}
+
+export function bindDraftRepository(draft: CmsDraft, repository: string): CmsDraft | null {
+  if (draft.repository === repository) {
+    return draft;
+  }
+  if (hasDraftChanges(draft) || draft.pendingRefresh) {
+    return null;
+  }
+  return { ...draft, repository };
+}
+
+export function synchronizeProject(
+  draft: CmsDraft,
+  slug: string,
+  baseline: CmsSnapshot['projects'][number] | undefined,
+  data: ProjectDocument,
+): CmsDraft {
+  if (baseline && JSON.stringify(data) === JSON.stringify(baseline.data)) {
+    if (!draft.projects.upsert.some((project) => project.slug === slug)) {
+      return draft;
+    }
+    return {
+      ...draft,
+      projects: {
+        ...draft.projects,
+        upsert: draft.projects.upsert.filter((project) => project.slug !== slug),
+      },
+    };
+  }
+  return stageProject(draft, slug, baseline?.sha || null, data);
+}
+
+export function synchronizeDocument<K extends 'site' | 'categories' | 'technologies'>(
+  draft: CmsDraft,
+  key: K,
+  baseline: CmsSnapshot[K],
+  data: CmsSnapshot[K]['data'],
+): CmsDraft {
+  const current = draft[key];
+  if (JSON.stringify(data) === JSON.stringify(baseline.data)) {
+    return current ? { ...draft, [key]: undefined } : draft;
+  }
+  const next = { expectedSha: current?.expectedSha ?? baseline.sha, data };
+  return JSON.stringify(current) === JSON.stringify(next) ? draft : { ...draft, [key]: next };
 }
