@@ -44,6 +44,30 @@ async function completeCaptcha(page: import('@playwright/test').Page) {
   await page.evaluate(() => window.__completeCaptcha?.());
 }
 
+test('keeps CAPTCHA usable after navigating away and back', async ({ page }) => {
+  await page.route('**/api/contact', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, message: 'Your message has been sent.' }),
+    }),
+  );
+  await page.goto('/contact');
+  await page.waitForFunction(() => typeof window.__captchaOptions?.callback === 'function');
+
+  const navigation = page.getByRole('navigation', { name: 'Primary' });
+  await navigation.getByRole('link', { name: 'About', exact: true }).click();
+  await page.waitForURL('**/about');
+  await navigation.getByRole('link', { name: 'Contact', exact: true }).click();
+  await page.waitForURL('**/contact');
+  for (const [field, value] of Object.entries(message)) {
+    await page.getByLabel(field[0].toUpperCase() + field.slice(1)).fill(value);
+  }
+  await page.getByRole('button', { name: 'Send Message' }).click();
+  await completeCaptcha(page);
+  await expect(page.getByText('Your message has been sent.')).toBeVisible();
+});
+
 test('keeps fields read-only while CAPTCHA is pending and submits one snapshot', async ({
   page,
 }) => {
