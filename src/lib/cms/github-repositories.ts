@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { assertCmsOwner, githubJson } from './github.ts';
-import { CmsError, validationError } from './errors.ts';
+import { CmsError } from './errors.ts';
 
 type GitHubRepositoryResponse = {
   id: number;
@@ -21,7 +21,7 @@ type GitHubRepositoryResponse = {
   owner: { id: number; login: string };
 };
 
-export type GitHubImportRepository = {
+type GitHubImportRepository = {
   id: number;
   ownerId: number;
   owner: string;
@@ -128,22 +128,4 @@ export async function listOwnerRepositories(token: string): Promise<GitHubImport
     'The repository list is larger than the importer can load. Narrow the GitHub account access and retry.',
     502,
   );
-}
-
-export async function getOwnerRepository(
-  token: string,
-  id: number,
-): Promise<GitHubImportRepository> {
-  if (!Number.isSafeInteger(id) || id <= 0) {
-    throw validationError('Choose a valid GitHub repository.');
-  }
-  const repository = (await listOwnerRepositories(token)).find((item) => item.id === id);
-  if (!repository) {
-    throw new CmsError(
-      'forbidden',
-      'The selected repository is not accessible to the configured GitHub account.',
-      403,
-    );
-  }
-  return repository;
 }

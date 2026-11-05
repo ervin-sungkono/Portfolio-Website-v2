@@ -8,6 +8,12 @@
     overflow: auto;
     box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 18%);
     margin: 0;
+    pointer-events: none;
+
+    a,
+    button {
+      pointer-events: auto;
+    }
   }
 
   .cms-editor-message {

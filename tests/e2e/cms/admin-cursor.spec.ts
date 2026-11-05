@@ -27,6 +27,11 @@ test('CMS routes use the native cursor and public pages restore the desktop effe
   ]);
   const page = await context.newPage();
   await page.goto('/admin');
+  const studioHeader = page.locator('header').filter({
+    has: page.getByRole('heading', { name: 'Content studio' }),
+  });
+  await expect(studioHeader.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'View portfolio' })).toHaveCount(0);
   await page.mouse.move(250, 250);
   await expect(page.locator('[data-desktop-cursor]')).toHaveCount(0);
   await expect(page.locator('html')).not.toHaveAttribute('data-custom-cursor', 'active');
@@ -36,7 +41,7 @@ test('CMS routes use the native cursor and public pages restore the desktop effe
   await expect(page.locator('[data-desktop-cursor]')).toHaveCount(0);
   await expect(page.locator('html')).not.toHaveAttribute('data-custom-cursor', 'active');
 
-  await page.getByRole('link', { name: 'Home', exact: true }).click();
+  await page.goto('/');
   await expect(page.locator('[data-desktop-cursor]')).toBeAttached();
   await page.mouse.move(300, 300);
   await expect(page.locator('html')).toHaveAttribute('data-custom-cursor', 'active');

@@ -1,4 +1,5 @@
 import type { CmsDraft } from '../CmsDraftProvider/type';
+import { cmsMediaPathSchema } from '@/lib/cms/schemas';
 import { errorFrom, parseSnapshot, readJson } from './response';
 
 export type ConflictReview = {
@@ -27,6 +28,46 @@ export async function loadConflictReview(body: Record<string, unknown>, draft: C
     throw new Error(errorFrom(snapshotBody) || 'Could not load the latest repository content.');
   }
   const snapshot = parseSnapshot(snapshotBody);
+
+  const deletionPaths = new Set(
+    (draft.deleteMedia ?? []).map(({ path }) => path).filter((path) => paths.includes(path)),
+  );
+  const mediaShas = new Map<string, string>();
+  if (deletionPaths.size) {
+    const mediaResponse = await fetch('/api/cms/media', { cache: 'no-store' });
+    const mediaBody = await readJson(mediaResponse);
+    const mediaRepository = mediaBody.repository;
+    if (
+      !mediaResponse.ok ||
+      errorFrom(mediaBody) ||
+      !mediaRepository ||
+      typeof mediaRepository !== 'object' ||
+      !('owner' in mediaRepository) ||
+      !('name' in mediaRepository) ||
+      !('defaultBranch' in mediaRepository) ||
+      mediaRepository.owner !== snapshot.repository.owner ||
+      mediaRepository.name !== snapshot.repository.name ||
+      mediaRepository.defaultBranch !== snapshot.repository.defaultBranch ||
+      !Array.isArray(mediaBody.media)
+    ) {
+      throw new Error(errorFrom(mediaBody) || 'Could not load the latest media files for review.');
+    }
+    for (const item of mediaBody.media) {
+      if (
+        item &&
+        typeof item === 'object' &&
+        'path' in item &&
+        typeof item.path === 'string' &&
+        deletionPaths.has(item.path) &&
+        cmsMediaPathSchema.safeParse(item.path).success &&
+        'sha' in item &&
+        typeof item.sha === 'string' &&
+        /^[a-f0-9]{40}$/i.test(item.sha)
+      ) {
+        mediaShas.set(item.path, item.sha);
+      }
+    }
+  }
 
   let designs: { sha: string; designs: string[] } | undefined;
   if (paths.includes('content/portfolio.json')) {
@@ -101,6 +142,19 @@ export async function loadConflictReview(body: Record<string, unknown>, draft: C
         canRebase: true,
       };
     }
+    const mediaDeletion = draft.deleteMedia?.find((item) => item.path === path);
+    if (mediaDeletion) {
+      const currentSha = mediaShas.get(path) ?? null;
+      return {
+        path,
+        currentSha,
+        latest: currentSha
+          ? { path, sha: currentSha, status: 'File is present in the current repository.' }
+          : '(media file no longer exists)',
+        draft: { path, expectedSha: mediaDeletion.expectedSha, action: 'delete' },
+        canRebase: true,
+      };
+    }
     return {
       path,
       currentSha: null,
@@ -134,6 +188,14 @@ export function rebaseReviewedVersions(draft: CmsDraft, conflicts: ConflictRevie
     }
     if (conflict.path === 'content/portfolio.json' && conflict.currentSha && next.designs) {
       next.designs.expectedSha = conflict.currentSha;
+    }
+    const mediaDeletion = next.deleteMedia?.find((item) => item.path === conflict.path);
+    if (mediaDeletion) {
+      if (conflict.currentSha) {
+        mediaDeletion.expectedSha = conflict.currentSha;
+      } else {
+        next.deleteMedia = next.deleteMedia?.filter((item) => item !== mediaDeletion);
+      }
     }
   }
   return next;

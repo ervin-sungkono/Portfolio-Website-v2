@@ -1,7 +1,17 @@
 .cms-editor .cms-editor-images-panel {
+  .cms-editor-image-upload-launcher {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+  }
+
+  .cms-editor-image-upload-launcher > p {
+    max-width: 52ch;
+    margin: 0;
+  }
+
   .cms-editor-upload-form {
     max-width: 44rem;
-    margin-bottom: var(--space-6);
 
     > fieldset {
       gap: var(--space-5);
@@ -12,7 +22,8 @@
     margin: 0 0 var(--space-5);
   }
 
-  .cms-editor-staged-images {
+  .cms-editor-staged-images,
+  .cms-editor-repository-images {
     display: grid;
     gap: var(--space-4);
     min-width: 0;
@@ -26,6 +37,7 @@
 
     ul {
       display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
       gap: var(--space-4);
       margin: 0;
       padding: 0;
@@ -55,6 +67,34 @@
 
     code {
       overflow-wrap: anywhere;
+    }
+  }
+
+  .cms-editor-images-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+
+    p {
+      margin: var(--space-2) 0 0;
+      color: var(--muted);
+      font-size: var(--text-sm);
+    }
+  }
+
+  .cms-editor-image-preview {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    background: var(--surface);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
   }
 

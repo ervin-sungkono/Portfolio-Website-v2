@@ -1,41 +1,39 @@
 .cms-editor .cms-editor-category-panel {
-  .cms-editor-form > fieldset {
-    gap: var(--space-4);
-  }
-
-  .cms-editor-stack {
-    gap: var(--space-3);
-  }
-
-  .cms-editor-repeat-row {
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3);
-  }
-
-  .cms-editor-id-field {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-
-    > span:first-child {
-      flex: 0 0 auto;
-      color: var(--muted);
-      font-size: var(--text-xs);
-    }
-
-    code {
-      min-height: 0;
-    }
-  }
-
   .cms-editor-order-field {
     max-width: 12rem;
   }
+}
 
-  .cms-editor-add-row {
-    gap: var(--space-3);
+.cms-editor-overview-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: var(--space-4);
+}
+
+.cms-editor-overview-table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: middle;
   }
+
+  thead th {
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
+}
+
+.cms-editor-overview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 @media (width >= 48rem) {

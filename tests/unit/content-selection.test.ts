@@ -11,6 +11,7 @@ import {
   getDesigns,
   relatedProjects,
   selectFeaturedProjects,
+  selectHeroProjects,
   type Project,
 } from '@/lib/content';
 
@@ -44,6 +45,24 @@ describe('project selection', () => {
       'two',
       'three',
     ]);
+  });
+
+  test('hero projects follow the configured order and ignore unavailable projects', () => {
+    const projects = ['one', 'two', 'three'].map((slug) => project(slug));
+    expect(
+      selectHeroProjects(projects, ['three', 'one', 'missing']).map(({ slug }) => slug),
+    ).toEqual(['three', 'one']);
+  });
+
+  test('an unset hero selection uses the first three featured projects', () => {
+    const projects = [
+      project('one', { featured: false }),
+      project('two', { featured: true }),
+      project('three', { featured: true }),
+      project('four', { featured: true }),
+      project('five', { featured: true }),
+    ];
+    expect(selectHeroProjects(projects).map(({ slug }) => slug)).toEqual(['two', 'three', 'four']);
   });
 
   test('filters by category and case-insensitive name, topic, and tag', () => {

@@ -19,8 +19,8 @@ import {
   resolveOwner,
   type CmsSnapshot,
   type RepositoryContext,
+  ProjectIndex,
 } from './repository.ts';
-import { isProjectIndexCurrent, serializeProjectIndex } from './project-index.ts';
 import type { Categories, SiteDocument, Technologies } from './schemas.ts';
 
 const seedSite: SiteDocument = {
@@ -145,7 +145,7 @@ function assertAllowedEntries(
   for (const [name, type] of entries) {
     if (!Object.hasOwn(allowed, name) || allowed[name] !== type) {
       throw unsupported(
-        `The ${location} directory contains unsupported content (${name}). Migrate it explicitly before using the CMS.`,
+        `The ${location} directory contains unsupported content (${name}). Review the repository before using the CMS.`,
       );
     }
   }
@@ -174,7 +174,7 @@ async function inspectStorage(
   );
 
   const seedFilesPresent = new Set<string>();
-  // Preserve compatibility asset URLs during cutover; never bootstrap over an asset-only repository.
+  // Never initialize over a repository that already contains assets.
   let onlySeedPaths = !rootEntries.has('images') && !rootEntries.has('icons');
   if (rootEntries.has('README.md')) {
     seedFilesPresent.add('README.md');
@@ -340,13 +340,13 @@ export async function initializeRepository(token: string): Promise<CmsSnapshot> 
         branch.commitSha,
       );
       const projectSlugs = snapshot.projects.map(({ slug }) => slug);
-      if (isProjectIndexCurrent(index?.text ?? null, projectSlugs)) {
+      if (ProjectIndex.isCurrent(index?.text ?? null, projectSlugs)) {
         return snapshot;
       }
       const commit = await commitInitialization(
         repository,
         branch,
-        { 'content/project-index.json': serializeProjectIndex(projectSlugs) },
+        { 'content/project-index.json': ProjectIndex.serialize(projectSlugs) },
         token,
       );
       return getSnapshot(token, commit.sha);
@@ -358,14 +358,14 @@ export async function initializeRepository(token: string): Promise<CmsSnapshot> 
     !(await isExactSeedSubset(repository, token, storage.seedFilesPresent, branch.commitSha))
   ) {
     throw unsupported(
-      'This repository is not an empty CMS repository or a compatible portfolio content repository. Migrate existing files explicitly before initializing it.',
+      'This repository is not empty or valid CMS content. Review existing files before initializing it.',
     );
   }
 
   const changes = Object.fromEntries(
     Object.entries(seedFiles).filter(([path]) => !storage.seedFilesPresent.has(path)),
   );
-  changes['content/project-index.json'] = serializeProjectIndex([]);
+  changes['content/project-index.json'] = ProjectIndex.serialize([]);
   const commit = await commitInitialization(repository, branch, changes, token);
   return getSnapshot(token, commit.sha);
 }

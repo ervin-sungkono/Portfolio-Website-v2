@@ -29,10 +29,6 @@ export class CmsError extends Error {
   }
 }
 
-export function isCmsError(error: unknown): error is CmsError {
-  return error instanceof CmsError;
-}
-
 export function validationError(message: string): CmsError {
   return new CmsError('validation', message, 400);
 }

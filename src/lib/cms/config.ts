@@ -2,14 +2,9 @@ import 'server-only';
 
 import { CmsError } from './errors.ts';
 
-const sourceRepositories = new Set([
-  'portfolio-website-2',
-  'portofolio-website-2',
-  'portfolio-website-v2',
-  'portofolio-website-v2',
-]);
+const sourceRepository = 'portfolio-website-v2';
 
-export type CmsConfig = { repository: string };
+type CmsConfig = { repository: string };
 
 export function getCmsConfig(): CmsConfig {
   const repository = process.env.GITHUB_REPO?.trim();
@@ -26,7 +21,7 @@ export function getCmsConfig(): CmsConfig {
       500,
     );
   }
-  if (sourceRepositories.has(repository.toLowerCase())) {
+  if (repository.toLowerCase() === sourceRepository) {
     throw new CmsError(
       'configuration',
       'GITHUB_REPO must point to a separate content repository, not the portfolio source repository.',

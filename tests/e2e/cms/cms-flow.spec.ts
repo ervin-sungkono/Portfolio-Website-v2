@@ -1,4 +1,4 @@
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import { unlink, writeFile } from 'node:fs/promises';
 import { CmsEditorPage } from '../../support/cms-editor-page';
 import {
@@ -67,10 +67,14 @@ async function readBrowserDraft(page: Page) {
   });
 }
 
-async function submitAllChanges(page: Page) {
-  await page.getByRole('button', { name: 'Submit all changes', exact: true }).click();
+async function submitAllChanges(page: Page, expectedReviewItems: string[] = []) {
+  await page.getByRole('button', { name: 'Submit draft', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('heading', { name: 'Submit all changes?' })).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: 'Changes to publish' })).toBeVisible();
+  for (const item of expectedReviewItems) {
+    await expect(dialog.getByText(item)).toBeVisible();
+  }
   await dialog.getByRole('button', { name: 'Submit changes', exact: true }).click();
 }
 
@@ -97,12 +101,26 @@ test('owner publishes content and a prior project 404 recovers without a new bui
   await expect(noScriptPage.getByRole('heading', { name: 'This Page Isn’t Here.' })).toBeVisible();
 
   await editor.open();
-  await expect(page.getByRole('heading', { name: 'Portfolio CMS' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Content studio' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
   const browserSession = await context.request.get(new URL('/api/auth/session', baseURL).href);
   expect(browserSession.status()).toBe(200);
   expect(await browserSession.text()).not.toContain(pat);
-  await expect(page.getByLabel('Choose a project')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Submit draft', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Delete draft', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Refresh public content' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Retry public refresh' })).toHaveCount(0);
+  await expect(page.getByLabel('Choose a project')).toBeHidden();
+  const projectsPanel = page.locator('#cms-editor-projects-panel');
+  const projectsHeading = projectsPanel.locator('.cms-editor-panel-heading');
+  await expect(
+    projectsHeading.getByRole('button', { name: 'Add project', exact: true }),
+  ).toBeVisible();
+  await expect(
+    projectsHeading.getByRole('link', { name: 'Import repository', exact: true }),
+  ).toBeVisible();
+  const projectTable = page.getByRole('table', { name: 'Current projects' });
+  await expect(projectTable.getByRole('row', { name: /Fixture Portfolio Project/ })).toBeVisible();
   await editor.expectUniquePanels();
   const overridePath = process.env.CMS_FIXTURE_PORTFOLIO_OVERRIDE;
   if (!overridePath) {
@@ -115,10 +133,11 @@ test('owner publishes content and a prior project 404 recovers without a new bui
     expect(await (await context.request.get(new URL('/about', baseURL).href)).text()).not.toContain(
       externalIntro,
     );
-    await page.getByRole('button', { name: 'Refresh public content' }).click();
-    await expect(
-      page.getByRole('status').getByText('Public content refresh requested.', { exact: true }),
-    ).toBeVisible();
+    const refresh = await context.request.post(new URL('/api/cms', baseURL).href, {
+      headers: { Origin: new URL(baseURL).origin },
+      data: { kind: 'revalidate', target: 'all' },
+    });
+    expect(refresh.ok()).toBe(true);
     await expect
       .poll(
         async () =>
@@ -132,38 +151,62 @@ test('owner publishes content and a prior project 404 recovers without a new bui
       .toBe(true);
   } finally {
     await unlink(overridePath).catch(() => undefined);
-    await page
-      .getByRole('button', { name: 'Refresh public content' })
-      .click()
+    await context.request
+      .post(new URL('/api/cms', baseURL).href, {
+        headers: { Origin: new URL(baseURL).origin },
+        data: { kind: 'revalidate', target: 'all' },
+      })
       .catch(() => undefined);
   }
   await captureCmsMutations(context, captured);
 
-  await page.getByLabel('Choose a project').selectOption('');
-  await page.getByLabel('Project URL slug').fill(projectSlug);
-  await page.getByLabel('Title', { exact: true }).fill('Browser CMS Project');
-  await page.getByLabel('Summary', { exact: true }).fill('Created through the owner editor.');
-  await page
+  const newProjectDialog = await editor.openProjectForm();
+  await newProjectDialog.getByLabel('Project URL slug').fill(projectSlug);
+  await newProjectDialog.getByLabel('Title', { exact: true }).fill('Browser CMS Project');
+  await newProjectDialog
+    .getByLabel('Summary', { exact: true })
+    .fill('Created through the owner editor.');
+  await newProjectDialog
     .getByLabel('Description', { exact: true })
     .fill('This page appeared after a GitHub content commit, with no application rebuild.');
-  await page.getByLabel('Year', { exact: true }).fill('2026');
-  await page.locator('input[name="sortOrder"]').fill('20');
-  await page.getByLabel('Published on the public site').check();
-  await page.getByLabel('Featured project').check();
-  await page.getByLabel('Add a category').selectOption('web');
-  await page.getByLabel('Add a technology').selectOption('nextjs');
-  const tagInput = page.getByLabel('Add a tag');
+  await newProjectDialog.getByLabel('Year', { exact: true }).fill('2026');
+  await newProjectDialog.locator('input[name="sortOrder"]').fill('20');
+  await newProjectDialog.getByLabel('Published on the public site').check();
+  await newProjectDialog.getByLabel('Featured project').check();
+  await newProjectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await editor.chooseOption(newProjectDialog.getByLabel('Add a category'), 'Website');
+  await editor.chooseOption(newProjectDialog.getByLabel('Add a technology'), 'Next.js');
+  const tagInput = newProjectDialog.getByLabel('Add a tag');
   await tagInput.fill('cms');
   await tagInput.press('Enter');
   await tagInput.fill('browser');
   await tagInput.press('Enter');
+  await newProjectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await newProjectDialog
+    .getByLabel('Cover image path')
+    .fill(`media/projects/${projectSlug}/pending-cover.png`);
+  await newProjectDialog.getByRole('button', { name: 'Add project to draft', exact: true }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(newProjectDialog).not.toBeVisible();
+
   await page.getByRole('button', { name: 'Images', exact: true }).click();
-  await page.getByLabel('Choose images').setInputFiles([
+  await page.getByRole('button', { name: 'Add images', exact: true }).click();
+  const imagesDialog = page.getByRole('dialog', { name: 'Stage images in browser draft' });
+  await expect(imagesDialog.getByRole('status')).toHaveText('Step 1 of 2: Destination');
+  await expect(imagesDialog.getByLabel('Project slug')).toHaveValue(projectSlug);
+  await imagesDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await imagesDialog.getByLabel('Choose images').setInputFiles([
     { name: 'Browser cover.png', mimeType: 'image/png', buffer: png },
     { name: 'Browser gallery keep.png', mimeType: 'image/png', buffer: png },
     { name: 'Browser gallery remove.png', mimeType: 'image/png', buffer: png },
   ]);
-  await page.getByRole('button', { name: 'Stage images in browser draft' }).click();
+  await imagesDialog
+    .getByRole('button', { name: 'Stage images in browser draft', exact: true })
+    .click();
+  await expect(imagesDialog).not.toBeVisible();
   await expect(
     page.getByRole('status').filter({ hasText: '3 images were saved to the browser draft.' }),
   ).toBeVisible();
@@ -180,46 +223,80 @@ test('owner publishes content and a prior project 404 recovers without a new bui
   await expect(stagedImageActions).toHaveCount(2);
   expect(captured).toHaveLength(0);
 
-  await page.getByRole('button', { name: 'Projects', exact: true }).click();
   await editor.expectUniquePanels();
-  await page.getByRole('button', { name: 'Add project to draft', exact: true }).click();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
-  ).toBeVisible();
-  const coverPath = await page.getByLabel('Cover image path').inputValue();
-  const galleryPath = (await page.locator('textarea[name="media.gallery"]').inputValue()).trim();
+  const projectDialog = await editor.openProjectForm(projectSlug);
+  const stagedDraft = await readBrowserDraft(page);
+  const coverPath = String(
+    stagedDraft?.media.find((image: { filename: string }) => image.filename === 'Browser cover.png')
+      ?.path ?? '',
+  );
+  const galleryPath = String(
+    stagedDraft?.media.find(
+      (image: { filename: string }) => image.filename === 'Browser gallery keep.png',
+    )?.path ?? '',
+  );
+  const gallery = projectDialog.locator('textarea[name="media.gallery"]');
   expect(coverPath).toMatch(
     /^media\/projects\/browser-cms-project\/[a-f0-9]{64}-browser-cover\.png$/,
   );
   expect(galleryPath).toMatch(
     /^media\/projects\/browser-cms-project\/[a-f0-9]{64}-browser-gallery-keep\.png$/,
   );
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByLabel('Cover image path').fill(coverPath);
+  await gallery.fill(galleryPath);
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await expect(
+    projectDialog.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
 
   await page.getByRole('button', { name: 'Site Profile', exact: true }).click();
-  await page.getByLabel('Site title').fill('Browser CMS Portfolio');
-  await page.getByLabel('Headline').fill('A headline updated from the browser');
-  await page
+  const siteForm = page.locator('#cms-editor-site-panel .cms-site-profile-inline-wizard');
+  await expect(siteForm).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await siteForm.getByLabel('Site title').fill('Browser CMS Portfolio');
+  await siteForm.getByLabel('Headline').fill('A headline updated from the browser');
+  await siteForm
     .getByLabel('Introduction')
     .fill('This public homepage changed after an on-demand cache invalidation.');
-  await page.getByRole('button', { name: 'Save site profile draft', exact: true }).click();
+  await siteForm.getByRole('button', { name: 'Continue', exact: true }).click();
+  await siteForm.getByRole('button', { name: 'Continue', exact: true }).click();
+  await siteForm.getByRole('button', { name: 'Save site profile draft', exact: true }).click();
   await expect(
-    page.getByRole('status').filter({ hasText: 'Site profile saved to the browser draft.' }),
+    siteForm.getByRole('status').filter({ hasText: 'Site profile saved to the browser draft.' }),
   ).toBeVisible();
   expect(captured).toHaveLength(0);
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await page.getByLabel('Choose a project').selectOption(projectSlug);
-  await expect(page.getByLabel('Cover image path')).toHaveValue(coverPath);
-  await expect(page.locator('textarea[name="media.gallery"]')).toHaveValue(galleryPath);
+  const restoredProjectDialog = await editor.openProjectForm(projectSlug);
+  await restoredProjectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await restoredProjectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(restoredProjectDialog.getByLabel('Cover image path')).toHaveValue(coverPath);
+  await expect(restoredProjectDialog.locator('textarea[name="media.gallery"]')).toHaveValue(
+    galleryPath,
+  );
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Site Profile', exact: true }).click();
-  await expect(page.getByLabel('Headline')).toHaveValue('A headline updated from the browser');
+  const restoredSiteForm = page.locator('#cms-editor-site-panel .cms-site-profile-inline-wizard');
+  await expect(restoredSiteForm.getByLabel('Headline')).toHaveValue(
+    'A headline updated from the browser',
+  );
   await page.getByRole('button', { name: 'Images', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Remove .* from browser draft$/ })).toHaveCount(2);
   expect(captured).toHaveLength(0);
 
   await editor.expectUniquePanels();
-  await submitAllChanges(page);
+  await submitAllChanges(page, [
+    'Add: Browser CMS Project (browser-cms-project)',
+    'Site title',
+    'Headline',
+    'Introduction',
+    'Browser cover.png',
+    'Browser gallery keep.png',
+  ]);
   await expect(page.getByRole('link', { name: 'View GitHub commit' })).toHaveAttribute(
     'href',
     /https:\/\/github\.com\/fixture-owner\/portfolio-content-fixture\/commit\//,
@@ -285,12 +362,14 @@ test('owner publishes content and a prior project 404 recovers without a new bui
     'A headline updated from the browser',
   );
 
-  await page.getByRole('button', { name: 'Projects', exact: true }).click();
   await editor.expectUniquePanels();
-  await page.getByLabel('Choose a project').selectOption(projectSlug);
-  await page.getByLabel('Published on the public site').uncheck();
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
-  await submitAllChanges(page);
+  let projectEditDialog = await editor.openProjectForm(projectSlug);
+  await projectEditDialog.getByLabel('Published on the public site').uncheck();
+  await projectEditDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectEditDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectEditDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await submitAllChanges(page, ['Update: Browser CMS Project (browser-cms-project)']);
   await waitForStatus(context, `/project/${projectSlug}`, 404);
   await expect
     .poll(
@@ -302,11 +381,18 @@ test('owner publishes content and a prior project 404 recovers without a new bui
     )
     .toBe(false);
 
-  await page.getByRole('button', { name: 'Delete project' }).click();
+  await page.getByRole('button', { name: 'Projects', exact: true }).click();
+  const projectRow = page
+    .getByRole('table', { name: 'Current projects' })
+    .getByRole('row', { name: new RegExp(projectSlug) });
+  await projectRow.getByRole('button', { name: new RegExp(`^Delete project`) }).click();
+  projectEditDialog = page.getByRole('dialog', { name: 'Edit project' });
+  await expect(projectEditDialog.getByRole('status')).toHaveText('Step 3 of 3: Links and media');
+  await projectEditDialog.getByRole('button', { name: 'Delete project', exact: true }).click();
   const removeDialog = page.getByRole('dialog');
   await expect(removeDialog.getByRole('heading', { name: 'Remove this project?' })).toBeVisible();
   await removeDialog.getByRole('button', { name: 'Remove project', exact: true }).click();
-  await submitAllChanges(page);
+  await submitAllChanges(page, ['Delete: Browser CMS Project (browser-cms-project)']);
   await expect(
     page.getByRole('status').filter({ hasText: 'All changes were submitted in one commit.' }),
   ).toBeVisible();
@@ -335,49 +421,61 @@ test('owner stages media in the browser draft and commits it with the project', 
   const editor = new CmsEditorPage(page);
   await editor.open();
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await page.getByLabel('Choose a project').selectOption('fixture-project');
+  await editor.chooseProject('fixture-project');
   await editor.expectUniquePanels();
   await page.getByRole('button', { name: 'Images' }).click();
   await editor.expectUniquePanels();
-  await page.getByLabel('Choose images').setInputFiles([
+  await page.getByRole('button', { name: 'Add images', exact: true }).click();
+  const imagesDialog = page.getByRole('dialog', { name: 'Stage images in browser draft' });
+  await imagesDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await imagesDialog.getByLabel('Choose images').setInputFiles([
     {
       name: 'Browser cover.png',
       mimeType: 'image/png',
       buffer: png,
     },
   ]);
-  await page.getByRole('button', { name: 'Stage images in browser draft' }).click();
+  await imagesDialog
+    .getByRole('button', { name: 'Stage images in browser draft', exact: true })
+    .click();
+  await expect(imagesDialog).not.toBeVisible();
   await expect(
     page.getByRole('status').filter({ hasText: /1 image was saved to the browser draft\./ }),
   ).toBeVisible();
   expect(captured).toHaveLength(0);
-  await page.getByRole('button', { name: 'Projects', exact: true }).click();
-  const gallery = page.locator('textarea[name="media.gallery"]');
+  let projectDialog = await editor.openProjectForm('fixture-project');
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  let gallery = projectDialog.locator('textarea[name="media.gallery"]');
   const path = (await gallery.inputValue()).trim();
   expect(path).toMatch(/^media\/projects\/fixture-project\/[a-f0-9]{64}-browser-cover\.png$/);
   await gallery.fill('');
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
   await expect(
-    page.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
+    projectDialog.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
   ).toBeVisible();
   const unattachedDraft = await readBrowserDraft(page);
   const unattachedProject = unattachedDraft?.projects.upsert.find(
     (project: { slug: string }) => project.slug === 'fixture-project',
   );
-  expect(unattachedProject?.data.media.gallery).not.toContain(path);
+  expect(unattachedProject?.data.media.gallery ?? []).not.toContain(path);
   expect(unattachedDraft?.media.some((item: { path: string }) => item.path === path)).toBe(true);
-  await page.getByRole('button', { name: 'Submit all changes', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Submit draft', exact: true }).click();
   await expect(
     page
       .getByRole('alert')
       .filter({ hasText: 'Attach Browser cover.png to a project or technology' }),
   ).toBeVisible();
   expect(captured).toHaveLength(0);
-  await page.getByRole('button', { name: 'Projects', exact: true }).click();
+  projectDialog = await editor.openProjectForm('fixture-project');
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  gallery = projectDialog.locator('textarea[name="media.gallery"]');
   await gallery.fill(path);
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
   await expect(
-    page.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
+    projectDialog.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
   ).toBeVisible();
   const reattachedDraft = await readBrowserDraft(page);
   const reattachedProject = reattachedDraft?.projects.upsert.find(
@@ -385,6 +483,7 @@ test('owner stages media in the browser draft and commits it with the project', 
   );
   expect(reattachedProject?.data.media.gallery).toContain(path);
   expect(reattachedDraft?.media.some((item: { path: string }) => item.path === path)).toBe(true);
+  await page.keyboard.press('Escape');
   await submitAllChanges(page);
   await expect(
     page.getByRole('status').filter({ hasText: /All changes were submitted in one commit/ }),
@@ -441,15 +540,18 @@ test('conflict review keeps the browser draft across reload and requires an expl
   const page = await context.newPage();
   const editor = new CmsEditorPage(page);
   await editor.open();
-  await page.getByLabel('Choose a project').selectOption('fixture-project');
-  await page
+  const projectDialog = await editor.openProjectForm('fixture-project');
+  await projectDialog
     .getByLabel('Summary', { exact: true })
     .fill('A summary retained through conflict review.');
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
   await expect(
-    page.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
+    projectDialog.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
   ).toBeVisible();
   expect(postedKinds).toEqual([]);
+  await page.keyboard.press('Escape');
   await submitAllChanges(page);
   expect(finalizations).toBe(1);
   expect(postedKinds).toEqual(['finalize']);
@@ -480,12 +582,13 @@ test('conflict review keeps the browser draft across reload and requires an expl
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await page.getByLabel('Choose a project').selectOption('fixture-project');
-  await expect(page.getByLabel('Summary', { exact: true })).toHaveValue(
+  const restoredProjectDialog = await editor.openProjectForm('fixture-project');
+  await expect(restoredProjectDialog.getByLabel('Summary', { exact: true })).toHaveValue(
     'A summary retained through conflict review.',
   );
   expect(finalizations).toBe(1);
   expect(postedKinds).toEqual(['finalize']);
+  await page.keyboard.press('Escape');
   await submitAllChanges(page);
   expect(finalizations).toBe(2);
   expect(postedKinds).toEqual(['finalize', 'finalize']);
@@ -587,36 +690,48 @@ test('a new project conflict adopts the remote SHA and submits one project entry
   const page = await context.newPage();
   const editor = new CmsEditorPage(page);
   await editor.open();
-  await page.getByLabel('Choose a project').selectOption('');
-  await page.getByLabel('Project URL slug').fill(slug);
-  await page.getByLabel('Title', { exact: true }).fill('Locally drafted project');
-  await page
+  const projectDialog = await editor.openProjectForm();
+  await projectDialog.getByLabel('Project URL slug').fill(slug);
+  await projectDialog.getByLabel('Title', { exact: true }).fill('Locally drafted project');
+  await projectDialog
     .getByLabel('Summary', { exact: true })
     .fill('A local version kept through conflict review.');
-  await page
+  await projectDialog
     .getByLabel('Description', { exact: true })
     .fill('Created locally before the remote slug appeared.');
-  await page.getByLabel('Year', { exact: true }).fill('2026');
-  await page.getByLabel('Add a category').selectOption('web');
-  await page.getByLabel('Cover image path').fill(`media/projects/${slug}/cover.png`);
-  await page.getByRole('button', { name: 'Add project to draft', exact: true }).click();
+  await projectDialog.getByLabel('Year', { exact: true }).fill('2026');
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await editor.chooseOption(projectDialog.getByLabel('Add a category'), 'Website');
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByLabel('Cover image path').fill(`media/projects/${slug}/cover.png`);
+  await projectDialog.getByRole('button', { name: 'Add project to draft', exact: true }).click();
   await expect(
     page.getByRole('status').filter({ hasText: 'Project saved to the browser draft.' }),
   ).toBeVisible();
   expect(postedKinds).toEqual([]);
 
-  await page.getByRole('button', { name: 'Submit all changes', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Submit draft', exact: true }).click();
   const firstSubmitDialog = page.getByRole('dialog');
   await expect(
     firstSubmitDialog.getByRole('heading', { name: 'Submit all changes?' }),
+  ).toBeVisible();
+  await expect(
+    firstSubmitDialog.getByRole('heading', { name: 'Changes to publish' }),
+  ).toBeVisible();
+  await expect(
+    firstSubmitDialog.getByText(`Add: Locally drafted project (${slug})`, { exact: true }),
   ).toBeVisible();
   await firstSubmitDialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   expect(finalizations).toBe(0);
   expect(postedKinds).toEqual([]);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await page.getByLabel('Choose a project').selectOption(slug);
-  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Locally drafted project');
+  const restoredProjectDialog = await editor.openProjectForm(slug);
+  await expect(restoredProjectDialog.getByLabel('Title', { exact: true })).toHaveValue(
+    'Locally drafted project',
+  );
+  await page.keyboard.press('Escape');
 
   await submitAllChanges(page);
   expect(finalizations).toBe(1);
@@ -654,12 +769,15 @@ test('a new project conflict adopts the remote SHA and submits one project entry
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await page.getByLabel('Choose a project').selectOption(slug);
-  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Locally drafted project');
-  await expect(page.getByLabel('Summary', { exact: true })).toHaveValue(
+  const reviewedProjectDialog = await editor.openProjectForm(slug);
+  await expect(reviewedProjectDialog.getByLabel('Title', { exact: true })).toHaveValue(
+    'Locally drafted project',
+  );
+  await expect(reviewedProjectDialog.getByLabel('Summary', { exact: true })).toHaveValue(
     'A local version kept through conflict review.',
   );
   expect(finalizations).toBe(1);
+  await page.keyboard.press('Escape');
   await submitAllChanges(page);
   expect(finalizations).toBe(2);
   expect(postedKinds).toEqual(['finalize', 'finalize']);
@@ -717,9 +835,14 @@ test('repository drift keeps the draft and prevents rebasing it onto another tar
   const page = await context.newPage();
   const editor = new CmsEditorPage(page);
   await editor.open();
-  await page.getByLabel('Choose a project').selectOption('fixture-project');
-  await page.getByLabel('Summary', { exact: true }).fill('Kept while repository settings drift.');
-  await page.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  const projectDialog = await editor.openProjectForm('fixture-project');
+  await projectDialog
+    .getByLabel('Summary', { exact: true })
+    .fill('Kept while repository settings drift.');
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+  await projectDialog.getByRole('button', { name: 'Save project draft', exact: true }).click();
+  await page.keyboard.press('Escape');
   await submitAllChanges(page);
 
   const conflicts = page.locator('.cms-editor-conflicts');
@@ -737,8 +860,8 @@ test('repository drift keeps the draft and prevents rebasing it onto another tar
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
-  await page.getByLabel('Choose a project').selectOption('fixture-project');
-  await expect(page.getByLabel('Summary', { exact: true })).toHaveValue(
+  const restoredProjectDialog = await editor.openProjectForm('fixture-project');
+  await expect(restoredProjectDialog.getByLabel('Summary', { exact: true })).toHaveValue(
     'Kept while repository settings drift.',
   );
   expect(finalizations).toBe(1);
@@ -756,17 +879,60 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
   await expect(page.getByRole('heading', { name: 'Content editor' })).toBeVisible();
 
   const widths = [320, 390, 820, 1024, 1440];
-  const sections = [
-    { button: 'Projects', heading: 'Projects', id: 'projects', control: 'Title' },
-    { button: 'Site Profile', heading: 'Site Profile', id: 'site', control: 'Site title' },
-    { button: 'Categories', heading: 'Categories', id: 'categories', control: 'New category ID' },
+  const sections: Array<{
+    button: string;
+    heading: string;
+    id: string;
+    trigger: string | null;
+    control: string;
+    advances: number;
+    inline: boolean;
+  }> = [
+    {
+      button: 'Projects',
+      heading: 'Projects',
+      id: 'projects',
+      trigger: 'Add project',
+      control: 'Project URL slug',
+      advances: 0,
+      inline: false,
+    },
+    {
+      button: 'Site Profile',
+      heading: 'Site Profile',
+      id: 'site',
+      trigger: null,
+      control: 'Site title',
+      advances: 0,
+      inline: true,
+    },
+    {
+      button: 'Categories',
+      heading: 'Categories',
+      id: 'categories',
+      trigger: 'Edit categories',
+      control: 'New category ID',
+      advances: 1,
+      inline: false,
+    },
     {
       button: 'Technologies',
       heading: 'Technologies',
       id: 'technologies',
+      trigger: 'Edit technologies',
       control: 'New technology ID',
+      advances: 1,
+      inline: false,
     },
-    { button: 'Images', heading: 'Images', id: 'images', control: 'Choose images' },
+    {
+      button: 'Images',
+      heading: 'Images',
+      id: 'images',
+      trigger: 'Add images',
+      control: 'Choose images',
+      advances: 1,
+      inline: false,
+    },
   ];
 
   for (const theme of ['light', 'dark'] as const) {
@@ -782,14 +948,31 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
           panel.getByRole('heading', { name: section.heading, exact: true }),
         ).toBeVisible();
         await expect(panel).toBeVisible();
-        await expect(panel.getByLabel(section.control)).toBeVisible();
+        if (section.id === 'projects') {
+          await editor.chooseProject();
+        }
+        const dialog: Locator = section.inline
+          ? panel.locator('.cms-site-profile-inline-wizard')
+          : await editor.openDialog(
+              section.trigger ?? '',
+              section.id === 'images' ? 'Stage images in browser draft' : (section.trigger ?? ''),
+            );
+        if (section.id === 'images') {
+          await editor.chooseOption(dialog.getByLabel('Image destination'), 'Technology icon');
+        }
+        for (let step = 0; step < section.advances; step += 1) {
+          await dialog.getByRole('button', { name: 'Continue', exact: true }).click();
+        }
+        await expect(dialog.getByLabel(section.control)).toBeVisible();
         const layout = await page.evaluate(() => {
           const editor = Array.from(document.querySelectorAll<HTMLElement>('.cms-editor')).find(
             (candidate) => candidate.getClientRects().length > 0,
           );
           return {
             documentWidth: document.documentElement.scrollWidth,
+            documentHeight: document.documentElement.scrollHeight,
             viewportWidth: window.innerWidth,
+            viewportHeight: window.innerHeight,
             editorWidth: editor?.scrollWidth ?? 0,
             editorClientWidth: editor?.clientWidth ?? 0,
           };
@@ -802,12 +985,30 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
           layout.editorWidth,
           `${theme} ${width}px ${section.id} editor overflow`,
         ).toBeLessThanOrEqual(layout.editorClientWidth + 1);
+        if (width >= 1024) {
+          expect(
+            layout.documentHeight,
+            `${theme} ${width}px ${section.id} outer page scroll`,
+          ).toBeLessThanOrEqual(layout.viewportHeight);
+        }
+        const wizardLayout = await dialog.evaluate((element) => ({
+          clientWidth: element.clientWidth,
+          scrollWidth: element.scrollWidth,
+        }));
+        expect(
+          wizardLayout.scrollWidth,
+          `${theme} ${width}px ${section.id} form overflow`,
+        ).toBeLessThanOrEqual(wizardLayout.clientWidth + 1);
 
         if (theme === 'light' && width === 320 && section.id === 'projects') {
           await page.screenshot({ path: testInfo.outputPath('editor-320-light.png') });
         }
         if (theme === 'light' && width === 1440 && section.id === 'projects') {
           await page.screenshot({ path: testInfo.outputPath('editor-1440-light.png') });
+        }
+        if (!section.inline) {
+          await page.keyboard.press('Escape');
+          await expect(dialog).not.toBeVisible();
         }
       }
     }
@@ -820,10 +1021,8 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
       document.documentElement.style.fontSize = '200%';
     });
     await expect(page.getByRole('button', { name: 'Projects', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Projects', exact: true }).click();
-    await page.getByLabel('Choose a project').selectOption('');
+    const projectDialog = await editor.openProjectForm();
     await editor.expectUniquePanels();
-    const projectsPanel = page.locator('#cms-editor-projects-panel');
     const layout = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
@@ -834,10 +1033,14 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
       layout.viewportWidth,
     );
 
-    await projectsPanel.getByLabel('Project URL slug').fill(`responsive-errors-${width}`);
-    await projectsPanel.getByRole('button', { name: 'Add project to draft' }).click();
-    await expect(projectsPanel.locator('#cms-project-title-error')).toBeVisible();
-    await expect(projectsPanel.getByRole('textbox', { name: /^Title/ })).toBeFocused();
+    await projectDialog.getByLabel('Project URL slug').fill(`responsive-errors-${width}`);
+    await projectDialog.getByRole('button', { name: 'Continue', exact: true }).click();
+    const titleField = projectDialog.getByRole('textbox', { name: /^Title\b/ });
+    await expect(projectDialog.locator('#cms-project-title-error')).toBeVisible();
+    await expect(titleField).toHaveAccessibleName(/^Title\b/);
+    await expect(titleField).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(projectDialog).not.toBeVisible();
   }
 
   await page.setViewportSize({ width: 390, height: 900 });

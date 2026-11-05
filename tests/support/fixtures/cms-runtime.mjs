@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 const nativeFetch = globalThis.fetch;
+const fixturePort = process.env.CMS_FIXTURE_PORT ?? '3104';
 
 process.env.GITHUB_PAT = 'fixture-owner-token';
 process.env.GITHUB_REPO = 'portfolio-content-fixture';
@@ -104,6 +105,10 @@ store('content/project-index.json', jsonBytes({ schemaVersion: 1, projects: ['fi
 store('content/projects/fixture-project.json', jsonBytes(fixtureProject));
 store(fixtureProject.media.cover, png);
 store('media/projects/browser-cms-project/cover.png', png);
+store(
+  'media/technologies/unreferenced.svg',
+  Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>', 'utf8'),
+);
 treeFiles.set(latestTreeSha, new Map(files));
 commitTrees.set(latestCommit, latestTreeSha);
 commitParents.set(latestCommit, null);
@@ -269,7 +274,7 @@ globalThis.fetch = async (input, init = {}) => {
   if (
     requestUrl.protocol === 'http:' &&
     requestUrl.hostname === '127.0.0.1' &&
-    requestUrl.port === '3104'
+    requestUrl.port === fixturePort
   ) {
     return nativeFetch(input, init);
   }

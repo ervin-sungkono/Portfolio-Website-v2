@@ -47,6 +47,21 @@ export function selectFeaturedProjects(projects: readonly Project[]) {
   return projects.filter((project, index) => project.featured ?? index < 3).slice(0, 3);
 }
 
+export function selectHeroProjects(
+  projects: readonly Project[],
+  heroProjectSlugs?: readonly string[],
+) {
+  if (heroProjectSlugs === undefined) {
+    return selectFeaturedProjects(projects);
+  }
+
+  const projectsBySlug = new Map(projects.map((project) => [project.slug, project]));
+  return heroProjectSlugs.flatMap((slug) => {
+    const project = projectsBySlug.get(slug);
+    return project ? [project] : [];
+  });
+}
+
 export async function findProject(slug: string) {
   'use cache';
   cacheTag(`project:${slug}`, 'projects', 'taxonomy');

@@ -478,13 +478,23 @@ test('repository configuration accepts a repository name and rejects paths/sourc
   assert.deepEqual(getCmsConfig(), { repository: 'portfolio-content' });
   process.env.GITHUB_REPO = 'owner/content';
   assert.throws(getCmsConfig, /repository name without an owner or path/);
-  process.env.GITHUB_REPO = 'Portofolio-Website-v2';
+  process.env.GITHUB_REPO = 'Portfolio-Website-v2';
   assert.throws(getCmsConfig, /separate content repository/);
 });
 
 test('shared schemas reject unknown fields, unsafe URLs, and future versions', () => {
   setupEnvironment();
   assert.equal(siteSchema.safeParse(site).success, true);
+  assert.equal(siteSchema.parse(site).heroProjectSlugs, undefined);
+  assert.equal(
+    siteSchema.safeParse({ ...site, heroProjectSlugs: ['one', 'two', 'three'] }).success,
+    true,
+  );
+  assert.equal(siteSchema.safeParse({ ...site, heroProjectSlugs: ['one', 'one'] }).success, false);
+  assert.equal(
+    siteSchema.safeParse({ ...site, heroProjectSlugs: ['one', 'two', 'three', 'four'] }).success,
+    false,
+  );
   assert.equal(categoriesSchema.safeParse(categories).success, true);
   assert.equal(technologiesSchema.safeParse(technologies).success, true);
   assert.equal(projectSchema.safeParse(project).success, true);
@@ -567,13 +577,13 @@ test('authenticated snapshots use the owner token when resolving the repository 
   );
 });
 
-test('compatible migrated repositories retain legacy asset URLs without bootstrap writes', async () => {
+test('existing content repositories retain asset directories without bootstrap writes', async () => {
   setupEnvironment();
   const state = createState();
   addSeedContent(state);
   addProject(state, 'example-project');
-  state.files.set('images/legacy.png', fileRecord(png));
-  state.files.set('icons/legacy.svg', fileRecord('<svg xmlns="http://www.w3.org/2000/svg"/>'));
+  state.files.set('images/existing.png', fileRecord(png));
+  state.files.set('icons/existing.svg', fileRecord('<svg xmlns="http://www.w3.org/2000/svg"/>'));
   installGithub(state);
   const snapshot = await initializeRepository('owner-token');
   assert.equal(snapshot.projects.length, 1);
@@ -592,12 +602,12 @@ test('compatible migrated repositories retain legacy asset URLs without bootstra
     1,
   );
 
-  const legacyOnly = createState();
-  legacyOnly.files.set('images/legacy.png', fileRecord(png));
-  installGithub(legacyOnly);
+  const assetsOnly = createState();
+  assetsOnly.files.set('images/existing.png', fileRecord(png));
+  installGithub(assetsOnly);
   await assert.rejects(initializeRepository('owner-token'), { code: 'unsupported_repository' });
   assert.equal(
-    legacyOnly.calls.some(({ init }) => init.method === 'PUT'),
+    assetsOnly.calls.some(({ init }) => init.method === 'PUT'),
     false,
   );
 });

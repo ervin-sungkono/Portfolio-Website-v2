@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { GitHubImport } from '@/components/admin/GitHubImport';
+import { Button } from '@/components/common/Button';
 import { auth, cmsAuthConfigured, isCurrentOwner, signIn } from '@/lib/cms/auth';
 
 export const metadata: Metadata = {
@@ -28,9 +29,9 @@ async function ImportWorkspace() {
         }}
       >
         <p>Sign in as the configured GitHub owner to map repositories to portfolio projects.</p>
-        <button className="button" type="submit">
+        <Button kind="action" type="submit">
           Sign in with GitHub
-        </button>
+        </Button>
       </form>
     );
   }
@@ -40,10 +41,10 @@ async function ImportWorkspace() {
 
 export default function AdminImportPage() {
   return (
-    <div className="container section">
+    <div>
       <div className="section-heading">
         <p className="eyebrow">Owner workspace</p>
-        <h1>Import from GitHub</h1>
+        <h2>Import from GitHub</h2>
         <p>
           Review an accessible repository’s verified metadata, then create a project or connect it
           to an existing one.

@@ -21,6 +21,35 @@
     margin-block: var(--space-4) var(--space-6);
     overflow-wrap: anywhere;
   }
+
+  .cms-confirm-review {
+    display: grid;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .cms-confirm-review-title {
+      font-size: var(--text-title);
+    }
+
+    .cms-confirm-review-section-title {
+      font-size: var(--text-sm);
+    }
+
+    ul {
+      margin: var(--space-2) 0 0;
+      padding-left: var(--space-5);
+    }
+
+    li {
+      margin-block: var(--space-1);
+      overflow-wrap: anywhere;
+    }
+  }
 }
 
 .cms-confirm-actions {
@@ -28,4 +57,16 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--space-3);
+}
+
+.cms-confirm-danger {
+  border-color: #b42318;
+  background: #b42318;
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    border-color: #8f1d15;
+    background: #8f1d15;
+    color: #fff;
+  }
 }

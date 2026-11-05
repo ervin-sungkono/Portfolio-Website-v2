@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
+import { Button } from '@/components/common/Button';
 import {
   categoriesSchema,
   projectSchema,
@@ -22,13 +24,24 @@ import { CmsMessage } from './CmsMessage';
 import { DesignsPanel } from './DesignsPanel';
 import { ImagesPanel } from './ImagesPanel';
 import { ProjectPanel } from './ProjectPanel';
+import { PublishSummary } from './PublishSummary';
 import { SiteProfilePanel } from './SiteProfilePanel';
 import { TechnologiesPanel } from './TechnologiesPanel';
 import type { BusySection, LoadState, CmsSection, CmsSnapshot, EditorMessage } from './type';
 import { errorFrom, parseSnapshot, readJson } from './response';
 import { safeCommitUrl } from './utils';
-import { applyDraft, hasDraftChanges, repositoryKey, stageProject } from './draft';
+import {
+  applyDraft,
+  bindDraftRepository,
+  hasDraftChanges,
+  repositoryKey,
+  stageProject,
+  synchronizeDocument,
+  synchronizeProject,
+} from './draft';
 import { loadConflictReview, rebaseReviewedVersions, type ConflictReview } from './conflicts';
+import { summarizePublishDraft } from './publish-summary';
+import { useCmsDraftAutosave } from './useCmsDraftAutosave';
 import './style.css';
 
 const sectionLabels: Record<CmsSection, string> = {
@@ -89,6 +102,7 @@ export function CmsEditor() {
   });
 
   const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [headerActions, setHeaderActions] = useState<HTMLElement | null>(null);
   const [loadError, setLoadError] = useState('');
   const [initializationMessage, setInitializationMessage] = useState('');
   const [snapshot, setSnapshot] = useState<CmsSnapshot | null>(null);
@@ -111,6 +125,7 @@ export function CmsEditor() {
 
   const busyRef = useRef(false);
   const loadedSnapshotRef = useRef(false);
+  const remoteSnapshotRef = useRef<CmsSnapshot | null>(null);
   const loadSnapshotRef = useRef<
     (options?: {
       discardSection?: CmsSection;
@@ -140,76 +155,23 @@ export function CmsEditor() {
   const resetCategoriesForm = categoriesForm.reset;
   const resetTechnologiesForm = technologiesForm.reset;
 
-  useEffect(() => {
-    if (
-      !snapshot ||
-      !draftReady ||
-      busyRef.current ||
-      (!projectIsDirty && (selectedProjectSlug || !newProjectSlug.trim()))
-    ) {
-      return;
-    }
-    if (selectedProjectSlug) {
-      const sha =
-        snapshot.projects.find((project) => project.slug === selectedProjectSlug)?.sha || null;
-      void updateDraft((value) => stageProject(value, selectedProjectSlug, sha, projectValues));
-    } else {
-      void updateDraft((value) => {
-        const next = { slug: newProjectSlug, data: projectValues };
-        return JSON.stringify(value.newProject) === JSON.stringify(next)
-          ? value
-          : { ...value, newProject: next };
-      });
-    }
-  }, [
+  useCmsDraftAutosave({
     snapshot,
+    remoteSnapshotRef,
     draftReady,
-    projectIsDirty,
+    busyRef,
+    updateDraft,
     selectedProjectSlug,
     newProjectSlug,
+    projectIsDirty,
     projectValues,
-    updateDraft,
-  ]);
-
-  useEffect(() => {
-    if (!snapshot || !draftReady || busyRef.current || !siteIsDirty) {
-      return;
-    }
-    void updateDraft((value) => {
-      const next = { expectedSha: value.site?.expectedSha ?? snapshot.site.sha, data: siteValues };
-      return JSON.stringify(value.site) === JSON.stringify(next) ? value : { ...value, site: next };
-    });
-  }, [snapshot, draftReady, siteIsDirty, siteValues, updateDraft]);
-
-  useEffect(() => {
-    if (!snapshot || !draftReady || busyRef.current || !categoriesAreDirty) {
-      return;
-    }
-    void updateDraft((value) => {
-      const next = {
-        expectedSha: value.categories?.expectedSha ?? snapshot.categories.sha,
-        data: categoryValues,
-      };
-      return JSON.stringify(value.categories) === JSON.stringify(next)
-        ? value
-        : { ...value, categories: next };
-    });
-  }, [snapshot, draftReady, categoriesAreDirty, categoryValues, updateDraft]);
-
-  useEffect(() => {
-    if (!snapshot || !draftReady || busyRef.current || !technologiesAreDirty) {
-      return;
-    }
-    void updateDraft((value) => {
-      const next = {
-        expectedSha: value.technologies?.expectedSha ?? snapshot.technologies.sha,
-        data: technologyValues,
-      };
-      return JSON.stringify(value.technologies) === JSON.stringify(next)
-        ? value
-        : { ...value, technologies: next };
-    });
-  }, [snapshot, draftReady, technologiesAreDirty, technologyValues, updateDraft]);
+    siteIsDirty,
+    siteValues,
+    categoriesAreDirty,
+    categoryValues,
+    technologiesAreDirty,
+    technologyValues,
+  });
 
   const refreshSnapshot = useCallback(
     async (
@@ -240,18 +202,23 @@ export function CmsEditor() {
           );
         }
         const remote = parseSnapshot(body);
+        remoteSnapshotRef.current = remote;
         const key = repositoryKey(remote);
         const stored = getDraft();
-        if (stored.repository && stored.repository !== key) {
+        const bound = bindDraftRepository(stored, key);
+        if (!bound) {
           throw new Error(
             'The saved browser draft belongs to a different content repository. Return to that account or discard the draft.',
           );
         }
         if (
-          !stored.repository &&
-          !(await updateDraft((value) => ({ ...value, repository: key })))
+          bound !== stored &&
+          !(await updateDraft((value) => bindDraftRepository(value, key) ?? value))
         ) {
           throw new Error('The browser could not save the draft. Check site storage and retry.');
+        }
+        if (getDraft().repository !== key) {
+          throw new Error('The saved browser draft belongs to a different content repository.');
         }
         const next = applyDraft(remote, getDraft());
         setLoadState('ready');
@@ -341,6 +308,18 @@ export function CmsEditor() {
   );
 
   useEffect(() => {
+    let active = true;
+    queueMicrotask(() => {
+      if (active) {
+        setHeaderActions(document.getElementById('cms-header-actions'));
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     loadSnapshotRef.current = refreshSnapshot;
   }, [refreshSnapshot]);
 
@@ -385,14 +364,15 @@ export function CmsEditor() {
       });
       return;
     }
+    const baseline = remoteSnapshotRef.current?.projects.find((project) => project.slug === slug);
     const saved = await updateDraft((value) => ({
-      ...stageProject(value, slug, selectedProjectSlug ? current?.sha || null : null, data),
+      ...synchronizeProject(value, slug, baseline, data),
       newProject: undefined,
     }));
     if (!saved) {
       return;
     }
-    setSnapshot((value) => value && applyDraft(value, getDraft()));
+    setSnapshot((value) => value && applyDraft(remoteSnapshotRef.current ?? value, getDraft()));
     projectForm.reset(data);
     setSelectedProjectSlug(slug);
     setNewProjectSlug('');
@@ -404,15 +384,14 @@ export function CmsEditor() {
       return;
     }
     if (
-      !(await updateDraft((value) => ({
-        ...value,
-        site: { expectedSha: value.site?.expectedSha ?? snapshot.site.sha, data },
-      })))
+      !(await updateDraft((value) =>
+        synchronizeDocument(value, 'site', remoteSnapshotRef.current?.site ?? snapshot.site, data),
+      ))
     ) {
       return;
     }
     siteForm.reset(data);
-    setSnapshot((value) => value && applyDraft(value, getDraft()));
+    setSnapshot((value) => value && applyDraft(remoteSnapshotRef.current ?? value, getDraft()));
     setSectionMessage('site', {
       tone: 'success',
       text: 'Site profile saved to the browser draft.',
@@ -424,15 +403,19 @@ export function CmsEditor() {
       return;
     }
     if (
-      !(await updateDraft((value) => ({
-        ...value,
-        categories: { expectedSha: value.categories?.expectedSha ?? snapshot.categories.sha, data },
-      })))
+      !(await updateDraft((value) =>
+        synchronizeDocument(
+          value,
+          'categories',
+          remoteSnapshotRef.current?.categories ?? snapshot.categories,
+          data,
+        ),
+      ))
     ) {
       return;
     }
     categoriesForm.reset(data);
-    setSnapshot((value) => value && applyDraft(value, getDraft()));
+    setSnapshot((value) => value && applyDraft(remoteSnapshotRef.current ?? value, getDraft()));
     setSectionMessage('categories', {
       tone: 'success',
       text: 'Categories saved to the browser draft.',
@@ -444,18 +427,19 @@ export function CmsEditor() {
       return;
     }
     if (
-      !(await updateDraft((value) => ({
-        ...value,
-        technologies: {
-          expectedSha: value.technologies?.expectedSha ?? snapshot.technologies.sha,
+      !(await updateDraft((value) =>
+        synchronizeDocument(
+          value,
+          'technologies',
+          remoteSnapshotRef.current?.technologies ?? snapshot.technologies,
           data,
-        },
-      })))
+        ),
+      ))
     ) {
       return;
     }
     technologiesForm.reset(data);
-    setSnapshot((value) => value && applyDraft(value, getDraft()));
+    setSnapshot((value) => value && applyDraft(remoteSnapshotRef.current ?? value, getDraft()));
     setSectionMessage('technologies', {
       tone: 'success',
       text: 'Technologies saved to the browser draft.',
@@ -465,16 +449,17 @@ export function CmsEditor() {
   async function deleteProject() {
     const current = snapshot?.projects.find((project) => project.slug === selectedProjectSlug);
     if (!current) {
-      return;
+      return false;
     }
     if (
       !(await confirm({
         title: 'Remove this project?',
         description: `“${current.data.title}” will be removed when you submit the draft.`,
         confirmLabel: 'Remove project',
+        danger: true,
       }))
     ) {
-      return;
+      return false;
     }
     const saved = await updateDraft((value) => {
       const staged = value.projects.upsert.find((project) => project.slug === current.slug);
@@ -493,7 +478,7 @@ export function CmsEditor() {
       };
     });
     if (!saved) {
-      return;
+      return false;
     }
     setSnapshot(
       (value) =>
@@ -509,6 +494,7 @@ export function CmsEditor() {
       tone: 'success',
       text: 'Project removal saved to the browser draft.',
     });
+    return true;
   }
 
   async function initializeRepository() {
@@ -583,50 +569,29 @@ export function CmsEditor() {
   }
 
   async function prepareDraft(): Promise<CmsDraft> {
-    if (!snapshot) {
+    const baseline = remoteSnapshotRef.current;
+    if (!snapshot || !baseline) {
       throw new Error('Load the repository before submitting.');
     }
     let next = getDraft();
-    if (projectForm.formState.isDirty) {
-      if (selectedProjectSlug) {
-        const current = snapshot.projects.find((project) => project.slug === selectedProjectSlug);
-        next = stageProject(
-          next,
-          selectedProjectSlug,
-          current?.sha || null,
-          projectForm.getValues(),
-        );
-      } else {
-        next = { ...next, newProject: { slug: newProjectSlug, data: projectForm.getValues() } };
-      }
+    if (selectedProjectSlug) {
+      next = synchronizeProject(
+        next,
+        selectedProjectSlug,
+        baseline.projects.find((project) => project.slug === selectedProjectSlug),
+        projectForm.getValues(),
+      );
+    } else if (projectForm.formState.isDirty || newProjectSlug.trim()) {
+      next = { ...next, newProject: { slug: newProjectSlug, data: projectForm.getValues() } };
     }
-    if (siteForm.formState.isDirty) {
-      next = {
-        ...next,
-        site: {
-          expectedSha: next.site?.expectedSha ?? snapshot.site.sha,
-          data: siteForm.getValues(),
-        },
-      };
-    }
-    if (categoriesForm.formState.isDirty) {
-      next = {
-        ...next,
-        categories: {
-          expectedSha: next.categories?.expectedSha ?? snapshot.categories.sha,
-          data: categoriesForm.getValues(),
-        },
-      };
-    }
-    if (technologiesForm.formState.isDirty) {
-      next = {
-        ...next,
-        technologies: {
-          expectedSha: next.technologies?.expectedSha ?? snapshot.technologies.sha,
-          data: technologiesForm.getValues(),
-        },
-      };
-    }
+    next = synchronizeDocument(next, 'site', baseline.site, siteForm.getValues());
+    next = synchronizeDocument(next, 'categories', baseline.categories, categoriesForm.getValues());
+    next = synchronizeDocument(
+      next,
+      'technologies',
+      baseline.technologies,
+      technologiesForm.getValues(),
+    );
     let promotedSlug: string | undefined;
     if (next.newProject) {
       const slug = next.newProject.slug.trim();
@@ -642,6 +607,9 @@ export function CmsEditor() {
       promotedSlug = slug;
     }
     if (!hasDraftChanges(next)) {
+      if (!(await updateDraft(() => next))) {
+        throw new Error('The draft could not be saved in this browser. Free storage and retry.');
+      }
       throw new Error('There are no changes to submit.');
     }
     const candidate = {
@@ -652,6 +620,7 @@ export function CmsEditor() {
       ...(next.categories && { categories: next.categories }),
       ...(next.technologies && { technologies: next.technologies }),
       ...(next.designs && { designs: next.designs }),
+      ...(next.deleteMedia?.length && { deleteMedia: next.deleteMedia }),
       media: next.media.map((item) => ({ ...item, blobSha: '0'.repeat(40) })),
     };
     const validation = finalizeCmsDraftSchema.safeParse(candidate);
@@ -695,7 +664,7 @@ export function CmsEditor() {
       }
       throw new Error(`Check the ${label}: ${issue.message}`);
     }
-    const view = applyDraft(snapshot, next);
+    const view = applyDraft(baseline, next);
     const referencedImages = new Set([
       ...view.projects.flatMap(({ data }) => [data.media.cover, ...data.media.gallery]),
       ...Object.values(view.technologies.data).flatMap(({ icon }) => (icon ? [icon] : [])),
@@ -711,7 +680,7 @@ export function CmsEditor() {
       throw new Error('The draft could not be saved in this browser. Free storage and retry.');
     }
     if (promotedSlug) {
-      setSnapshot((current) => current && applyDraft(current, next));
+      setSnapshot((current) => current && applyDraft(baseline, next));
       if (!selectedProjectSlug && newProjectSlug.trim() === promotedSlug) {
         setSelectedProjectSlug(promotedSlug);
         setNewProjectSlug('');
@@ -744,11 +713,23 @@ export function CmsEditor() {
       setBusySection(null);
       return;
     }
+    const baseline = remoteSnapshotRef.current;
+    if (!baseline) {
+      setFinalMessage({
+        tone: 'error',
+        text: 'Reload the repository before reviewing this draft.',
+      });
+      busyRef.current = false;
+      setBusySection(null);
+      return;
+    }
+    const summary = summarizePublishDraft(baseline, prepared);
     if (
       !(await confirm({
         title: 'Submit all changes?',
         description:
           'All draft changes and selected images will be published together in one commit to the public content repository.',
+        details: <PublishSummary summary={summary} />,
         confirmLabel: 'Submit changes',
       }))
     ) {
@@ -801,6 +782,7 @@ export function CmsEditor() {
           ...(prepared.categories && { categories: prepared.categories }),
           ...(prepared.technologies && { technologies: prepared.technologies }),
           ...(prepared.designs && { designs: prepared.designs }),
+          ...(prepared.deleteMedia?.length && { deleteMedia: prepared.deleteMedia }),
           media,
         }),
       });
@@ -903,8 +885,13 @@ export function CmsEditor() {
     if (
       !(await confirm({
         title: 'Discard browser draft?',
-        description: 'All unsubmitted changes and staged images in this browser will be removed.',
+        description:
+          'All unsubmitted changes and staged images in this browser will be removed.' +
+          (getDraft().pendingRefresh
+            ? ' The published commit will remain, but the option to retry its pending public refresh will also be removed.'
+            : ''),
         confirmLabel: 'Discard draft',
+        danger: true,
       }))
     ) {
       return;
@@ -936,20 +923,23 @@ export function CmsEditor() {
     }
   }
 
-  async function selectProject(slug: string) {
+  async function selectProject(slug: string): Promise<boolean> {
     if (slug === selectedProjectSlug) {
-      return;
+      return true;
     }
     if (
       snapshot &&
-      (projectForm.formState.isDirty || (!selectedProjectSlug && newProjectSlug.trim()))
+      (selectedProjectSlug || projectForm.formState.isDirty || newProjectSlug.trim())
     ) {
       const data = projectForm.getValues();
       let saved: boolean;
       if (selectedProjectSlug) {
-        const sha =
-          snapshot.projects.find((project) => project.slug === selectedProjectSlug)?.sha || null;
-        saved = await updateDraft((value) => stageProject(value, selectedProjectSlug, sha, data));
+        const baseline = remoteSnapshotRef.current?.projects.find(
+          (project) => project.slug === selectedProjectSlug,
+        );
+        saved = await updateDraft((value) =>
+          synchronizeProject(value, selectedProjectSlug, baseline, data),
+        );
       } else {
         saved = await updateDraft((value) => ({
           ...value,
@@ -961,16 +951,20 @@ export function CmsEditor() {
           tone: 'error',
           text: 'The project draft could not be saved in this browser. Resolve the storage issue before switching projects.',
         });
-        return;
+        return false;
       }
     }
-    setSelectedProjectSlug(slug);
     const savedNew = !slug ? getDraft().newProject : undefined;
-    setNewProjectSlug(savedNew?.slug || '');
-    const view = snapshot && applyDraft(snapshot, getDraft());
+    const view = snapshot && applyDraft(remoteSnapshotRef.current ?? snapshot, getDraft());
     const next = view?.projects.find((project) => project.slug === slug);
+    if (slug && !next) {
+      return false;
+    }
+    setSelectedProjectSlug(slug);
+    setNewProjectSlug(savedNew?.slug || '');
     projectForm.reset(savedNew?.data || next?.data || emptyProject());
     clearSectionMessage('projects');
+    return true;
   }
 
   async function retryLoad() {
@@ -1026,8 +1020,7 @@ export function CmsEditor() {
       aria-labelledby="cms-editor-heading"
       aria-busy={pending || isRefreshing}
     >
-      <header className="cms-editor-heading">
-        <p className="eyebrow">Owner workspace</p>
+      <div className="cms-editor-context">
         <h2 id="cms-editor-heading">Content editor</h2>
         {snapshot && (
           <p>
@@ -1038,7 +1031,7 @@ export function CmsEditor() {
             on <code>{snapshot.repository.defaultBranch}</code>.
           </p>
         )}
-      </header>
+      </div>
 
       {loadState === 'loading' && !snapshot && (
         <p className="cms-editor-loading" role="status">
@@ -1050,23 +1043,20 @@ export function CmsEditor() {
         <section className="cms-editor-state-card" aria-labelledby="cms-load-error-heading">
           <h3 id="cms-load-error-heading">CMS content could not be loaded</h3>
           <p role="alert">{loadError || 'Refresh the content snapshot and try again.'}</p>
-          <button
-            type="button"
-            className="button"
-            onClick={() => void retryLoad()}
-            disabled={pending}
-          >
+          <Button kind="action" type="button" onClick={() => void retryLoad()} disabled={pending}>
             Retry loading
-          </button>
-          {(hasDraftChanges(draft) || draftStore.error) && (
-            <button
+          </Button>
+          {(hasDraftChanges(draft) || draft.pendingRefresh || draftStore.error) && (
+            <Button
+              kind="action"
               type="button"
-              className="button button-outline"
+              variant="outline"
+              className="cms-editor-danger-button"
               onClick={() => void discardDraft()}
               disabled={pending}
             >
-              Discard browser draft
-            </button>
+              Delete draft
+            </Button>
           )}
         </section>
       )}
@@ -1085,220 +1075,253 @@ export function CmsEditor() {
               {initializationMessage}
             </p>
           )}
-          <button
+          <Button
+            kind="action"
             type="button"
-            className="button"
             onClick={() => void initializeRepository()}
             disabled={pending}
           >
             {pending ? 'Initializing…' : 'Initialize content repository'}
-          </button>
+          </Button>
         </section>
       )}
 
       {loadState === 'ready' && snapshot && (
         <>
-          <div className="cms-editor-actions cms-editor-publish-actions">
-            <button
-              type="button"
-              className="button"
-              disabled={pending || !hasUnsavedChanges}
-              onClick={() => void submitDraft()}
-            >
-              {busySection === 'submit' ? 'Submitting…' : 'Submit all changes'}
-            </button>
-            <button
-              type="button"
-              className="button button-outline"
-              disabled={pending || !hasUnsavedChanges}
-              onClick={() => void discardDraft()}
-            >
-              Discard browser draft
-            </button>
-            <button
-              type="button"
-              className="button button-outline"
-              disabled={pending}
-              onClick={() => void refreshPublicContent()}
-            >
-              {draft.pendingRefresh ? 'Retry public refresh' : 'Refresh public content'}
-            </button>
-          </div>
-          <p className="cms-editor-draft-state">
-            {draftStore.saving
-              ? 'Saving draft in this browser…'
-              : draftStore.error
-                ? 'The browser draft could not be saved.'
-                : 'Changes are saved in this browser until you submit them together.'}
-          </p>
-          {draftStore.error && (
-            <p className="cms-editor-field-error" role="alert">
-              {draftStore.error}
-            </p>
-          )}
-          {conflicts.length > 0 && (
-            <section className="cms-editor-conflicts" aria-labelledby="cms-conflicts-heading">
-              <h3 id="cms-conflicts-heading">Review conflicting changes</h3>
-              <p>
-                Compare your draft with the latest repository content before choosing what to do.
-                Nothing has been committed.
-              </p>
-              {conflicts.some((item) => item.path === '@repository') && (
-                <p>
-                  Return to the repository and branch where this draft was created, or discard the
-                  draft before editing the new target.
+          {headerActions &&
+            createPortal(
+              <>
+                <Button
+                  kind="action"
+                  type="button"
+                  disabled={pending || !hasUnsavedChanges}
+                  onClick={() => void submitDraft()}
+                >
+                  {busySection === 'submit' ? 'Submitting…' : 'Submit draft'}
+                </Button>
+                <Button
+                  kind="action"
+                  type="button"
+                  variant="outline"
+                  className="cms-header-danger-button"
+                  disabled={pending || !hasUnsavedChanges}
+                  onClick={() => void discardDraft()}
+                >
+                  Delete draft
+                </Button>
+              </>,
+              headerActions,
+            )}
+          <div className="cms-editor-dashboard">
+            <aside className="cms-editor-sidebar">
+              <nav className="cms-editor-navigation" aria-label="CMS editor sections">
+                {(Object.keys(sectionLabels) as CmsSection[]).map((section) => (
+                  <button
+                    key={section}
+                    type="button"
+                    className="cms-editor-nav-button"
+                    aria-pressed={activeSection === section}
+                    aria-controls={`cms-editor-${section}-panel`}
+                    onClick={() => setActiveSection(section)}
+                  >
+                    {sectionLabels[section]}
+                  </button>
+                ))}
+              </nav>
+            </aside>
+            <div className="cms-editor-workspace">
+              {draftStore.saving && <p role="status">Saving draft in this browser…</p>}
+              {draft.pendingRefresh && (
+                <div className="cms-editor-pending-refresh" role="status">
+                  <p>
+                    The commit succeeded; public refresh is pending. Retrying will not create
+                    another commit.
+                  </p>
+                  <Button
+                    kind="action"
+                    type="button"
+                    variant="outline"
+                    disabled={pending}
+                    onClick={() => void refreshPublicContent()}
+                  >
+                    Retry public refresh
+                  </Button>
+                </div>
+              )}
+              {draftStore.error && (
+                <p className="cms-editor-field-error" role="alert">
+                  {draftStore.error}
                 </p>
               )}
-              {conflicts.map((item) => (
-                <details key={item.path}>
-                  <summary>{item.path}</summary>
-                  <p>Latest repository version</p>
-                  <pre>
-                    {typeof item.latest === 'string'
-                      ? item.latest
-                      : JSON.stringify(item.latest, null, 2)}
-                  </pre>
-                  <p>Your draft</p>
-                  <pre>
-                    {typeof item.draft === 'string'
-                      ? item.draft
-                      : JSON.stringify(item.draft, null, 2)}
-                  </pre>
-                </details>
-              ))}
-              <button
-                type="button"
-                className="button button-outline"
-                onClick={() => void acceptReviewedVersions()}
-                disabled={pending || conflicts.some((item) => !item.canRebase)}
-              >
-                Use reviewed versions as baseline
-              </button>
-            </section>
-          )}
-          {loadError && (
-            <div className="cms-editor-message cms-editor-message-error" role="alert">
-              <p>{loadError}</p>
-              <button
-                type="button"
-                className="cms-editor-text-button"
-                onClick={() => void retryLoad()}
-                disabled={pending}
-              >
-                Reload repository snapshot
-              </button>
+              {conflicts.length > 0 && (
+                <section className="cms-editor-conflicts" aria-labelledby="cms-conflicts-heading">
+                  <h3 id="cms-conflicts-heading">Review conflicting changes</h3>
+                  <p>
+                    Compare your draft with the latest repository content before choosing what to
+                    do. Nothing has been committed.
+                  </p>
+                  {conflicts.some((item) => item.path === '@repository') && (
+                    <p>
+                      Return to the repository and branch where this draft was created, or discard
+                      the draft before editing the new target.
+                    </p>
+                  )}
+                  {conflicts.map((item) => (
+                    <details key={item.path}>
+                      <summary>{item.path}</summary>
+                      <p>Latest repository version</p>
+                      <pre>
+                        {typeof item.latest === 'string'
+                          ? item.latest
+                          : JSON.stringify(item.latest, null, 2)}
+                      </pre>
+                      <p>Your draft</p>
+                      <pre>
+                        {typeof item.draft === 'string'
+                          ? item.draft
+                          : JSON.stringify(item.draft, null, 2)}
+                      </pre>
+                    </details>
+                  ))}
+                  <Button
+                    kind="action"
+                    type="button"
+                    variant="outline"
+                    onClick={() => void acceptReviewedVersions()}
+                    disabled={pending || conflicts.some((item) => !item.canRebase)}
+                  >
+                    Use reviewed versions as baseline
+                  </Button>
+                </section>
+              )}
+              {loadError && (
+                <div className="cms-editor-message cms-editor-message-error" role="alert">
+                  <p>{loadError}</p>
+                  <Button
+                    kind="action"
+                    type="button"
+                    className="cms-editor-text-button"
+                    variant="text"
+                    onClick={() => void retryLoad()}
+                    disabled={pending}
+                  >
+                    Reload repository snapshot
+                  </Button>
+                </div>
+              )}
+              {isRefreshing && (
+                <p className="cms-editor-refreshing" role="status">
+                  Refreshing repository snapshot…
+                </p>
+              )}
+              <ProjectPanel
+                key={`projects:${discardVersions.projects}`}
+                form={projectForm}
+                snapshot={snapshot}
+                active={activeSection === 'projects'}
+                showImportLink
+                selectedSlug={selectedProjectSlug}
+                newSlug={newProjectSlug}
+                pending={pending}
+                feedback={
+                  <CmsMessage
+                    message={messages.projects}
+                    onDismiss={() => clearSectionMessage('projects')}
+                  />
+                }
+                onSelectedSlugChange={selectProject}
+                onNewSlugChange={(slug) => {
+                  setNewProjectSlug(slug);
+                  clearSectionMessage('projects');
+                }}
+                onSave={saveProject}
+                onDelete={deleteProject}
+                onClearMessage={() => clearSectionMessage('projects')}
+              />
+              <SiteProfilePanel
+                key={`site:${discardVersions.site}`}
+                form={siteForm}
+                projects={snapshot?.projects ?? []}
+                active={activeSection === 'site'}
+                pending={pending}
+                feedback={
+                  <CmsMessage
+                    message={messages.site}
+                    onDismiss={() => clearSectionMessage('site')}
+                  />
+                }
+                onSave={saveSite}
+                onClearMessage={() => clearSectionMessage('site')}
+              />
+              <CategoriesPanel
+                key={`categories:${discardVersions.categories}`}
+                form={categoriesForm}
+                active={activeSection === 'categories'}
+                pending={pending}
+                feedback={
+                  <CmsMessage
+                    message={messages.categories}
+                    onDismiss={() => clearSectionMessage('categories')}
+                  />
+                }
+                onSave={saveCategories}
+                onClearMessage={() => clearSectionMessage('categories')}
+              />
+              <TechnologiesPanel
+                key={`technologies:${discardVersions.technologies}`}
+                form={technologiesForm}
+                active={activeSection === 'technologies'}
+                pending={pending}
+                feedback={
+                  <CmsMessage
+                    message={messages.technologies}
+                    onDismiss={() => clearSectionMessage('technologies')}
+                  />
+                }
+                onSave={saveTechnologies}
+                onClearMessage={() => clearSectionMessage('technologies')}
+              />
+              <DesignsPanel
+                key={`designs:${discardVersions.designs}`}
+                active={activeSection === 'designs'}
+                pending={pending}
+                feedback={
+                  <CmsMessage
+                    message={messages.designs}
+                    onDismiss={() => clearSectionMessage('designs')}
+                  />
+                }
+                onClearMessage={() => clearSectionMessage('designs')}
+              />
+              <ImagesPanel
+                key={`images:${discardVersions.images}`}
+                projectForm={projectForm}
+                technologiesForm={technologiesForm}
+                snapshot={snapshot}
+                selectedProjectSlug={selectedProjectSlug}
+                newProjectSlug={newProjectSlug}
+                active={activeSection === 'images'}
+                pending={pending}
+                feedback={
+                  <CmsMessage
+                    message={messages.images}
+                    onDismiss={() => clearSectionMessage('images')}
+                  />
+                }
+                onUpload={uploadImage}
+                onEditReferences={async (kind, slug) => {
+                  if (kind === 'project' && slug) {
+                    const selected = await selectProject(slug);
+                    if (!selected) {
+                      return;
+                    }
+                  }
+                  setActiveSection(kind === 'project' ? 'projects' : 'technologies');
+                }}
+                onClearMessage={() => clearSectionMessage('images')}
+              />
             </div>
-          )}
-          <nav className="cms-editor-navigation" aria-label="CMS editor sections">
-            {(Object.keys(sectionLabels) as CmsSection[]).map((section) => (
-              <button
-                key={section}
-                type="button"
-                className="cms-editor-nav-button"
-                aria-pressed={activeSection === section}
-                aria-controls={`cms-editor-${section}-panel`}
-                onClick={() => setActiveSection(section)}
-              >
-                {sectionLabels[section]}
-              </button>
-            ))}
-          </nav>
-          {isRefreshing && (
-            <p className="cms-editor-refreshing" role="status">
-              Refreshing repository snapshot…
-            </p>
-          )}
-          <ProjectPanel
-            key={`projects:${discardVersions.projects}`}
-            form={projectForm}
-            snapshot={snapshot}
-            active={activeSection === 'projects'}
-            selectedSlug={selectedProjectSlug}
-            newSlug={newProjectSlug}
-            pending={pending}
-            feedback={
-              <CmsMessage
-                message={messages.projects}
-                onDismiss={() => clearSectionMessage('projects')}
-              />
-            }
-            onSelectedSlugChange={selectProject}
-            onNewSlugChange={(slug) => {
-              setNewProjectSlug(slug);
-              clearSectionMessage('projects');
-            }}
-            onSave={saveProject}
-            onDelete={() => void deleteProject()}
-            onClearMessage={() => clearSectionMessage('projects')}
-          />
-          <SiteProfilePanel
-            key={`site:${discardVersions.site}`}
-            form={siteForm}
-            active={activeSection === 'site'}
-            pending={pending}
-            feedback={
-              <CmsMessage message={messages.site} onDismiss={() => clearSectionMessage('site')} />
-            }
-            onSave={saveSite}
-            onClearMessage={() => clearSectionMessage('site')}
-          />
-          <CategoriesPanel
-            key={`categories:${discardVersions.categories}`}
-            form={categoriesForm}
-            active={activeSection === 'categories'}
-            pending={pending}
-            feedback={
-              <CmsMessage
-                message={messages.categories}
-                onDismiss={() => clearSectionMessage('categories')}
-              />
-            }
-            onSave={saveCategories}
-            onClearMessage={() => clearSectionMessage('categories')}
-          />
-          <TechnologiesPanel
-            key={`technologies:${discardVersions.technologies}`}
-            form={technologiesForm}
-            active={activeSection === 'technologies'}
-            pending={pending}
-            feedback={
-              <CmsMessage
-                message={messages.technologies}
-                onDismiss={() => clearSectionMessage('technologies')}
-              />
-            }
-            onSave={saveTechnologies}
-            onClearMessage={() => clearSectionMessage('technologies')}
-          />
-          <DesignsPanel
-            key={`designs:${discardVersions.designs}`}
-            active={activeSection === 'designs'}
-            pending={pending}
-            feedback={
-              <CmsMessage
-                message={messages.designs}
-                onDismiss={() => clearSectionMessage('designs')}
-              />
-            }
-            onClearMessage={() => clearSectionMessage('designs')}
-          />
-          <ImagesPanel
-            key={`images:${discardVersions.images}`}
-            projectForm={projectForm}
-            technologiesForm={technologiesForm}
-            selectedProjectSlug={selectedProjectSlug}
-            newProjectSlug={newProjectSlug}
-            active={activeSection === 'images'}
-            pending={pending}
-            feedback={
-              <CmsMessage
-                message={messages.images}
-                onDismiss={() => clearSectionMessage('images')}
-              />
-            }
-            onUpload={uploadImage}
-            onClearMessage={() => clearSectionMessage('images')}
-          />
+          </div>
         </>
       )}
       <CmsMessage message={finalMessage} onDismiss={() => setFinalMessage(undefined)} />

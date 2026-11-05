@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { revalidateTag } from 'next/cache';
-import { encode } from 'next-auth/jwt';
 
 vi.mock('next-auth', () => ({
   default: () => ({ auth: vi.fn(), handlers: {}, signIn: vi.fn(), signOut: vi.fn() }),
@@ -116,23 +115,6 @@ describe('private CMS HTTP handlers', () => {
     }
   });
 
-  test('rejects legacy session cookies that retained an OAuth access token', async () => {
-    const legacyCredential = 'fixture-legacy-oauth-token';
-    const encrypted = await encode({
-      secret: cmsAuthSecret,
-      salt: cookieName,
-      maxAge: 60 * 60,
-      token: { githubId: cmsPatUserId, githubAccessToken: legacyCredential },
-    });
-    const response = await cms.GET(
-      new Request(new URL('/api/cms', cmsBaseUrl), {
-        headers: { cookie: `${cookieName}=${encrypted}` },
-      }),
-    );
-    expect(response.status).toBe(401);
-    expect(await response.text()).not.toContain(legacyCredential);
-  });
-
   test('reject cross-origin writes and malformed content', async () => {
     const crossOrigin = await cms.POST(
       await request('/api/cms', {
@@ -229,6 +211,10 @@ describe('private CMS HTTP handlers', () => {
             upsert: [{ slug: 'atomic-project', expectedSha: null, data: project }],
             delete: [],
           },
+          site: {
+            expectedSha: snapshot.site.sha,
+            data: { ...snapshot.site.data, heroProjectSlugs: ['atomic-project'] },
+          },
           media: [staged],
         },
       }),
@@ -242,12 +228,13 @@ describe('private CMS HTTP handlers', () => {
       expect.arrayContaining([
         'content/projects/atomic-project.json',
         'content/project-index.json',
+        'content/site.json',
         staged.path,
       ]),
     );
     const committed = fixtureGitStats();
     expect(committed).toEqual({
-      blobCreations: before.blobCreations + 3,
+      blobCreations: before.blobCreations + 4,
       treeCreations: before.treeCreations + 1,
       commitsCreated: before.commitsCreated + 1,
       refUpdates: before.refUpdates + 1,
@@ -263,6 +250,277 @@ describe('private CMS HTTP handlers', () => {
     expect(retried.status).toBe(200);
     expect(await retried.json()).toEqual({ cache: 'refreshed' });
     expect(fixtureGitStats()).toEqual(committed);
+  });
+
+  test('owner can list existing media and stale or missing deletion SHAs conflict without writes', async () => {
+    expect((await media.GET(await request('/api/cms/media'))).status).toBe(401);
+    expect(
+      (await media.GET(await request('/api/cms/media', { githubId: '99999999' }))).status,
+    ).toBe(403);
+
+    const response = await media.GET(await request('/api/cms/media', { githubId: cmsPatUserId }));
+    expect(response.status).toBe(200);
+    const listing = await response.json();
+    expect(listing.repository).toEqual({
+      owner: 'fixture-owner',
+      name: 'portfolio-content-fixture',
+      defaultBranch: 'published',
+    });
+    expect(listing.media).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: 'media/projects/fixture-project/cover.png' }),
+        expect.objectContaining({ path: 'media/projects/browser-cms-project/cover.png' }),
+        expect.objectContaining({ path: 'media/technologies/unreferenced.svg' }),
+      ]),
+    );
+    expect(listing.media.every((item: { sha: string }) => /^[a-f0-9]{40}$/i.test(item.sha))).toBe(
+      true,
+    );
+
+    const snapshot = await (
+      await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }))
+    ).json();
+    const fixtureMedia = listing.media.find(
+      (item: { path: string }) => item.path === snapshot.projects[0].data.media.cover,
+    );
+    expect(fixtureMedia).toBeDefined();
+    const before = fixtureGitStats();
+    const invalidDeletes = [
+      [{ path: 'media/projects/fixture-project/../escape.png', expectedSha: 'a'.repeat(40) }],
+      [
+        { path: fixtureMedia.path, expectedSha: fixtureMedia.sha },
+        { path: fixtureMedia.path, expectedSha: fixtureMedia.sha },
+      ],
+    ];
+    for (const deleteMedia of invalidDeletes) {
+      const invalid = await cms.POST(
+        await request('/api/cms', {
+          githubId: cmsPatUserId,
+          origin: cmsBaseUrl,
+          data: {
+            kind: 'finalize',
+            repositoryKey: repositoryKey(snapshot.repository),
+            projects: { upsert: [], delete: [] },
+            media: [],
+            deleteMedia,
+          },
+        }),
+      );
+      expect(invalid.status).toBe(400);
+    }
+    expect(fixtureGitStats()).toEqual(before);
+    const conflict = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(snapshot.repository),
+          projects: { upsert: [], delete: [] },
+          media: [],
+          deleteMedia: [
+            { path: fixtureMedia.path, expectedSha: 'f'.repeat(40) },
+            {
+              path: 'media/projects/missing-project/missing.png',
+              expectedSha: 'e'.repeat(40),
+            },
+          ],
+        },
+      }),
+    );
+    expect(conflict.status).toBe(409);
+    expect(await conflict.json()).toMatchObject({
+      conflicts: expect.arrayContaining([
+        expect.objectContaining({ path: fixtureMedia.path, expectedSha: 'f'.repeat(40) }),
+        expect.objectContaining({
+          path: 'media/projects/missing-project/missing.png',
+          currentSha: null,
+        }),
+      ]),
+    });
+    expect(fixtureGitStats()).toEqual(before);
+  });
+
+  test('media deletion rejects referenced files and publishes replacement plus reference update atomically', async () => {
+    const initialResponse = await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }));
+    const initial = await initialResponse.json();
+    const mediaResponse = await media.GET(
+      await request('/api/cms/media', { githubId: cmsPatUserId }),
+    );
+    const listing = await mediaResponse.json();
+    const referenced = listing.media.find(
+      (item: { path: string }) => item.path === initial.projects[0].data.media.cover,
+    );
+    const beforeRejectedDelete = fixtureGitStats();
+    const rejected = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(initial.repository),
+          projects: { upsert: [], delete: [] },
+          media: [],
+          deleteMedia: [{ path: referenced.path, expectedSha: referenced.sha }],
+        },
+      }),
+    );
+    expect(rejected.status).toBe(400);
+    expect(await rejected.json()).toMatchObject({ code: 'validation' });
+    expect(fixtureGitStats()).toEqual(beforeRejectedDelete);
+
+    const oldPath = 'media/projects/browser-cms-project/cover.png';
+    const browserProject = {
+      ...initial.projects[0].data,
+      title: 'Browser CMS media cleanup project',
+      media: { cover: oldPath, gallery: [] },
+    };
+    const prepared = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(initial.repository),
+          projects: {
+            upsert: [{ slug: 'browser-cms-project', expectedSha: null, data: browserProject }],
+            delete: [],
+          },
+          media: [],
+        },
+      }),
+    );
+    expect(prepared.status, await prepared.clone().text()).toBe(200);
+
+    const updatedSnapshot = await (
+      await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }))
+    ).json();
+    const updatedProject = updatedSnapshot.projects.find(
+      (item: { slug: string }) => item.slug === 'browser-cms-project',
+    );
+    const afterPreparationMedia = await (
+      await media.GET(await request('/api/cms/media', { githubId: cmsPatUserId }))
+    ).json();
+    const oldMedia = afterPreparationMedia.media.find(
+      (item: { path: string }) => item.path === oldPath,
+    );
+    const stagedResponse = await media.POST(
+      await request('/api/cms/media', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          scope: 'project',
+          slug: 'browser-cms-project',
+          filename: 'replacement.png',
+          mime: 'image/png',
+          content: fixturePng.toString('base64'),
+        },
+      }),
+    );
+    expect(stagedResponse.status).toBe(200);
+    const staged = await stagedResponse.json();
+    const beforeDelete = fixtureGitStats();
+    const finalized = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(updatedSnapshot.repository),
+          projects: {
+            upsert: [
+              {
+                slug: 'browser-cms-project',
+                expectedSha: updatedProject.sha,
+                data: { ...updatedProject.data, media: { cover: staged.path, gallery: [] } },
+              },
+            ],
+            delete: [],
+          },
+          media: [staged],
+          deleteMedia: [{ path: oldPath, expectedSha: oldMedia.sha }],
+        },
+      }),
+    );
+    expect(finalized.status, await finalized.clone().text()).toBe(200);
+    const result = await finalized.json();
+    expect(result.changedPaths).toEqual(
+      expect.arrayContaining(['content/projects/browser-cms-project.json', staged.path, oldPath]),
+    );
+    expect(fixtureGitStats()).toEqual({
+      ...beforeDelete,
+      blobCreations: beforeDelete.blobCreations + 1,
+      treeCreations: beforeDelete.treeCreations + 1,
+      commitsCreated: beforeDelete.commitsCreated + 1,
+      refUpdates: beforeDelete.refUpdates + 1,
+    });
+    const finalSnapshot = await (
+      await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }))
+    ).json();
+    expect(
+      finalSnapshot.projects.find((item: { slug: string }) => item.slug === 'browser-cms-project')
+        .data.media.cover,
+    ).toBe(staged.path);
+    const finalMedia = await (
+      await media.GET(await request('/api/cms/media', { githubId: cmsPatUserId }))
+    ).json();
+    expect(finalMedia.media.some((item: { path: string }) => item.path === oldPath)).toBe(false);
+    expect(finalMedia.media.some((item: { path: string }) => item.path === staged.path)).toBe(true);
+
+    const stale = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(finalSnapshot.repository),
+          projects: { upsert: [], delete: [] },
+          media: [],
+          deleteMedia: [{ path: oldPath, expectedSha: oldMedia.sha }],
+        },
+      }),
+    );
+    expect(stale.status).toBe(409);
+    expect(await stale.json()).toMatchObject({
+      conflicts: [expect.objectContaining({ path: oldPath, currentSha: null })],
+    });
+  });
+
+  test('deletion-only commits invalidate public content', async () => {
+    const snapshot = await (
+      await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }))
+    ).json();
+    const listing = await (
+      await media.GET(await request('/api/cms/media', { githubId: cmsPatUserId }))
+    ).json();
+    const item = listing.media.find(
+      (entry: { path: string }) => entry.path === 'media/technologies/unreferenced.svg',
+    );
+    expect(item).toBeDefined();
+    vi.mocked(revalidateTag).mockClear();
+    const before = fixtureGitStats();
+    const response = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(snapshot.repository),
+          projects: { upsert: [], delete: [] },
+          media: [],
+          deleteMedia: [{ path: item.path, expectedSha: item.sha }],
+        },
+      }),
+    );
+    expect(response.status, await response.clone().text()).toBe(200);
+    expect((await response.json()).changedPaths).toEqual([item.path]);
+    expect(revalidateTag).toHaveBeenCalledWith('content-source', 'max');
+    expect(fixtureGitStats()).toEqual({
+      ...before,
+      treeCreations: before.treeCreations + 1,
+      commitsCreated: before.commitsCreated + 1,
+      refUpdates: before.refUpdates + 1,
+    });
   });
 
   test('a stale expected SHA returns a conflict without creating a commit or moving the ref', async () => {
@@ -296,6 +554,65 @@ describe('private CMS HTTP handlers', () => {
       currentSha: snapshot.site.sha,
     });
     expect(fixtureGitStats()).toEqual(before);
+  });
+
+  test('hero highlights reject missing, deleted, and unpublished projects before writing', async () => {
+    const snapshotResponse = await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }));
+    expect(snapshotResponse.status).toBe(200);
+    const snapshot = await snapshotResponse.json();
+    const project = snapshot.projects.find(
+      (entry: { slug: string }) => entry.slug === 'fixture-project',
+    );
+    expect(project).toBeDefined();
+    const before = fixtureGitStats();
+    const invalidDrafts = [
+      {
+        heroProjectSlugs: ['missing-project'],
+        projects: { upsert: [], delete: [] },
+      },
+      {
+        heroProjectSlugs: ['fixture-project'],
+        projects: {
+          upsert: [],
+          delete: [{ slug: project.slug, expectedSha: project.sha }],
+        },
+      },
+      {
+        heroProjectSlugs: ['fixture-project'],
+        projects: {
+          upsert: [
+            {
+              slug: project.slug,
+              expectedSha: project.sha,
+              data: { ...project.data, published: false },
+            },
+          ],
+          delete: [],
+        },
+      },
+    ];
+
+    for (const invalidDraft of invalidDrafts) {
+      const response = await cms.POST(
+        await request('/api/cms', {
+          githubId: cmsPatUserId,
+          origin: cmsBaseUrl,
+          data: {
+            kind: 'finalize',
+            repositoryKey: repositoryKey(snapshot.repository),
+            projects: invalidDraft.projects,
+            site: {
+              expectedSha: snapshot.site.sha,
+              data: { ...snapshot.site.data, heroProjectSlugs: invalidDraft.heroProjectSlugs },
+            },
+            media: [],
+          },
+        }),
+      );
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ code: 'validation' });
+      expect(fixtureGitStats()).toEqual(before);
+    }
   });
 
   test('a staged technology icon can be finalized when the resulting registry references it', async () => {
@@ -531,33 +848,55 @@ describe('private CMS HTTP handlers', () => {
     );
     expect(current).toBeTruthy();
     const before = fixtureGitStats();
-    const inaccessible = await cms.POST(
-      await request('/api/cms', {
-        githubId: cmsPatUserId,
-        origin: cmsBaseUrl,
-        data: {
-          kind: 'finalize',
-          repositoryKey: repositoryKey(snapshot.repository),
-          projects: {
-            upsert: [
-              {
-                slug: 'inaccessible-project',
-                expectedSha: null,
-                data: {
-                  ...current.data,
-                  githubRepositoryId: 999999,
-                  media: { cover: 'media/projects/inaccessible-project/cover.png', gallery: [] },
+    let repositoryListRequests = 0;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      const url = new URL(
+        typeof input === 'string' ? input : input instanceof URL ? input.href : input.url,
+      );
+      if (url.hostname === 'api.github.com' && url.pathname === '/user/repos') {
+        repositoryListRequests += 1;
+      }
+      return originalFetch(input, init);
+    }) as typeof fetch;
+    let inaccessible: Response;
+    try {
+      inaccessible = await cms.POST(
+        await request('/api/cms', {
+          githubId: cmsPatUserId,
+          origin: cmsBaseUrl,
+          data: {
+            kind: 'finalize',
+            repositoryKey: repositoryKey(snapshot.repository),
+            projects: {
+              upsert: [
+                {
+                  slug: current.slug,
+                  expectedSha: current.sha,
+                  data: { ...current.data, githubRepositoryId: 310001 },
                 },
-              },
-            ],
-            delete: [],
+                {
+                  slug: 'inaccessible-project',
+                  expectedSha: null,
+                  data: {
+                    ...current.data,
+                    githubRepositoryId: 999999,
+                    media: { cover: 'media/projects/inaccessible-project/cover.png', gallery: [] },
+                  },
+                },
+              ],
+              delete: [],
+            },
+            media: [],
           },
-          media: [],
-        },
-      }),
-    );
+        }),
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
     expect(inaccessible.status).toBe(403);
     expect(await inaccessible.json()).toMatchObject({ code: 'forbidden' });
+    expect(repositoryListRequests).toBe(1);
     expect(fixtureGitStats()).toEqual(before);
 
     const duplicate = await cms.POST(

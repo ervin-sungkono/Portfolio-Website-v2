@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/common/Button';
 import { useCmsDraft } from '../../CmsDraftProvider';
 import { readJson } from '../response';
 import type { DesignsPanelProps, DribbbleShot } from './type';
@@ -170,23 +171,30 @@ export function DesignsPanel({ active, pending, feedback, onClearMessage }: Desi
           <h2 id="cms-designs-heading">Design Selection</h2>
           <p>Choose which shots appear on the public Design page and homepage preview.</p>
         </div>
-        <button
+        <Button
+          kind="action"
           type="button"
-          className="button button-outline"
+          variant="outline"
           onClick={reload}
           disabled={pending || isLoading}
         >
           {isLoading ? 'Loading shots…' : 'Reload shots'}
-        </button>
+        </Button>
       </div>
 
       {feedback}
       {loadError && (
         <div className="cms-editor-message cms-editor-message-error" role="alert">
           <p>{loadError}</p>
-          <button type="button" className="cms-editor-text-button" onClick={reload}>
+          <Button
+            kind="action"
+            type="button"
+            className="cms-editor-text-button"
+            variant="text"
+            onClick={reload}
+          >
             Try loading Dribbble again
-          </button>
+          </Button>
         </div>
       )}
 

@@ -1,4 +1,10 @@
-import { getPortfolio, getProjects, selectFeaturedProjects, getSiteContent } from '@/lib/content';
+import {
+  getPortfolio,
+  getProjects,
+  getSiteContent,
+  selectFeaturedProjects,
+  selectHeroProjects,
+} from '@/lib/content';
 import { Experience } from '@/components/common/Experience';
 import { HomeHero } from '@/components/home/HomeHero';
 import { SelectedProjects } from '@/components/home/SelectedProjects';
@@ -18,10 +24,11 @@ export async function generateMetadata() {
 export default async function HomePage() {
   const [projects, content] = await Promise.all([getProjects(), getSiteContent()]);
   const featured = selectFeaturedProjects(projects);
+  const heroProjects = selectHeroProjects(projects, content.heroProjectSlugs);
 
   return (
     <div className={`container ${styles.home}`}>
-      <HomeHero content={content} projects={featured.slice(0, 2)} />
+      <HomeHero content={content} projects={heroProjects} />
       <SelectedProjects projects={featured} />
       <PublishedSocialLinks links={content.socialLinks} />
       <Experience />

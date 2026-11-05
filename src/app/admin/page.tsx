@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { auth, cmsAuthConfigured, isCurrentOwner, signIn, signOut } from '@/lib/cms/auth';
+import { auth, cmsAuthConfigured, isCurrentOwner, signIn } from '@/lib/cms/auth';
 import { CmsEditor } from '@/components/admin/CmsEditor';
+import { Button } from '@/components/common/Button';
+import styles from './style.module.css';
 
 export const metadata: Metadata = {
   title: 'Portfolio CMS',
@@ -28,45 +29,27 @@ async function AdminWorkspace() {
         }}
       >
         <p>Sign in with the GitHub account configured by the server credential to edit content.</p>
-        <button className="button" type="submit">
+        <Button kind="action" type="submit">
           Sign in with GitHub
-        </button>
+        </Button>
       </form>
     );
   }
-  return (
-    <>
-      <form
-        action={async () => {
-          'use server';
-          await signOut({ redirectTo: '/admin' });
-        }}
-      >
-        <button className="button button-outline" type="submit">
-          Sign out
-        </button>
-      </form>
-      <p>
-        <Link className="button button-outline" href="/admin/import">
-          Import repository
-        </Link>
-      </p>
-      <CmsEditor />
-    </>
-  );
+  return <CmsEditor />;
 }
 
 export default function AdminPage() {
   return (
-    <div className="container section">
-      <h1>Portfolio CMS</h1>
-      <p>
-        Committed content and images are public, including unpublished projects and their history.
-        Keep sensitive drafts local.
-      </p>
-      <Suspense fallback={<p role="status">Loading owner workspace…</p>}>
+    <>
+      <Suspense
+        fallback={
+          <p className={styles.loading} role="status">
+            Loading owner workspace…
+          </p>
+        }
+      >
         <AdminWorkspace />
       </Suspense>
-    </div>
+    </>
   );
 }

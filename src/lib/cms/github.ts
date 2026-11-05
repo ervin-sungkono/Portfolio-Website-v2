@@ -6,7 +6,7 @@ const apiBase = 'https://api.github.com';
 const apiVersion = '2022-11-28';
 const requestTimeoutMs = 15_000;
 
-export type GitHubUser = { id: number; login: string };
+type GitHubUser = { id: number; login: string };
 export type GitHubRepository = {
   name: string;
   full_name: string;

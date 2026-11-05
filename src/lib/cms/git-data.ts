@@ -2,9 +2,9 @@ import 'server-only';
 
 import { CmsError } from './errors.ts';
 import { githubJson, repoPath } from './github.ts';
-import { cmsIdentity } from './git-identity.ts';
 import type { RepositoryContext } from './repository.ts';
 
+const cmsIdentity = { name: 'Portfolio CMS', email: 'cms@portfolio.local' } as const;
 const gitShaPattern = /^[a-f0-9]{40}$/i;
 const updateRefsMutation = `
   mutation UpdateCmsBranch($input: UpdateRefsInput!) {
@@ -14,9 +14,9 @@ const updateRefsMutation = `
   }
 `;
 
-export type GitBranchState = { commitSha: string; treeSha: string };
-export type GitTreeChange = { path: string; sha: string | null };
-export type GitBlobData = { sha: string; size: number; bytes: Uint8Array };
+type GitBranchState = { commitSha: string; treeSha: string };
+type GitTreeChange = { path: string; sha: string | null };
+type GitBlobData = { sha: string; size: number; bytes: Uint8Array };
 
 function requireSha(value: unknown, description: string): string {
   if (typeof value !== 'string' || !gitShaPattern.test(value)) {
