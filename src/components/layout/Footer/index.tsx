@@ -26,7 +26,6 @@ export async function Footer() {
     <footer className="site-footer container">
       <div className="site-footer-top">
         <div>
-          <p className="eyebrow">05 / Contact</p>
           <h2>Have Something in Mind?</h2>
           <p>For opportunities, collaborations, or a conversation about the work.</p>
         </div>

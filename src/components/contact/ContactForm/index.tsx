@@ -3,7 +3,7 @@
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRightIcon, CircleNotchIcon } from '@phosphor-icons/react';
-import { contactFields, validateContact, type ContactErrors } from '@/lib/contact/validation';
+import { Contact, type ContactErrors } from '@/lib/contact/validation';
 import { ExternalLink } from '@/components/common/ExternalLink';
 import type { ContactFormProps } from './type';
 import './style.css';
@@ -38,9 +38,6 @@ export function ContactForm({ siteKey }: ContactFormProps) {
       return;
     }
     window.portfolioCaptchaReady = () => setCaptchaReady(true);
-    if (typeof window.grecaptcha?.render === 'function') {
-      setCaptchaReady(true);
-    }
     return () => {
       delete window.portfolioCaptchaReady;
     };
@@ -115,10 +112,10 @@ export function ContactForm({ siteKey }: ContactFormProps) {
     }
     const form = formRef.current;
     const input = Object.fromEntries(new FormData(form));
-    const result = validateContact(input);
+    const result = Contact.validate(input);
     setErrors(result.errors);
     setStatus('');
-    const firstError = contactFields.find((field) => result.errors[field]);
+    const firstError = Contact.fields.find((field) => result.errors[field]);
     if (firstError) {
       form.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${firstError}"]`)?.focus();
       return;
@@ -145,7 +142,7 @@ export function ContactForm({ siteKey }: ContactFormProps) {
       if (!response.ok || !body.success) {
         if (body.errors) {
           setErrors(body.errors);
-          const field = contactFields.find((key) => body.errors?.[key]);
+          const field = Contact.fields.find((key) => body.errors?.[key]);
           if (field) {
             form.querySelector<HTMLInputElement>(`[name="${field}"]`)?.focus();
           }
@@ -178,7 +175,7 @@ export function ContactForm({ siteKey }: ContactFormProps) {
       className="contact-form"
       aria-busy={busy}
     >
-      {contactFields.map((field) => (
+      {Contact.fields.map((field) => (
         <div key={field} className="form-field">
           <label htmlFor={`contact-${field}`}>{field[0].toUpperCase() + field.slice(1)}</label>
           {field === 'message' ? (
