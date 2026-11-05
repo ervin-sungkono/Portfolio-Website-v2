@@ -1,6 +1,10 @@
 .scroll-hero {
   position: relative;
 
+  &[data-pinned='true'] {
+    overflow-x: clip;
+  }
+
   .scroll-hero-visual-stack {
     display: grid;
     min-width: 0;
@@ -9,6 +13,7 @@
   .scroll-hero-slide {
     grid-area: 1 / 1;
     min-width: 0;
+    transform-origin: right bottom;
   }
 
   [data-parallax='hero-image'] {

@@ -9,15 +9,7 @@ import { imageSizes } from '@/lib/image-sizes';
 import { ScrollHero } from '../ScrollHero';
 import styles from './style.module.css';
 
-function HeroPreview({
-  project,
-  placeholder,
-  preload,
-}: {
-  project: Project;
-  placeholder: boolean;
-  preload: boolean;
-}) {
+function HeroPreview({ project, preload }: { project: Project; preload: boolean }) {
   return (
     <Link
       href={`/project/${project.slug}`}
@@ -25,36 +17,25 @@ function HeroPreview({
       data-cursor="project"
     >
       <div className={`hero-image ${styles.heroMedia}`}>
-        {placeholder ? (
-          <div className={styles.heroPlaceholder}>
-            <span className={styles.placeholderWindow} aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </span>
-            <span>Preview coming soon</span>
-          </div>
-        ) : (
-          <div data-parallax="hero-image">
-            <Image
-              src={project.image}
-              alt={
-                project.slug === 'wetrack-app'
-                  ? 'WeTrack Kanban board with tasks organised into sprints'
-                  : `${project.name} application interface`
-              }
-              width={1600}
-              height={990}
-              sizes={imageSizes.hero}
-              preload={preload}
-            />
-          </div>
-        )}
+        <div data-parallax="hero-image">
+          <Image
+            src={project.image}
+            alt={
+              project.slug === 'wetrack-app'
+                ? 'WeTrack Kanban board with tasks organised into sprints'
+                : `${project.name} application interface`
+            }
+            width={1600}
+            height={990}
+            sizes={imageSizes.hero}
+            preload={preload}
+          />
+        </div>
       </div>
       <div className="hero-image-caption">
         <div>
           <strong>{project.name}</strong>
-          <span>{placeholder ? 'Project preview coming soon.' : 'Selected project.'}</span>
+          <span>Selected project.</span>
         </div>
         <ArrowUpRightIcon size={24} aria-hidden="true" />
       </div>
@@ -73,7 +54,7 @@ export async function HomeHero({
   const [headline, ...rest] = content.headline.split('\n');
   const slides = projects.map((project, index) => ({
     id: project.slug,
-    content: <HeroPreview project={project} placeholder={index === 1} preload={index === 0} />,
+    content: <HeroPreview project={project} preload={index === 0} />,
   }));
   return (
     <ScrollHero slides={slides}>
