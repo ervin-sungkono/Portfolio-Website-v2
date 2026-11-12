@@ -1,0 +1,36 @@
+/* A steady text frame keeps the conversation from jumping as words appear. */
+.pixel-dialog .npc-conversation .dialogue-bubble {
+  padding: 15px 17px 17px;
+  background: linear-gradient(135deg, #fffdf2, #fbf1d9);
+  border-color: #bd986b;
+  box-shadow: 3px 3px 0 #e5cfaa, inset 4px 0 0 #e4bf7a;
+}
+.dialogue-chapter {
+  display: block;
+  margin-bottom: 8px;
+  color: #987345;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .11em;
+}
+.dialogue-stack { display: grid; }
+.dialogue-stack > p { grid-area: 1 / 1; }
+.pixel-dialog .npc-conversation .dialogue-measure,
+.pixel-dialog .npc-conversation .dialogue-text {
+  min-height: 3.3em;
+  margin: 0;
+  color: #354e3f;
+  font: 400 15px/1.65 'DM Sans', system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+.dialogue-measure { visibility: hidden; }
+.pixel-dialog .npc-conversation .dialogue-caret { padding-left: 3px; color: #d58855; }
+.npc-conversation .dialogue-options button:focus-visible,
+.npc-conversation .skip-dialogue:focus-visible { outline: 3px solid #c47b42; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .npc-conversation .dialogue-bubble { animation: conversation-arrive 180ms ease-out both; }
+  .npc-conversation .dialogue-options { animation: conversation-choices 200ms ease-out both; }
+  @keyframes conversation-arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes conversation-choices { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+}

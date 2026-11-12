@@ -1,0 +1,17 @@
+.town-minimap{position:absolute;z-index:3;top:calc(max(18px,env(safe-area-inset-top)) + 52px);right:max(20px,env(safe-area-inset-right));display:grid;justify-items:end;gap:5px}
+.minimap-toggle{min-height:38px;padding:7px 10px;border:1px solid #fff8e7;border-radius:4px;background:#fffaf0ed;color:#365849;font-size:11px;font-weight:700;box-shadow:0 3px 14px #23452b30;touch-action:manipulation}
+.minimap-toggle span{color:#ba8745;font-size:15px}
+.minimap-card{width:170px;padding:8px;background:#fff9e9f5;border:2px solid #aa8960;box-shadow:3px 3px 0 #2a4e3c80}
+.minimap-heading{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;color:#42644e;font-size:8px;font-weight:700;letter-spacing:.08em}
+.minimap-heading span{color:#a4723f}
+.minimap-art{position:relative;overflow:hidden;aspect-ratio:3/2;border:1px solid #c8b48c;background:#a6c58c}
+.minimap-art img,.minimap-art svg{position:absolute;inset:0;display:block;width:100%;height:100%}
+.minimap-legend{display:flex;gap:10px;margin-top:5px;color:#5a6b55;font-size:9px;font-weight:700}
+.minimap-legend span{display:flex;align-items:center;gap:4px}.minimap-legend i{width:7px;height:7px;border-radius:50%;background:#2c6656}.minimap-legend span+span i{background:#e4a748}
+.minimap-selection{margin:5px 0 0;color:#365849;font-size:10px;line-height:1.3}.minimap-places{margin-top:5px;color:#45614d;font-size:10px}.minimap-places summary{cursor:pointer;font-weight:700}.minimap-places ul{max-height:132px;overflow-y:auto;margin:5px 0 0;padding:0;list-style:none;touch-action:pan-y}.minimap-places li{margin:0}.minimap-places button{width:100%;min-height:44px;padding:5px 6px;text-align:left;background:transparent;border:0;border-bottom:1px solid #d7c9ac;color:#365849;font-size:11px}.minimap-places button[aria-pressed="true"]{background:#e1ecd9;box-shadow:inset 3px 0 #347c68}.minimap-places button span{color:#866d4c}.minimap-places button small{display:block;margin-top:2px;color:#5b6c55;font-size:10px;line-height:1.2}
+@media(max-width:650px){.town-minimap{top:calc(max(18px,env(safe-area-inset-top)) + 45px);right:max(10px,env(safe-area-inset-right))}.minimap-card{width:148px}.minimap-toggle{min-height:40px}}
+.minimap-scroll-hint{margin:4px 0 0;color:#5b6c55;font-size:10px;line-height:1.3}
+.minimap-places ul{scrollbar-width:thin;scrollbar-color:#a8895c #eee4cf}
+@media(max-width:650px) and (min-height:501px){.minimap-card:has(.minimap-places[open]){width:min(236px,calc(100vw - 20px));max-height:max(110px,calc(100dvh - 320px));overflow-y:auto;touch-action:pan-y}.minimap-card:has(.minimap-places[open]) .minimap-art{max-width:130px}.minimap-places ul{max-height:clamp(70px,calc(100dvh - 630px),132px)}}
+@media(max-width:900px){.town-minimap.has-guide{top:calc(max(18px,env(safe-area-inset-top)) + 112px)}}
+@media(max-height:500px) and (orientation:landscape){.minimap-card{width:120px}.town-minimap{gap:3px}.minimap-heading{margin-bottom:3px}.minimap-legend{margin-top:3px}}

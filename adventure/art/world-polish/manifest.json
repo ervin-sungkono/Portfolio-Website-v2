@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "created": "2026-11-11",
+  "approvedStyleReference": "art/concepts/direction-a-selected.png",
+  "method": "imagegen concept sheets; LibreSprite 1.3 crop, nearest-neighbor resize, alpha cleanup and editable save",
+  "sourceSheets": [
+    {
+      "id": "garden",
+      "path": "art/world-polish/sources/garden-generated.png",
+      "sha256": "11d2204570b625473cac9179d13d092c091898283ef4c630b37c97b5cf63713a",
+      "method": "image_gen imagegen; referenced approved Direction A"
+    },
+    {
+      "id": "plaza",
+      "path": "art/world-polish/sources/plaza-generated.png",
+      "sha256": "b8bdf3716eb6ba918a4a4e8301fee8ffe60d93e59b26eb514b2cfcf67d102783",
+      "method": "image_gen imagegen; referenced approved Direction A"
+    }
+  ],
+  "assets": [
+    {
+      "id": "flowerbed",
+      "status": "draft",
+      "png": "art/world-polish/outputs/flowerbed.png",
+      "sha256": "f3c1f959805d84bc6283ee22c54c18b2d548f85223c8c733e5f0c9b5dba71d4e",
+      "editableSource": "art/world-polish/sources/flowerbed.aseprite",
+      "editableSha256": "76c5f477c5cf4b12a21a8ca72a1c7b5dc90ca0dd7ca3fa2322db618a5d7b1541",
+      "dimensions": [
+        107,
+        128
+      ],
+      "visualBounds": [
+        7,
+        33,
+        101,
+        109
+      ],
+      "suggestedBaseAnchor": [
+        54,
+        109
+      ],
+      "sourceSheet": "garden",
+      "crop": [
+        20,
+        0,
+        610,
+        724
+      ]
+    },
+    {
+      "id": "lantern",
+      "status": "draft",
+      "png": "art/world-polish/outputs/lantern.png",
+      "sha256": "f0238ed68032b9fadc6357b60e02700c92967ac169b67991a5c6b3801e39e1d2",
+      "editableSource": "art/world-polish/sources/lantern.aseprite",
+      "editableSha256": "8414156afb42e8b628a3aa4361caa5b48cd8cef3e6c0cc5243d4fc33b211aa4d",
+      "dimensions": [
+        65,
+        128
+      ],
+      "visualBounds": [
+        11,
+        5,
+        58,
+        111
+      ],
+      "suggestedBaseAnchor": [
+        27,
+        111
+      ],
+      "sourceSheet": "garden",
+      "crop": [
+        650,
+        0,
+        370,
+        724
+      ]
+    },
+    {
+      "id": "flower-bush",
+      "status": "draft",
+      "png": "art/world-polish/outputs/flower-bush.png",
+      "sha256": "21cb77f36886e1c5f4250c7d640fde9f7faa363a73a4ac28007835561a9a8491",
+      "editableSource": "art/world-polish/sources/flower-bush.aseprite",
+      "editableSha256": "ac7873e165c04d9bd577510201d805de71a8b2319bfa1d7a3b222e5dd3d0719e",
+      "dimensions": [
+        97,
+        128
+      ],
+      "visualBounds": [
+        6,
+        53,
+        92,
+        110
+      ],
+      "suggestedBaseAnchor": [
+        48,
+        110
+      ],
+      "sourceSheet": "garden",
+      "crop": [
+        1050,
+        0,
+        550,
+        724
+      ]
+    },
+    {
+      "id": "mossy-rocks",
+      "status": "draft",
+      "png": "art/world-polish/outputs/mossy-rocks.png",
+      "sha256": "fbf6cf42cce1a067b5a872ffa13294b4022a81dd866ab667e1bb29c0e988cbd1",
+      "editableSource": "art/world-polish/sources/mossy-rocks.aseprite",
+      "editableSha256": "4c75e7eb97f96ee76fdf5b97b25e8506ace9163cd53279bcd176c089a7b91f85",
+      "dimensions": [
+        96,
+        128
+      ],
+      "visualBounds": [
+        7,
+        52,
+        91,
+        108
+      ],
+      "suggestedBaseAnchor": [
+        36,
+        108
+      ],
+      "sourceSheet": "garden",
+      "crop": [
+        1625,
+        0,
+        547,
+        724
+      ]
+    },
+    {
+      "id": "fountain",
+      "status": "draft",
+      "png": "art/world-polish/outputs/fountain.png",
+      "sha256": "92d37233ee60340d5d793d454a24357e066655646cc2dbb6aeed3f8e2e31cedb",
+      "editableSource": "art/world-polish/sources/fountain.aseprite",
+      "editableSha256": "dca570ee2ed44502dbb445f2b1224ce5d5e542d3399d6acaeb135b7f83caa16c",
+      "dimensions": [
+        93,
+        128
+      ],
+      "visualBounds": [
+        7,
+        37,
+        88,
+        113
+      ],
+      "suggestedBaseAnchor": [
+        47,
+        113
+      ],
+      "sourceSheet": "plaza",
+      "crop": [
+        50,
+        0,
+        530,
+        724
+      ]
+    },
+    {
+      "id": "mailbox",
+      "status": "draft",
+      "png": "art/world-polish/outputs/mailbox.png",
+      "sha256": "2858fffb0a18084bac77a297b6dc75ab7a2f1457e84747151cd83ad0cffd87c0",
+      "editableSource": "art/world-polish/sources/mailbox.aseprite",
+      "editableSha256": "02f7e1d43128962fd573b4d4a63c94e69945079427a9fd62737314fb7daeea87",
+      "dimensions": [
+        60,
+        128
+      ],
+      "visualBounds": [
+        9,
+        26,
+        53,
+        111
+      ],
+      "suggestedBaseAnchor": [
+        30,
+        111
+      ],
+      "sourceSheet": "plaza",
+      "crop": [
+        650,
+        0,
+        340,
+        724
+      ]
+    },
+    {
+      "id": "bunting",
+      "status": "draft",
+      "png": "art/world-polish/outputs/bunting.png",
+      "sha256": "2f2445772686705a40c5157e58c919bce0cec12e5c95da37c304c17db7d626ea",
+      "editableSource": "art/world-polish/sources/bunting.aseprite",
+      "editableSha256": "7c41a5f48daf1f0cd4b96fa818feeb7684c5a9a60509ba07b1ae009747fefa00",
+      "dimensions": [
+        83,
+        128
+      ],
+      "visualBounds": [
+        8,
+        20,
+        76,
+        111
+      ],
+      "suggestedBaseAnchor": [
+        41,
+        111
+      ],
+      "sourceSheet": "plaza",
+      "crop": [
+        1125,
+        0,
+        475,
+        724
+      ]
+    },
+    {
+      "id": "planter-crates",
+      "status": "draft",
+      "png": "art/world-polish/outputs/planter-crates.png",
+      "sha256": "02b0ef5db96dee777bcf653e5aff098a695f93f17967a007cdcdc3e5ef0085cd",
+      "editableSource": "art/world-polish/sources/planter-crates.aseprite",
+      "editableSha256": "42a04b04e9b3b060889ad735241d7bd75986d8ab9811aa449202da64b7a04cec",
+      "dimensions": [
+        84,
+        128
+      ],
+      "visualBounds": [
+        8,
+        22,
+        78,
+        110
+      ],
+      "suggestedBaseAnchor": [
+        42,
+        110
+      ],
+      "sourceSheet": "plaza",
+      "crop": [
+        1650,
+        0,
+        480,
+        724
+      ]
+    }
+  ],
+  "limitations": [
+    "Single-layer editable sources; no authored animation.",
+    "Anchors are suggested from artwork bounds and require in-world scale, placement and occlusion review.",
+    "Assets are visual drafts and do not imply game content or action functionality."
+  ]
+}

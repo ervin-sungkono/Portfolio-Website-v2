@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "project": "portfolio-adventure",
+  "stage": "character-and-scene-proof",
+  "technicalTargets": {
+    "tileWidth": 32,
+    "tileHeight": 32,
+    "characterFrameWidth": 48,
+    "characterFrameHeight": 64,
+    "targetsAreProvisional": true
+  },
+  "concepts": [
+    {
+      "id": "direction-a",
+      "label": "Sunny workshop",
+      "path": "art/concepts/direction-a.png",
+      "sha256": "a911d89384d9ecc879302e54c9d771ff4d41e3e45f57a9804882ca3809fbd938",
+      "status": "review",
+      "provenance": {"method": "image_gen imagegen", "created": "2026-11-11", "role": "concept reference"}
+    },
+    {
+      "id": "direction-b",
+      "label": "Harbor garden",
+      "path": "art/concepts/direction-b.png",
+      "sha256": "cb3bb86b2d806a6fe77ea22708ccd7aa2d7102b26842b57d352db330c67df41b",
+      "status": "review",
+      "provenance": {"method": "image_gen imagegen", "created": "2026-11-11", "role": "concept reference"}
+    },
+    {
+      "id": "direction-a-selected",
+      "label": "Sunny workshop — approved chibi direction",
+      "path": "art/concepts/direction-a-selected.png",
+      "sha256": "429da277b53b0291580d460bae6aa482191bb82a419e164d31df9705d783f85b",
+      "status": "approved",
+      "provenance": {"method": "image_gen imagegen, edited from direction-a", "created": "2026-11-11", "role": "user-selected concept reference"}
+    },
+    {
+      "id": "direction-a-topdown-chibi",
+      "label": "Sunny workshop — top-down chibi revision",
+      "path": "art/concepts/direction-a-topdown-chibi.png",
+      "sha256": "f167ce692a8299bec7b438d7f2e0d414262aec57eb21eee283d62d34811ea958",
+      "status": "review",
+      "provenance": {"method": "image_gen imagegen, edited from direction-a", "created": "2026-11-11", "role": "concept reference"}
+    },
+    {
+      "id": "explorers-four-directions-proof",
+      "label": "Explorers — four-direction art proof",
+      "path": "art/proofs/explorers-four-directions.png",
+      "sha256": "2735bf8056c0535c2b93ebd47ed40a9543f1b32537dbc5c773398d1525878c0c",
+      "status": "review",
+      "provenance": {"method": "image_gen imagegen, based on direction-a-selected", "created": "2026-11-11", "role": "character proof; not a sprite atlas"}
+    },
+    {
+      "id": "town-scene-proof",
+      "label": "Town scene art proof",
+      "path": "art/proofs/town-scene.png",
+      "sha256": "a3d40185afe809a6ba8570a404b77a39b53f67353c52c4f7af70b2a52a34b89f",
+      "status": "review",
+      "provenance": {"method": "image_gen imagegen, based on direction-a-selected", "created": "2026-11-11", "role": "environment proof; not a tilemap"}
+    },
+    {
+      "id": "walk-blink-study",
+      "label": "Explorer blink keyframe study",
+      "path": "art/proofs/walk-blink-study.png",
+      "sha256": "62c3cf72abfb8639fca50cfc23005be9a2bbea0bed08392a262294bcdc90ff72",
+      "status": "review",
+      "provenance": {"method": "image_gen imagegen, edit of walk-pose-proof", "created": "2026-11-11", "role": "blink pose study; not a production sprite"}
+    },
+    {
+      "id": "walk-pose-proof",
+      "label": "Explorer walk poses",
+      "path": "art/proofs/walk-pose-study.png",
+      "sha256": "d0bc0f1afc5f251524531b81e7852ebd35bdeecedbf86d57b3477840797ae421",
+      "status": "review",
+      "provenance": {"method": "image_gen imagegen, based on selected direction and character proof", "created": "2026-11-11", "role": "unregistered pose study; not animation"}
+    }
+  ],
+  "reviewPreviews": [
+    {
+      "id": "walk-blink-preview",
+      "path": "art/proofs/walk-blink-preview.gif",
+      "sha256": "72cb7445404d0d06aa4bc81ed0853b7985fe43060d89f9f687019a487a053ae3",
+      "status": "review",
+      "provenance": {"method": "LibreSprite crops and FFmpeg composition from walk and blink studies", "created": "2026-11-11", "role": "four-second facial animation study, not a production sprite"}
+    },
+    {
+      "id": "walk-preview",
+      "path": "art/proofs/walk-preview.gif",
+      "sha256": "fe5b7164ebc70f7367879f652691dceb4b21c4e877417dbb0ebf75edab3bba4e",
+      "status": "review",
+      "provenance": {"method": "LibreSprite crops and FFmpeg preview from walk-pose-proof", "created": "2026-11-11", "role": "unregistered animated study, not a production sprite"}
+    }
+  ],
+  "assets": [
+    {"id": "explorer-male", "kind": "character", "status": "pending", "source": null, "image": null, "animation": null},
+    {"id": "explorer-female", "kind": "character", "status": "pending", "source": null, "image": null, "animation": null},
+    {"id": "town-tiles", "kind": "tiles", "status": "pending", "source": null, "image": null},
+    {"id": "npc-background", "kind": "npc", "status": "pending", "source": null, "image": null},
+    {"id": "npc-skills", "kind": "npc", "status": "pending", "source": null, "image": null},
+    {"id": "world-props", "kind": "props", "status": "pending", "source": null, "image": null}
+  ]
+}

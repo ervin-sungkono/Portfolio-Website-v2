@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light"><meta name="robots" content="noindex">
+  <title>Town Atelier · Ervin’s Little World</title>
+  <link rel="stylesheet" href="./review.css"><script type="module" src="./review.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the art review</a>
+  <header class="masthead"><a class="brand" href="/">✦ <span>ERVIN’S LITTLE WORLD</span></a><a class="back" href="/">← Back to the town</a></header>
+  <main id="main">
+    <section class="intro">
+      <div><p class="eyebrow">TOWN ATELIER / APPROVED PACK</p><h1>A town with<br>more <em>character.</em></h1><p class="lead">Warmer stone, greener courtyards, and places that feel connected. The owner-approved environment is now part of the gameplay map.</p><p class="status"><span></span> Integrated · Offline composition reviewed · Browser/device QA not run</p></div>
+      <figure class="reference"><img src="./assets/reference.webp" width="1200" height="675" alt="Approved reference: a lush waterside pixel town with a fountain plaza, photo garden, cafe, arcade and stone riverbank." fetchpriority="high"><figcaption>THE APPROVED REFERENCE <span>Our visual target</span></figcaption></figure>
+    </section>
+    <nav class="section-nav" aria-label="Art review sections"><a href="#motion">01 / Motion</a><a href="#ground">02 / Ground & depth</a><a href="#places">03 / Places</a><a href="#layout">04 / Layout reference</a><a href="#experience">05 / App review</a></nav>
+
+    <section id="motion" class="section">
+      <div class="section-heading"><div><p class="eyebrow">01 / WATCH THE LITTLE DETAILS</p><h2>Made to move.</h2></div><p>Pause, step through a loop, and compare the approved frames at their intended size. The gallery remains a reference; the integrated town uses the exported runtime cels.</p></div>
+      <div class="motion-controls"><button id="play" type="button" aria-pressed="true">Pause animations</button><label>Speed <input id="speed" type="range" min="2" max="6" value="4" step="1"><output id="speed-value" for="speed">4 frames/s</output></label><label>Preview size <select id="zoom"><option value="1">1× native</option><option value="2">2× pixels</option><option value="3">3× pixels</option></select></label></div>
+      <p id="load-status" class="fine" role="status">Loading animation studies…</p>
+      <div id="animations" class="animation-grid"></div>
+      <p class="fine scale-note"><img src="/game/drafts/male-down.png" width="53" height="70" alt="" aria-hidden="true"> For scale: the current explorer is about 70 pixels tall. Zoom changes the preview only.</p>
+    </section>
+
+    <section id="ground" class="section">
+      <div class="section-heading"><div><p class="eyebrow">02 / THE TOWN’S FOUNDATION</p><h2>Quiet ground.<br>Clear height.</h2></div><p>Four surface families replace a single repeated lawn and pavement. Each sample below repeats a 128-pixel patch, so seams are visible for review.</p></div>
+      <div class="terrain-grid">
+        <figure><div class="terrain grass" role="img" aria-label="Repeated olive grass texture"></div><figcaption>01 / Garden grass <span>Less fine noise</span></figcaption></figure>
+        <figure><div class="terrain plaza" role="img" aria-label="Repeated coral sandstone paving"></div><figcaption>02 / Plaza sandstone <span>Warm, worn coral</span></figcaption></figure>
+        <figure><div class="terrain garden-path" role="img" aria-label="Repeated rounded garden stepping stones"></div><figcaption>03 / Garden stones <span>Soft, irregular edges</span></figcaption></figure>
+        <figure><div class="terrain promenade" role="img" aria-label="Repeated cream promenade bricks"></div><figcaption>04 / Promenade brick <span>A lighter riverside</span></figcaption></figure>
+      </div>
+      <div class="depth-grid">
+        <figure><div class="checker"><img src="./assets/raised-wall.png" width="256" height="128" alt="Raised planter wall with a thick top cap and shaded vertical stone face."></div><figcaption>Raised garden wall <span>Cap + face + shadow</span></figcaption></figure>
+        <figure><div class="checker"><img src="./assets/stairs.png" width="128" height="144" alt="Stone stairway with separate treads and shaded risers."></div><figcaption>Terrace stairs <span>Readable individual steps</span></figcaption></figure>
+        <figure><div class="checker"><img src="./assets/garden-corner.png" width="176" height="144" alt="Rounded, flower-filled raised stone garden corner."></div><figcaption>Planted corners <span>Curves with visible depth</span></figcaption></figure>
+      </div>
+      <p class="note">The approved construction pieces are integrated as end caps, corner joins, terrain transitions, collision shapes, and foreground layers in the gameplay map.</p>
+      <div class="depth-grid">
+        <figure><div class="checker"><img src="./assets/willow.png" width="160" height="192" alt="A slender willow with draping leaves and a curved trunk."></div><figcaption>A waterside willow <span>A different silhouette by the stream</span></figcaption></figure>
+        <figure><div class="checker"><img src="./assets/blossom-tree.png" width="176" height="176" alt="A rounded garden tree with pink and cream blossoms."></div><figcaption>A flowering garden tree <span>Color for the photo courtyard</span></figcaption></figure>
+        <figure><div class="checker"><img src="./assets/waterside-planting.png" width="192" height="144" alt="A group of ornamental grasses, flowers and mossy stones."></div><figcaption>Low waterside planting <span>Variety without hiding the path</span></figcaption></figure>
+      </div>
+    </section>
+
+    <section id="places" class="section">
+      <div class="section-heading"><div><p class="eyebrow">03 / COMPOSED PLACES</p><h2>Connected garden<br>neighborhoods.</h2></div><p>Grouped scenes keep paths, planting, furniture, and buildings in the same visual language. The paintings use sample landscapes for this composition review.</p></div>
+      <figure class="garden-study"><div class="checker scene"><img src="./assets/photo-garden.png" width="768" height="576" alt="A structured photo garden with three easels around a planting island, benches, a floral arch, raised stone borders and a side entrance with steps."></div><figcaption>THE PHOTO COURTYARD <span>Beside the starting plaza · Pictures stay easy to discover</span></figcaption></figure>
+      <div class="place-grid">
+        <figure><div class="checker scene"><img src="./assets/cafe-patio.png" width="448" height="416" alt="A cafe patio with tables, a parasol, lanterns, planting and a stone stair entrance."></div><figcaption>A café terrace <span>Social seating, a clear entrance</span></figcaption></figure>
+        <figure><div class="checker scene"><img src="./assets/arcade-nook.png" width="448" height="416" alt="Two arcade cabinets sheltered by a flowered canopy inside a curved stone and garden border."></div><figcaption>The arcade nook <span>One destination, two games</span></figcaption></figure>
+      </div>
+      <p class="note">The streets meet the courtyard entrances directly. Raised beds and curved walls block movement; the stairs and garden arch stay open. Browser/device movement has not been tested. Your real photos remain original quality when opened.</p>
+    </section>
+
+    <section id="layout" class="section">
+      <div class="section-heading"><div><p class="eyebrow">04 / LAYOUT REFERENCE</p><h2>The same town,<br>better connected.</h2></div><p>The gameplay map now follows this neighborhood order, with its own final placements and connected paths.</p></div>
+      <div class="layout-card">
+        <svg viewBox="0 0 1000 650" role="img" aria-labelledby="map-title map-description"><title id="map-title">Approved town organization</title><desc id="map-description">Workshop and cafe north; fountain plaza in the center; photo garden immediately east; arcade southwest; a riverside promenade and central bridge south. This diagram shows the approved direction; runtime placements differ in detail.</desc>
+          <defs><pattern id="water-pattern" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#5db7b2"/><path d="M1 6h5" stroke="#a7e5d7" stroke-width="1"/></pattern></defs>
+          <rect width="1000" height="650" rx="20" fill="#dce7b9"/>
+          <g fill="none" stroke="#f4c79e" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"><path d="M190 195Q350 175 490 240Q635 175 820 195"/><path d="M490 250L490 550"/><path d="M490 330Q340 350 250 420Q180 480 250 505H835"/><path d="M490 360Q610 410 720 400Q820 400 835 505"/></g>
+          <g fill="#a8c68f" stroke="#7a9e70" stroke-width="2"><path d="M135 250Q260 230 340 285L300 330Q220 345 140 340Z"/><path d="M345 405Q405 425 410 465L350 475Z"/><path d="M600 125Q640 65 705 90L710 135Z"/><path d="M780 435Q865 410 895 455L870 475Z"/></g>
+          <rect x="150" y="90" width="180" height="100" rx="12" fill="#397e73"/><rect x="660" y="90" width="180" height="100" rx="12" fill="#be7759"/>
+          <circle cx="490" cy="290" r="94" fill="#f8dbb6" stroke="#c29472" stroke-width="3"/><circle cx="490" cy="290" r="57" fill="#d7b38d"/><circle cx="490" cy="285" r="35" fill="#51a9aa" stroke="#fff0d1" stroke-width="10"/>
+          <rect x="605" y="250" width="260" height="170" rx="55" fill="#aaca84" stroke="#ad8c6a" stroke-width="9"/><path d="M620 350Q715 275 835 350" stroke="#f6d6b1" stroke-width="30" fill="none"/>
+          <g fill="#c99452" stroke="#fff8df" stroke-width="5"><rect x="635" y="342" width="40" height="30"/><rect x="718" y="292" width="40" height="30"/><rect x="797" y="342" width="40" height="30"/></g>
+          <rect x="125" y="365" width="180" height="108" rx="25" fill="#d49364" stroke="#b58460" stroke-width="5"/>
+          <rect y="550" width="1000" height="72" fill="url(#water-pattern)"/><path d="M0 550h440m100 0h460" stroke="#a07769" stroke-width="15"/><rect x="450" y="532" width="80" height="108" rx="12" fill="#c88f51" stroke="#8a634a" stroke-width="6"/><path d="M370 550v40" stroke="#dafcff" stroke-width="15"/>
+          <g font-family="system-ui,sans-serif" font-weight="700" text-anchor="middle" font-size="16" fill="#294e40"><text x="240" y="130" fill="#fff6df">WORKSHOP</text><text x="750" y="130" fill="#fff6df">CAFÉ + PATIO</text><text x="490" y="415">STARTING PLAZA</text><text x="735" y="393">PHOTO COURTYARD</text><text x="215" y="425">ARCADE</text><text x="745" y="528">RIVERSIDE WALK</text></g>
+          <circle cx="490" cy="370" r="8" fill="#cc734e" stroke="white" stroke-width="3"/><path d="M520 370h78" stroke="#cc734e" stroke-width="3" stroke-dasharray="5 5"/>
+        </svg>
+        <div class="layout-caption"><strong>Approved layout reference</strong><span>Runtime placements are tuned for the playable map.</span></div>
+      </div>
+      <div class="principles"><p><strong>Landmarks first.</strong> The fountain and gallery entrance read together from the start. All three photo previews fit within the initial desktop view. The phone crop shows the fountain edge, the clear passage and the garden entrance.</p><p><strong>Greenery frames the route.</strong> Continuous planting beds and rounded corners replace isolated decorations in large lawns.</p><p><strong>Height has a purpose.</strong> Stairs connect raised gardens and the promenade; the waterfall drops from the same stone level.</p></div>
+    </section>
+
+    <section id="experience" class="section">
+      <div class="section-heading"><div><p class="eyebrow">05 / THE EXPERIENCE REVIEW</p><h2>More reasons<br>to linger.</h2></div><p>Six Luna reviewers covered the code and current experience. These future ideas are separate from the approved environment integration.</p></div>
+      <div class="review-grid">
+        <article><span class="number">01</span><h3>Personal moments</h3><p>Add short captions and stories to the existing gallery and café. The park stays directly accessible; photos never require a game or a scavenger hunt.</p><small>Uses existing content slots · Real content comes from you</small></article>
+        <article><span class="number">02</span><h3>Optional town requests</h3><p>Extend Milo’s stamp trail with a short visit to the arcade or café. A small routine gives visitors a destination without turning the town into a checklist.</p><small>Build on the current trail · Keep free exploration</small></article>
+        <article><span class="number">03</span><h3>A calmer conversation flow</h3><p>Keep readable fonts and the typewriter skip. Show a short story beat, then two or three clear question choices, with one consistent way back.</p><small>Proposed dialogue polish · Preserve keyboard navigation</small></article>
+        <article><span class="number">04</span><h3>A connected arcade</h3><p>Give Market Match a first-win achievement and a saved best attempt count. A later optional postcard puzzle could use your photos without gating the gallery.</p><small>Review scope before adding a new mode</small></article>
+      </div>
+      <div class="performance"><p class="eyebrow">PERFORMANCE / WHAT CHANGED NOW</p><h3>Less invisible work.</h3><ul><li>Invisible collision objects leave the rendering list while keeping their physics; the count follows the map.</li><li>Completed image preloads release their references and event handlers.</li><li>Resident circuits use authored waypoints and scene-managed tweens, with no pathfinding loop.</li><li>Four-frame cel sprites animate the approved fountain, tree, and waterfall art.</li><li>The release report separates the initial page from optional engine and gallery assets.</li></ul><p>The latest build measures 687 KiB raw / 206 KiB gzip for initial HTML and directly referenced CSS/JS; the full export is 17.35 MiB across 209 files. The optional Phaser chunk is 1.34 MiB raw / 356 KiB gzip. The 2.45 MiB lossless welcome image remains the largest visible download. The paused town remains in memory intentionally for fast re-entry.</p><p class="fine">The offline composition was reviewed against the approved reference. Browser/device rendering, movement, FPS, memory, and mobile controls have not been tested.</p></div>
+    </section>
+
+    <footer><p class="eyebrow">APPROVED ART / INTEGRATED ENVIRONMENT</p><h2>The approved town pack.</h2><p>This gallery preserves the approved assets and source reference. The gameplay map integration and offline composition check are complete; browser/device QA remains unverified. The layout diagram is illustrative, while runtime placement is tuned for play.</p><a class="button" href="/">Return to the current town ↗</a></footer>
+  </main>
+</body>
+</html>

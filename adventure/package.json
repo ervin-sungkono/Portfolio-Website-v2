@@ -1,0 +1,53 @@
+{
+  "name": "portfolio-adventure",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "export:map": "node scripts/export-town-map.mjs",
+    "build:town-art": "python3 scripts/build-town-runtime-art.py && python3 scripts/build-town-districts.py && node scripts/install-town-runtime-props.mjs",
+    "test:dialogue": "node tests/dialogue.test.mjs",
+    "test:arcade": "node tests/arcade.test.mjs",
+    "validate:world": "node scripts/validate-world.mjs",
+    "validate:art-review": "node scripts/validate-art-review.mjs && python3 art/town-redesign/verify.py",
+    "test:achievements": "node tests/achievements.test.mjs",
+    "measure:release": "node scripts/measure-release.mjs",
+    "test:audio": "node tests/audio.test.mjs",
+    "test:preload-adventure": "node tests/preload-adventure.test.mjs",
+    "postinstall": "node scripts/patch-phaser-visibility.mjs",
+    "predev": "node scripts/patch-phaser-visibility.mjs",
+    "prebuild": "node scripts/patch-phaser-visibility.mjs",
+    "test:phaser": "node scripts/patch-phaser-visibility.mjs && node tests/phaser-visibility.test.mjs",
+    "test:sheets": "node tests/sheets.test.mjs",
+    "test:overlay-pause": "node tests/overlay-pause.test.mjs",
+    "test:collisions": "node tests/world-collisions.test.mjs",
+    "test:collision-overrides": "node tests/collision-overrides.test.mjs",
+    "test:terrain": "node tests/terrain-model.test.mjs",
+    "test:movement": "node tests/movement.test.mjs",
+    "test:world-motion": "node tests/world-motion.test.mjs",
+    "test:minimap": "node tests/minimap.test.mjs && node tests/minimap-selection.test.mjs",
+    "test:avatar": "node tests/avatar-selection.test.mjs",
+    "test:moments": "node tests/moments.test.mjs",
+    "test:market-match": "node tests/market-match.test.mjs",
+    "test:cafe": "node tests/cafe.test.mjs",
+    "test:stamp-trail": "node tests/stamp-trail.test.mjs",
+    "test:residents": "node tests/residents.test.mjs && node tests/resident-physics.test.mjs && node tests/resident-routes.test.mjs",
+    "test:world-layering": "node tests/world-layering.test.mjs",
+    "test:pixel-photos": "node tests/pixel-photo-preview.test.mjs",
+    "test:group-collisions": "node tests/group-collisions.test.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.6",
+    "phaser": "4.2.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  }
+}

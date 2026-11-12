@@ -1,0 +1,138 @@
+{
+  "width": 2176,
+  "height": 1536,
+  "spawn": {
+    "x": 1196,
+    "y": 888
+  },
+  "interactionRadius": 92,
+  "interactions": [
+    {
+      "kind": "collection",
+      "id": "creations",
+      "label": "Things I’ve made",
+      "displayName": "The Curiosity Cabinet",
+      "role": "CREATIONS",
+      "x": 780,
+      "y": 350,
+      "color": 16166473,
+      "icon": "✦",
+      "prop": "terminal"
+    },
+    {
+      "kind": "npc",
+      "id": "background-guide",
+      "label": "A little about me",
+      "displayName": "Milo",
+      "role": "THE NAVIGATOR",
+      "x": 750,
+      "y": 740,
+      "color": 14123619,
+      "icon": "✦"
+    },
+    {
+      "kind": "npc",
+      "id": "skills-guide",
+      "label": "My skills",
+      "displayName": "Ivy",
+      "role": "THE MAKER",
+      "x": 600,
+      "y": 340,
+      "color": 4954513,
+      "icon": "✦"
+    },
+    {
+      "kind": "contact",
+      "id": "contact-board",
+      "label": "Contact board",
+      "displayName": "Post & Pals",
+      "role": "SAY HELLO",
+      "x": 720,
+      "y": 1080,
+      "color": 16039009,
+      "icon": "✉",
+      "prop": "mailbox"
+    },
+    {
+      "kind": "arcade",
+      "id": "garden-arcade",
+      "label": "Play Garden Glide",
+      "displayName": "Garden Glide",
+      "role": "THE ARCADE",
+      "x": 376,
+      "y": 868.75,
+      "color": 15971679,
+      "icon": "✦",
+      "prop": "arcade",
+      "districtPart": "arcade-nook/garden-glide"
+    },
+    {
+      "kind": "match",
+      "id": "market-match",
+      "label": "Play Market Match",
+      "displayName": "Market Match",
+      "role": "THE ARCADE",
+      "x": 454.75,
+      "y": 868.75,
+      "color": 15971679,
+      "icon": "✦",
+      "prop": "arcade",
+      "districtPart": "arcade-nook/market-match"
+    },
+    {
+      "kind": "cafe",
+      "id": "cafe-corner",
+      "label": "Café conversations",
+      "displayName": "The Café Corner",
+      "role": "COME SAY HELLO",
+      "x": 1738.5,
+      "y": 284,
+      "color": 16039009,
+      "icon": "✦",
+      "prop": "sign",
+      "districtPart": "cafe-patio/table-west"
+    },
+    {
+      "kind": "moments",
+      "id": "moments-frame-1",
+      "label": "Park gallery: first frame",
+      "displayName": "Park Gallery",
+      "role": "FIRST FRAME",
+      "photoIndex": 0,
+      "x": 1463,
+      "y": 745.75,
+      "color": 16039009,
+      "icon": "✦",
+      "prop": "painting-frame",
+      "districtPart": "photo-garden/easel-2"
+    },
+    {
+      "kind": "moments",
+      "id": "moments-frame-2",
+      "label": "Park gallery: second frame",
+      "displayName": "Park Gallery",
+      "role": "SECOND FRAME",
+      "photoIndex": 1,
+      "x": 1551.5,
+      "y": 657.25,
+      "color": 16039009,
+      "icon": "✦",
+      "prop": "painting-frame",
+      "districtPart": "photo-garden/easel-1"
+    },
+    {
+      "kind": "moments",
+      "id": "moments-frame-3",
+      "label": "Park gallery: third frame",
+      "displayName": "Park Gallery",
+      "role": "THIRD FRAME",
+      "photoIndex": 2,
+      "x": 1637,
+      "y": 745.75,
+      "color": 16039009,
+      "icon": "✦",
+      "prop": "painting-frame",
+      "districtPart": "photo-garden/easel-3"
+    }
+  ]
+}

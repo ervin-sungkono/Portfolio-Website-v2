@@ -1,0 +1,1303 @@
+{
+  "schemaVersion": 1,
+  "coordinateSpace": "Native source pixels; group origin is the top-left. Part localAnchor is the crop's top-left in the group. Apply placementScale uniformly to anchors, dimensions, colliders, interaction points, and photo quads.",
+  "footColliderSemantics": "offsetX and offsetY are rectangle centers relative to the cropped part's top-left; width and height are world-pixel sizes before placementScale.",
+  "groups": {
+    "photo-garden": {
+      "nativeSize": {
+        "width": 768,
+        "height": 576
+      },
+      "placementScale": 0.75,
+      "suggestedWorldOrigin": {
+        "x": 1085,
+        "y": 430,
+        "status": "advisory; place the southwest stair beside the plaza and keep all three easels in the spawn view"
+      },
+      "base": {
+        "prop": "town-v2-photo-garden-base",
+        "url": "/game/town-v2/groups/photo-garden/base.png",
+        "width": 768,
+        "height": 576,
+        "originX": 0,
+        "originY": 0,
+        "scale": 1
+      },
+      "parts": [
+        {
+          "id": "photo-garden/arch",
+          "prop": "town-v2-photo-garden-arch",
+          "url": "/game/town-v2/groups/photo-garden/arch.png",
+          "width": 250,
+          "height": 230,
+          "localAnchor": {
+            "x": 424,
+            "y": 0
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 208,
+          "footcolliders": [
+            {
+              "offsetX": 57,
+              "offsetY": 207,
+              "width": 20,
+              "height": 14
+            },
+            {
+              "offsetX": 188,
+              "offsetY": 207,
+              "width": 20,
+              "height": 14
+            }
+          ]
+        },
+        {
+          "id": "photo-garden/bench-west",
+          "prop": "town-v2-photo-garden-bench-west",
+          "url": "/game/town-v2/groups/photo-garden/bench-west.png",
+          "width": 140,
+          "height": 102,
+          "localAnchor": {
+            "x": 136,
+            "y": 177
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 272,
+          "footcolliders": [
+            {
+              "offsetX": 70,
+              "offsetY": 88,
+              "width": 78,
+              "height": 14
+            }
+          ]
+        },
+        {
+          "id": "photo-garden/bench-east",
+          "prop": "town-v2-photo-garden-bench-east",
+          "url": "/game/town-v2/groups/photo-garden/bench-east.png",
+          "width": 171,
+          "height": 102,
+          "localAnchor": {
+            "x": 557,
+            "y": 177
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 272,
+          "footcolliders": [
+            {
+              "offsetX": 84,
+              "offsetY": 88,
+              "width": 78,
+              "height": 14
+            }
+          ]
+        },
+        {
+          "id": "photo-garden/easel-1",
+          "prop": "town-v2-photo-garden-easel-1",
+          "url": "/game/town-v2/groups/photo-garden/easel-1.png",
+          "width": 120,
+          "height": 137,
+          "localAnchor": {
+            "x": 350,
+            "y": 175
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 303,
+          "interactionId": "moments-frame-2",
+          "footcolliders": [
+            {
+              "offsetX": 60,
+              "offsetY": 128,
+              "width": 40,
+              "height": 14
+            }
+          ],
+          "photoQuad": [
+            {
+              "x": 25,
+              "y": 20
+            },
+            {
+              "x": 94,
+              "y": 20
+            },
+            {
+              "x": 94,
+              "y": 75
+            },
+            {
+              "x": 25,
+              "y": 75
+            }
+          ]
+        },
+        {
+          "id": "photo-garden/easel-2",
+          "prop": "town-v2-photo-garden-easel-2",
+          "url": "/game/town-v2/groups/photo-garden/easel-2.png",
+          "width": 130,
+          "height": 145,
+          "localAnchor": {
+            "x": 230,
+            "y": 285
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 421,
+          "interactionId": "moments-frame-1",
+          "footcolliders": [
+            {
+              "offsetX": 62,
+              "offsetY": 136,
+              "width": 40,
+              "height": 14
+            }
+          ],
+          "photoQuad": [
+            {
+              "x": 25,
+              "y": 23
+            },
+            {
+              "x": 95,
+              "y": 25
+            },
+            {
+              "x": 94,
+              "y": 81
+            },
+            {
+              "x": 26,
+              "y": 79
+            }
+          ]
+        },
+        {
+          "id": "photo-garden/easel-3",
+          "prop": "town-v2-photo-garden-easel-3",
+          "url": "/game/town-v2/groups/photo-garden/easel-3.png",
+          "width": 132,
+          "height": 145,
+          "localAnchor": {
+            "x": 462,
+            "y": 285
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 421,
+          "interactionId": "moments-frame-3",
+          "footcolliders": [
+            {
+              "offsetX": 62,
+              "offsetY": 136,
+              "width": 40,
+              "height": 14
+            }
+          ],
+          "photoQuad": [
+            {
+              "x": 26,
+              "y": 23
+            },
+            {
+              "x": 95,
+              "y": 25
+            },
+            {
+              "x": 93,
+              "y": 80
+            },
+            {
+              "x": 26,
+              "y": 78
+            }
+          ]
+        },
+        {
+          "id": "photo-garden/planter-front",
+          "prop": "town-v2-photo-garden-planter-front",
+          "url": "/game/town-v2/groups/photo-garden/planter-front.png",
+          "width": 242,
+          "height": 101,
+          "localAnchor": {
+            "x": 268,
+            "y": 316
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 415,
+          "footcolliders": []
+        },
+        {
+          "id": "photo-garden/south-stonefront",
+          "prop": "town-v2-photo-garden-south-stonefront",
+          "url": "/game/town-v2/groups/photo-garden/south-stonefront.png",
+          "width": 618,
+          "height": 86,
+          "localAnchor": {
+            "x": 150,
+            "y": 490
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 568,
+          "footcolliders": []
+        },
+        {
+          "id": "photo-garden/rear-bed-west",
+          "prop": "town-v2-photo-garden-rear-bed-west",
+          "url": "/game/town-v2/groups/photo-garden/rear-bed-west.png",
+          "width": 390,
+          "height": 105,
+          "localAnchor": {
+            "x": 80,
+            "y": 72
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 170,
+          "footcolliders": []
+        },
+        {
+          "id": "photo-garden/rear-bed-east",
+          "prop": "town-v2-photo-garden-rear-bed-east",
+          "url": "/game/town-v2/groups/photo-garden/rear-bed-east.png",
+          "width": 148,
+          "height": 110,
+          "localAnchor": {
+            "x": 620,
+            "y": 96
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 206,
+          "footcolliders": []
+        },
+        {
+          "id": "photo-garden/sidewall-west",
+          "prop": "town-v2-photo-garden-sidewall-west",
+          "url": "/game/town-v2/groups/photo-garden/sidewall-west.png",
+          "width": 65,
+          "height": 160,
+          "localAnchor": {
+            "x": 45,
+            "y": 165
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 323,
+          "footcolliders": []
+        },
+        {
+          "id": "photo-garden/sidewall-east",
+          "prop": "town-v2-photo-garden-sidewall-east",
+          "url": "/game/town-v2/groups/photo-garden/sidewall-east.png",
+          "width": 62,
+          "height": 330,
+          "localAnchor": {
+            "x": 706,
+            "y": 170
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 500,
+          "footcolliders": []
+        }
+      ],
+      "suggestedInteractions": [
+        {
+          "id": "moments-frame-1",
+          "partId": "photo-garden/easel-2",
+          "x": 292,
+          "y": 421,
+          "photoIndex": 0
+        },
+        {
+          "id": "moments-frame-2",
+          "partId": "photo-garden/easel-1",
+          "x": 410,
+          "y": 303,
+          "photoIndex": 1
+        },
+        {
+          "id": "moments-frame-3",
+          "partId": "photo-garden/easel-3",
+          "x": 524,
+          "y": 421,
+          "photoIndex": 2
+        }
+      ],
+      "walkEntrances": [
+        {
+          "id": "southwest-steps",
+          "x": 74,
+          "y": 436,
+          "width": 90,
+          "height": 118,
+          "approachFrom": "southwest",
+          "minClearWidth": 88,
+          "classification": "primary",
+          "worldClearWidth": 67.5
+        },
+        {
+          "id": "northeast-arch",
+          "x": 499,
+          "y": 112,
+          "width": 93,
+          "height": 97,
+          "approachFrom": "north",
+          "minClearWidth": 93,
+          "classification": "secondary",
+          "worldClearWidth": 69.75
+        }
+      ],
+      "boundaryColliders": [
+        {
+          "id": "photo-garden/west-outer-wall",
+          "offsetX": 106.0,
+          "offsetY": 239.0,
+          "width": 84,
+          "height": 138,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/north-bed-west",
+          "offsetX": 285.0,
+          "offsetY": 146.0,
+          "width": 330,
+          "height": 80,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/northwest-bed",
+          "offsetX": 124.0,
+          "offsetY": 160.0,
+          "width": 72,
+          "height": 64,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/arch-bed-west",
+          "offsetX": 458.0,
+          "offsetY": 146.0,
+          "width": 76,
+          "height": 68,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/arch-post-west",
+          "offsetX": 481.0,
+          "offsetY": 180.0,
+          "width": 30,
+          "height": 72,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/arch-post-east",
+          "offsetX": 609.0,
+          "offsetY": 180.0,
+          "width": 30,
+          "height": 72,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/north-bed-east",
+          "offsetX": 681.0,
+          "offsetY": 150.0,
+          "width": 118,
+          "height": 68,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/northeast-bed",
+          "offsetX": 742.0,
+          "offsetY": 228.0,
+          "width": 44,
+          "height": 136,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/east-outer-wall",
+          "offsetX": 746.0,
+          "offsetY": 369.0,
+          "width": 36,
+          "height": 166,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/east-bed-upper",
+          "offsetX": 726.0,
+          "offsetY": 362.0,
+          "width": 52,
+          "height": 152,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/east-bed-corner",
+          "offsetX": 712.0,
+          "offsetY": 454.0,
+          "width": 80,
+          "height": 64,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/east-bed-lower",
+          "offsetX": 672.0,
+          "offsetY": 494.0,
+          "width": 104,
+          "height": 56,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/southwest-bed",
+          "offsetX": 267.0,
+          "offsetY": 465.5,
+          "width": 166,
+          "height": 55,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/southwest-curb",
+          "offsetX": 265.0,
+          "offsetY": 519.0,
+          "width": 202,
+          "height": 70,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/southeast-bed",
+          "offsetX": 553.0,
+          "offsetY": 485.0,
+          "width": 226,
+          "height": 74,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/south-wall",
+          "offsetX": 440.0,
+          "offsetY": 540.0,
+          "width": 532,
+          "height": 44,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/south-wall-foot",
+          "offsetX": 438.5,
+          "offsetY": 563.0,
+          "width": 473,
+          "height": 26,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/southeast-wall",
+          "offsetX": 724.5,
+          "offsetY": 520.5,
+          "width": 41,
+          "height": 57,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/west-landing-back",
+          "offsetX": 83.0,
+          "offsetY": 328.0,
+          "width": 118,
+          "height": 20,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/west-landing-side",
+          "offsetX": 14.0,
+          "offsetY": 405.0,
+          "width": 28,
+          "height": 130,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/west-landing-corner",
+          "offsetX": 15.0,
+          "offsetY": 474.0,
+          "width": 30,
+          "height": 32,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/west-landing-lower",
+          "offsetX": 38.0,
+          "offsetY": 496.5,
+          "width": 28,
+          "height": 39,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/west-stair-rail",
+          "offsetX": 61.0,
+          "offsetY": 520.0,
+          "width": 26,
+          "height": 56,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/island-upper",
+          "offsetX": 399.5,
+          "offsetY": 322.0,
+          "width": 91,
+          "height": 16,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/island-middle",
+          "offsetX": 398.5,
+          "offsetY": 354.0,
+          "width": 145,
+          "height": 48,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "photo-garden/island-lower",
+          "offsetX": 400.0,
+          "offsetY": 391,
+          "width": 120,
+          "height": 26,
+          "visualSource": "base.png"
+        }
+      ]
+    },
+    "cafe-patio": {
+      "nativeSize": {
+        "width": 448,
+        "height": 416
+      },
+      "placementScale": 0.75,
+      "suggestedWorldOrigin": {
+        "x": 1648,
+        "y": 118,
+        "status": "advisory; place in the north neighborhood without overlapping the photo courtyard"
+      },
+      "base": {
+        "prop": "town-v2-cafe-patio-base",
+        "url": "/game/town-v2/groups/cafe-patio/base.png",
+        "width": 448,
+        "height": 416,
+        "originX": 0,
+        "originY": 0,
+        "scale": 1
+      },
+      "parts": [
+        {
+          "id": "cafe-patio/rear-planting",
+          "prop": "town-v2-cafe-patio-rear-planting",
+          "url": "/game/town-v2/groups/cafe-patio/rear-planting.png",
+          "width": 448,
+          "height": 130,
+          "localAnchor": {
+            "x": 0,
+            "y": 30
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 160,
+          "footcolliders": [
+            {
+              "offsetX": 224,
+              "offsetY": 123,
+              "width": 410,
+              "height": 14
+            }
+          ]
+        },
+        {
+          "id": "cafe-patio/umbrella",
+          "prop": "town-v2-cafe-patio-umbrella",
+          "url": "/game/town-v2/groups/cafe-patio/umbrella.png",
+          "width": 244,
+          "height": 199,
+          "localAnchor": {
+            "x": 102,
+            "y": 10
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 194,
+          "footcolliders": [
+            {
+              "offsetX": 122,
+              "offsetY": 179,
+              "width": 12,
+              "height": 12
+            }
+          ]
+        },
+        {
+          "id": "cafe-patio/table-west",
+          "prop": "town-v2-cafe-patio-table-west",
+          "url": "/game/town-v2/groups/cafe-patio/table-west.png",
+          "width": 135,
+          "height": 112,
+          "localAnchor": {
+            "x": 90,
+            "y": 140
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 242,
+          "interactionId": "cafe-corner",
+          "footcolliders": [
+            {
+              "offsetX": 68,
+              "offsetY": 86,
+              "width": 44,
+              "height": 14
+            },
+            {
+              "offsetX": 20,
+              "offsetY": 92,
+              "width": 24,
+              "height": 12
+            },
+            {
+              "offsetX": 107,
+              "offsetY": 92,
+              "width": 24,
+              "height": 12
+            }
+          ]
+        },
+        {
+          "id": "cafe-patio/table-east",
+          "prop": "town-v2-cafe-patio-table-east",
+          "url": "/game/town-v2/groups/cafe-patio/table-east.png",
+          "width": 135,
+          "height": 112,
+          "localAnchor": {
+            "x": 225,
+            "y": 140
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 242,
+          "footcolliders": [
+            {
+              "offsetX": 68,
+              "offsetY": 86,
+              "width": 44,
+              "height": 14
+            },
+            {
+              "offsetX": 20,
+              "offsetY": 92,
+              "width": 24,
+              "height": 12
+            },
+            {
+              "offsetX": 107,
+              "offsetY": 92,
+              "width": 24,
+              "height": 12
+            }
+          ]
+        },
+        {
+          "id": "cafe-patio/front-west",
+          "prop": "town-v2-cafe-patio-front-west",
+          "url": "/game/town-v2/groups/cafe-patio/front-west.png",
+          "width": 170,
+          "height": 141,
+          "localAnchor": {
+            "x": 0,
+            "y": 275
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 408,
+          "footcolliders": []
+        },
+        {
+          "id": "cafe-patio/front-east",
+          "prop": "town-v2-cafe-patio-front-east",
+          "url": "/game/town-v2/groups/cafe-patio/front-east.png",
+          "width": 170,
+          "height": 141,
+          "localAnchor": {
+            "x": 278,
+            "y": 275
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 408,
+          "footcolliders": []
+        },
+        {
+          "id": "cafe-patio/sidewall-west",
+          "prop": "town-v2-cafe-patio-sidewall-west",
+          "url": "/game/town-v2/groups/cafe-patio/sidewall-west.png",
+          "width": 48,
+          "height": 210,
+          "localAnchor": {
+            "x": 0,
+            "y": 120
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 330,
+          "footcolliders": []
+        },
+        {
+          "id": "cafe-patio/sidewall-east",
+          "prop": "town-v2-cafe-patio-sidewall-east",
+          "url": "/game/town-v2/groups/cafe-patio/sidewall-east.png",
+          "width": 48,
+          "height": 210,
+          "localAnchor": {
+            "x": 400,
+            "y": 120
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 330,
+          "footcolliders": []
+        }
+      ],
+      "suggestedInteractions": [
+        {
+          "id": "cafe-corner",
+          "partId": "cafe-patio/table-west",
+          "x": 158,
+          "y": 232
+        }
+      ],
+      "walkEntrances": [
+        {
+          "id": "south-stairs",
+          "x": 170,
+          "y": 314,
+          "width": 108,
+          "height": 92,
+          "approachFrom": "south",
+          "minClearWidth": 104,
+          "classification": "primary",
+          "worldClearWidth": 81
+        }
+      ],
+      "boundaryColliders": [
+        {
+          "id": "cafe-patio/rear-bed",
+          "offsetX": 224.0,
+          "offsetY": 111.0,
+          "width": 400,
+          "height": 94,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/west-sidewall",
+          "offsetX": 19.0,
+          "offsetY": 241.0,
+          "width": 22,
+          "height": 178,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/east-sidewall",
+          "offsetX": 429.0,
+          "offsetY": 241.0,
+          "width": 22,
+          "height": 178,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/west-pot",
+          "offsetX": 44.0,
+          "offsetY": 211.0,
+          "width": 64,
+          "height": 82,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/east-pot",
+          "offsetX": 404.0,
+          "offsetY": 211.0,
+          "width": 64,
+          "height": 82,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/southwest-bed",
+          "offsetX": 70.0,
+          "offsetY": 285.0,
+          "width": 100,
+          "height": 80,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/southwest-bed-lower",
+          "offsetX": 89.0,
+          "offsetY": 336.5,
+          "width": 114,
+          "height": 37,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/southwest-wall",
+          "offsetX": 104.0,
+          "offsetY": 366.0,
+          "width": 104,
+          "height": 40,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/west-curve",
+          "offsetX": 37.0,
+          "offsetY": 339.0,
+          "width": 34,
+          "height": 38,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/west-curve-lower",
+          "offsetX": 67.0,
+          "offsetY": 367.0,
+          "width": 50,
+          "height": 34,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/west-entry-pillar",
+          "offsetX": 149.0,
+          "offsetY": 356.0,
+          "width": 42,
+          "height": 100,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/southeast-bed",
+          "offsetX": 378.0,
+          "offsetY": 285.0,
+          "width": 100,
+          "height": 80,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/southeast-bed-lower",
+          "offsetX": 359.0,
+          "offsetY": 336.5,
+          "width": 114,
+          "height": 37,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/southeast-wall",
+          "offsetX": 344.0,
+          "offsetY": 366.0,
+          "width": 104,
+          "height": 40,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/east-curve",
+          "offsetX": 411.0,
+          "offsetY": 339.0,
+          "width": 34,
+          "height": 38,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/east-curve-lower",
+          "offsetX": 381.0,
+          "offsetY": 367.0,
+          "width": 50,
+          "height": 34,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "cafe-patio/east-entry-pillar",
+          "offsetX": 299.0,
+          "offsetY": 356.0,
+          "width": 42,
+          "height": 100,
+          "visualSource": "base.png"
+        }
+      ]
+    },
+    "arcade-nook": {
+      "nativeSize": {
+        "width": 448,
+        "height": 416
+      },
+      "placementScale": 0.75,
+      "suggestedWorldOrigin": {
+        "x": 250,
+        "y": 720,
+        "status": "advisory; keep southwest of plaza and connect the open south entrance to the arcade lane"
+      },
+      "base": {
+        "prop": "town-v2-arcade-nook-base",
+        "url": "/game/town-v2/groups/arcade-nook/base.png",
+        "width": 448,
+        "height": 416,
+        "originX": 0,
+        "originY": 0,
+        "scale": 1
+      },
+      "baseOpenings": [
+        {
+          "id": "south-entry",
+          "x": 160,
+          "y": 335,
+          "width": 128,
+          "height": 81,
+          "source": "remove the continuous stonefront here; map ground supplies the paved approach"
+        }
+      ],
+      "parts": [
+        {
+          "id": "arcade-nook/canopy",
+          "prop": "town-v2-arcade-nook-canopy",
+          "url": "/game/town-v2/groups/arcade-nook/canopy.png",
+          "width": 384,
+          "height": 165,
+          "localAnchor": {
+            "x": 32,
+            "y": 0
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 160,
+          "footcolliders": []
+        },
+        {
+          "id": "arcade-nook/garden-glide",
+          "prop": "town-v2-arcade-nook-garden-glide",
+          "url": "/game/town-v2/groups/arcade-nook/cabinet-garden-glide.png",
+          "width": 106,
+          "height": 173,
+          "localAnchor": {
+            "x": 115,
+            "y": 102
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 274,
+          "interactionId": "garden-arcade",
+          "footcolliders": [
+            {
+              "offsetX": 53,
+              "offsetY": 163,
+              "width": 50,
+              "height": 16
+            }
+          ]
+        },
+        {
+          "id": "arcade-nook/market-match",
+          "prop": "town-v2-arcade-nook-market-match",
+          "url": "/game/town-v2/groups/arcade-nook/cabinet-market-match.png",
+          "width": 106,
+          "height": 173,
+          "localAnchor": {
+            "x": 220,
+            "y": 102
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 274,
+          "interactionId": "market-match",
+          "footcolliders": [
+            {
+              "offsetX": 53,
+              "offsetY": 163,
+              "width": 50,
+              "height": 16
+            }
+          ]
+        },
+        {
+          "id": "arcade-nook/planter-west",
+          "prop": "town-v2-arcade-nook-planter-west",
+          "url": "/game/town-v2/groups/arcade-nook/planter-west.png",
+          "width": 130,
+          "height": 142,
+          "localAnchor": {
+            "x": 32,
+            "y": 165
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 307,
+          "footcolliders": [
+            {
+              "offsetX": 65,
+              "offsetY": 134,
+              "width": 86,
+              "height": 16
+            }
+          ]
+        },
+        {
+          "id": "arcade-nook/planter-east",
+          "prop": "town-v2-arcade-nook-planter-east",
+          "url": "/game/town-v2/groups/arcade-nook/planter-east.png",
+          "width": 130,
+          "height": 142,
+          "localAnchor": {
+            "x": 286,
+            "y": 165
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 307,
+          "footcolliders": [
+            {
+              "offsetX": 65,
+              "offsetY": 134,
+              "width": 86,
+              "height": 16
+            }
+          ]
+        },
+        {
+          "id": "arcade-nook/front-west",
+          "prop": "town-v2-arcade-nook-front-west",
+          "url": "/game/town-v2/groups/arcade-nook/front-west.png",
+          "width": 160,
+          "height": 121,
+          "localAnchor": {
+            "x": 0,
+            "y": 295
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 408,
+          "footcolliders": []
+        },
+        {
+          "id": "arcade-nook/front-east",
+          "prop": "town-v2-arcade-nook-front-east",
+          "url": "/game/town-v2/groups/arcade-nook/front-east.png",
+          "width": 160,
+          "height": 121,
+          "localAnchor": {
+            "x": 288,
+            "y": 295
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 408,
+          "footcolliders": []
+        },
+        {
+          "id": "arcade-nook/sidewall-west",
+          "prop": "town-v2-arcade-nook-sidewall-west",
+          "url": "/game/town-v2/groups/arcade-nook/sidewall-west.png",
+          "width": 55,
+          "height": 210,
+          "localAnchor": {
+            "x": 0,
+            "y": 112
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 322,
+          "footcolliders": []
+        },
+        {
+          "id": "arcade-nook/sidewall-east",
+          "prop": "town-v2-arcade-nook-sidewall-east",
+          "url": "/game/town-v2/groups/arcade-nook/sidewall-east.png",
+          "width": 55,
+          "height": 210,
+          "localAnchor": {
+            "x": 393,
+            "y": 112
+          },
+          "originX": 0,
+          "originY": 0,
+          "scale": 1,
+          "depthAnchorY": 322,
+          "footcolliders": []
+        }
+      ],
+      "suggestedInteractions": [
+        {
+          "id": "garden-arcade",
+          "partId": "arcade-nook/garden-glide",
+          "x": 168,
+          "y": 265
+        },
+        {
+          "id": "market-match",
+          "partId": "arcade-nook/market-match",
+          "x": 273,
+          "y": 265
+        }
+      ],
+      "walkEntrances": [
+        {
+          "id": "south-entry",
+          "x": 160,
+          "y": 335,
+          "width": 128,
+          "height": 81,
+          "approachFrom": "south",
+          "minClearWidth": 128,
+          "classification": "primary",
+          "worldClearWidth": 96
+        }
+      ],
+      "boundaryColliders": [
+        {
+          "id": "arcade-nook/rear-wall",
+          "offsetX": 224.0,
+          "offsetY": 128.0,
+          "width": 344,
+          "height": 32,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/west-sidewall",
+          "offsetX": 36.5,
+          "offsetY": 227.5,
+          "width": 37,
+          "height": 175,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/east-sidewall",
+          "offsetX": 411.5,
+          "offsetY": 227.5,
+          "width": 37,
+          "height": 175,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/west-pot",
+          "offsetX": 97.0,
+          "offsetY": 219.5,
+          "width": 62,
+          "height": 63,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/east-pot",
+          "offsetX": 351.0,
+          "offsetY": 219.5,
+          "width": 62,
+          "height": 63,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/west-bed",
+          "offsetX": 85.0,
+          "offsetY": 297.0,
+          "width": 114,
+          "height": 90,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/east-bed",
+          "offsetX": 363.0,
+          "offsetY": 297.0,
+          "width": 114,
+          "height": 90,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/west-inner-curve",
+          "offsetX": 133.0,
+          "offsetY": 340.0,
+          "width": 46,
+          "height": 60,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/east-inner-curve",
+          "offsetX": 315.0,
+          "offsetY": 340.0,
+          "width": 46,
+          "height": 60,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/west-outer-curve",
+          "offsetX": 30.0,
+          "offsetY": 325.0,
+          "width": 36,
+          "height": 50,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/east-outer-curve",
+          "offsetX": 418.0,
+          "offsetY": 325.0,
+          "width": 36,
+          "height": 50,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/west-wall-lower",
+          "offsetX": 69.0,
+          "offsetY": 359.0,
+          "width": 74,
+          "height": 58,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/east-wall-lower",
+          "offsetX": 379.0,
+          "offsetY": 359.0,
+          "width": 74,
+          "height": 58,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/west-front-wall",
+          "offsetX": 108.0,
+          "offsetY": 390.0,
+          "width": 104,
+          "height": 48,
+          "visualSource": "base.png"
+        },
+        {
+          "id": "arcade-nook/east-front-wall",
+          "offsetX": 340.0,
+          "offsetY": 390.0,
+          "width": 104,
+          "height": 48,
+          "visualSource": "base.png"
+        }
+      ]
+    }
+  }
+}

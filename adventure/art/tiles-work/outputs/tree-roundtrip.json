@@ -1,0 +1,20 @@
+{ "frames": [
+   {
+    "filename": "tree-draft.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 256, "h": 336 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 256, "h": 336 },
+    "sourceSize": { "w": 256, "h": 336 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "https://github.com/LibreSprite/LibreSprite/",
+  "version": "1.3",
+  "image": "art/tiles-work/outputs/tree-roundtrip.png",
+  "format": "RGBA8888",
+  "size": { "w": 256, "h": 336 },
+  "scale": "1"
+ }
+}

@@ -1,0 +1,20 @@
+.market-match{padding:20px 24px 24px;color:#315849}
+.pixel-dialog .market-match-intro{margin:0 0 14px;color:#5d7565;font-size:13px;line-height:1.5}
+.market-match-score{display:flex;align-items:center;gap:16px;margin-bottom:10px;color:#a37a49;font-size:10px;font-weight:800;letter-spacing:.1em}
+.market-match-score strong{padding-left:4px;color:#315d4b;font-size:14px;letter-spacing:normal}
+.market-match-score button{margin-left:auto;min-height:38px;padding:6px 9px;border:1px solid #a6ba96;background:#eff4e4;color:#3a7054;font-size:11px;font-weight:700}
+.pixel-dialog .market-match-help{margin:0 0 10px;color:#6e806f;font-size:11px;line-height:1.4}
+.market-match-grid{display:grid;gap:8px;max-width:396px;margin:0 auto}
+.market-match-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.market-card{position:relative;display:block;width:100%;aspect-ratio:1;min-width:0;min-height:0;padding:0;overflow:hidden;border:3px solid #8c674b;background:#386f59;color:#f6d27d;box-shadow:3px 3px 0 #d4c4a0;touch-action:manipulation;transition:transform .12s ease,background-color .12s ease}
+.market-card:hover{transform:translateY(-2px)}.market-card:focus-visible,.market-match-score button:focus-visible{outline:3px solid #cd8745;outline-offset:3px}
+.market-card-back,.market-card img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px)}
+.market-card-back{display:grid;place-items:center;border:1px solid #8bb895;background:#47836a;font-size:27px;text-shadow:2px 2px #24604a}
+.market-card-visible{background:#fff7dc;border-color:#cba66f}.market-card-matched{background:#e6f1d8;border-color:#7da777}
+.market-card img{object-fit:contain;image-rendering:pixelated}.market-card-check{position:absolute;right:3px;top:2px;display:grid;place-items:center;width:17px;height:17px;background:#4b8962;color:#fffdf0;font-size:11px;font-weight:700}
+.market-match-win{display:grid;justify-items:center;gap:4px;margin-top:15px;padding:12px;border:2px solid #b1c79b;background:#eef5df;color:#3d7050;text-align:center}.market-match-win span{color:#dba053;font-size:18px}.market-match-win strong{font-size:14px}.market-match-win small{font-size:11px}
+@media(prefers-reduced-motion:no-preference){.market-match-win{animation:market-match-celebrate .35s ease-out}@keyframes market-match-celebrate{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}}
+@media(pointer:coarse){.pixel-dialog .market-match-help{display:none}}
+@media(max-width:480px){.market-match{padding:14px 16px 20px}.market-match-grid,.market-match-row{gap:6px}.market-card-back,.market-card img{inset:4px;width:calc(100% - 8px);height:calc(100% - 8px)}.market-card-back{font-size:23px}.market-match-score{gap:9px}}
+@media(max-height:500px) and (orientation:landscape){.market-match{padding:10px 16px 16px}.market-match-grid{max-width:280px}.pixel-dialog .market-match-intro{margin-bottom:7px}.market-match-score{margin-bottom:6px}}
+@media(prefers-reduced-motion:reduce){.market-card{transition:none}.market-card:hover{transform:none}}

@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "styleReference": "art/concepts/direction-a-selected.png",
+  "generation": "image_gen reference studies; LibreSprite 1.3 and FFmpeg for frame extraction and compositing",
+  "canvas": {
+    "width": 96,
+    "height": 128
+  },
+  "animation": {
+    "breathingFrames": [
+      0,
+      1,
+      0,
+      3
+    ],
+    "framesPerSecond": 1.25,
+    "blinkFrame": 2,
+    "blinkDurationMs": 150,
+    "blinkIntervalMs": [
+      3000,
+      6000
+    ]
+  },
+  "characters": {
+    "guide": {
+      "feetBaseline": 122,
+      "origin": [
+        0.5,
+        0.953125
+      ]
+    },
+    "workshop": {
+      "feetBaseline": 124,
+      "origin": [
+        0.5,
+        0.96875
+      ]
+    }
+  },
+  "limitations": [
+    "Flattened single-frame editable sources; not multi-frame layered masters.",
+    "Visual continuity and display size require actual in-game review."
+  ],
+  "files": [
+    {
+      "path": "studies/guide-idle.png",
+      "sha256": "3ba3b3994829c2204acb84de68e0e854320dadccda5083743ad3034741354769"
+    },
+    {
+      "path": "studies/guide-original.png",
+      "sha256": "6cfc18693fa48d41535eee4ef75b4442a400f8931e8007eaf18fd40b55caf642"
+    },
+    {
+      "path": "studies/workshop-idle.png",
+      "sha256": "4ff442ca6d7ca2e5c1d1d25cfce736b8ffd1982bfca1b03c93f550cbd90429bf"
+    },
+    {
+      "path": "studies/workshop-original.png",
+      "sha256": "b9dabf2fba5a22c407dbe458f070cce99ef26fcfb70ef67117b6b913b33bea0a"
+    },
+    {
+      "path": "frames/guide/idle-0.png",
+      "sha256": "760caf9a66818e8d6c91f1803a1fdff5d60524718ddd81484e4eacfd54cef8c8"
+    },
+    {
+      "path": "frames/guide/idle-1.png",
+      "sha256": "623343ca6e96900be1855f091141345b301a035e61c8e23d852df3d953aaabb7"
+    },
+    {
+      "path": "frames/guide/idle-2.png",
+      "sha256": "a88ea49a72c7da4039e7f6945ccea24bbd2e14d493ece86d46ec95d4a1709d0b"
+    },
+    {
+      "path": "frames/guide/idle-3.png",
+      "sha256": "8db4f6047d7dcce833ac7b7f7a30a868906110185a180efc60f1a7fc669850a4"
+    },
+    {
+      "path": "frames/workshop/idle-0.png",
+      "sha256": "8690a28ce15121582cad1b9a0d6df1bab4881cd6eddebf6fde0d3acdf0a40c48"
+    },
+    {
+      "path": "frames/workshop/idle-1.png",
+      "sha256": "98fe144afb429ea3b24f20bb0881b088d1291c54a6ad39e252ecffa106ce1d05"
+    },
+    {
+      "path": "frames/workshop/idle-2.png",
+      "sha256": "d663c0bb732a5ecc8f518b454892d0705f0688643ffc6f5e0dacc93ca3c0397e"
+    },
+    {
+      "path": "frames/workshop/idle-3.png",
+      "sha256": "2feecfb036f3ce6e5fc2fd19e705131b535234d8e1dc9bf33a3ad74b277599a8"
+    },
+    {
+      "path": "sources/guide/idle-0.aseprite",
+      "sha256": "3c50921d26fa333cb5228cfff46c73a681f5e737d9f7b0c4efee14bba6bc8b40"
+    },
+    {
+      "path": "sources/guide/idle-1.aseprite",
+      "sha256": "60b972de097bf9adbd8763f8710b40521c2d90e74e703a58babff5d6d60f4d1a"
+    },
+    {
+      "path": "sources/guide/idle-2.aseprite",
+      "sha256": "6dae2f2177388b1d2ef82766666e3a2d10df7e0f75b2628bb6ae5c5beababe5d"
+    },
+    {
+      "path": "sources/guide/idle-3.aseprite",
+      "sha256": "f678d8a3f9f0b3ea817ebc9d6019dfb6e13294deb018944ab3b11b8fd8aeab8a"
+    },
+    {
+      "path": "sources/workshop/idle-0.aseprite",
+      "sha256": "b4e962f9dd495ae76bf132fa311f2dc5845325a1101f7138cf83f16d7c5e1b76"
+    },
+    {
+      "path": "sources/workshop/idle-1.aseprite",
+      "sha256": "60e31cc9272f8f54fec6f5878eb5084d47e47b27a043f9070d673608004585c6"
+    },
+    {
+      "path": "sources/workshop/idle-2.aseprite",
+      "sha256": "9ca8c11a0f24c99d7b3230ce1711a9a5c64fd134a02716de6f983e6c7ee38319"
+    },
+    {
+      "path": "sources/workshop/idle-3.aseprite",
+      "sha256": "0e14b009a9b48940d247e9945017d3050db87aa3d2fd4cfb36816f6dd6c45e25"
+    },
+    {
+      "path": "previews/contact.png",
+      "sha256": "16390b02fe98e40f88ed405150818a03f8125c6b1446d02109c44bc80867238e"
+    },
+    {
+      "path": "previews/guide-idle.gif",
+      "sha256": "9405963a8805c7acaede7b61bb42cdbe0c8a745fa81f69b8872e2876917c4764"
+    },
+    {
+      "path": "previews/previous-and-new.png",
+      "sha256": "1cf5ecb46539d26bb836867262fdf15d347b4c98d6759223bea951183ba55dff"
+    },
+    {
+      "path": "previews/workshop-idle.gif",
+      "sha256": "dcbd265be31e81cc6b6f1e7054cba895844a3e22404f4f6d96f53ec33069c345"
+    }
+  ]
+}

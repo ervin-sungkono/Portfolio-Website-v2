@@ -1,0 +1,20 @@
+[
+  {"id": "baker", "texture": "baker", "mode": "idle", "x": 770, "y": 430},
+  {"id": "gardener", "texture": "gardener", "mode": "idle", "x": 1360, "y": 1080},
+  {
+    "id": "artist", "texture": "artist-walk-v2", "mode": "walk", "x": 1476.5, "y": 640,
+    "route": [
+      {"x": 1506.5, "y": 628.75, "pauseMs": 2100, "face": "right"},
+      {"x": 1476.5, "y": 617.5, "face": "left"},
+      {"x": 1446.5, "y": 628.75, "pauseMs": 1800, "face": "left"}
+    ]
+  },
+  {
+    "id": "traveler", "texture": "traveler-walk-v2", "mode": "walk", "x": 444, "y": 905,
+    "route": [
+      {"x": 386, "y": 889, "pauseMs": 1900, "face": "right"},
+      {"x": 444, "y": 889, "pauseMs": 1600, "face": "left"},
+      {"x": 390, "y": 905}
+    ]
+  }
+]

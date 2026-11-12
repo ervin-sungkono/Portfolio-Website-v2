@@ -1,0 +1,258 @@
+{
+  "source": {
+    "repository": "https://github.com/ervin-sungkono/web-assets",
+    "commit": "fac7bf3b0e595017fff282c1a64aa76d889a0ceb",
+    "files": [
+      "content/portfolio.json",
+      "content/projects/wetrack-app.json",
+      "content/projects/chatgpt-clone.json",
+      "content/projects/next-pokedex.json",
+      "media/projects/wetrack-app/cover-d8eb479c.webp",
+      "media/projects/chatgpt-clone/cover-a96c6df9.webp",
+      "media/projects/next-pokedex/cover-4c4bd47d.webp"
+    ],
+    "note": "Project dates were omitted because source documentation describes them as repository-creation proxies."
+  },
+  "profile": {
+    "name": "Ervin Cahyadinata Sungkono",
+    "title": "Software Engineer",
+    "linkedin": "https://www.linkedin.com/in/ervin-cahyadinata-sungkono",
+    "github": "https://github.com/ervin-sungkono",
+    "dribbble": "https://dribbble.com/ErvinCS",
+    "instagram": "https://www.instagram.com/ervin.cs",
+    "cv": "https://drive.google.com/file/d/1cODpw-zhF3dpDGRBxN0HlxOI1ywUYUbK/view?usp=sharing",
+    "intro": "Software engineer at Samsung R&D Institute Indonesia, with a background in frontend development and interface design.",
+    "experiences": [
+      {
+        "company": "Samsung R&D Institute Indonesia",
+        "role": "Software Engineer",
+        "start": "2024-12",
+        "end": null,
+        "description": "Current software engineering role at Samsung R&D Institute Indonesia."
+      },
+      {
+        "company": "Pharma Metric Labs",
+        "role": "Front End Developer",
+        "start": "2024-03",
+        "end": "2024-09",
+        "description": "Developed internal Next.js applications, tested releases, maintained company websites, and designed interfaces in Figma."
+      },
+      {
+        "company": "PT Kalbe Farma, Tbk",
+        "role": "Front End Developer",
+        "start": "2023-02",
+        "end": "2024-02",
+        "description": "Built internal websites and applications with Next.js and JavaScript, translated requirements into interfaces, and supported frontend testing and maintenance."
+      }
+    ],
+    "education": {
+      "school": "BINUS University",
+      "degree": "Bachelor’s Degree in Computer Science",
+      "years": "2020–2024"
+    }
+  },
+  "skills": [
+    {
+      "label": "React",
+      "icon": "react"
+    },
+    {
+      "label": "Next.js",
+      "icon": "nextjs"
+    },
+    {
+      "label": "JavaScript",
+      "icon": "js"
+    },
+    {
+      "label": "HTML",
+      "icon": "html"
+    },
+    {
+      "label": "CSS",
+      "icon": "css"
+    },
+    {
+      "label": "Tailwind",
+      "icon": "tailwind"
+    },
+    {
+      "label": "Sass",
+      "icon": "sass"
+    },
+    {
+      "label": "Git",
+      "icon": "git"
+    },
+    {
+      "label": "Figma",
+      "icon": "figma"
+    },
+    {
+      "label": "Node.js",
+      "icon": "nodejs"
+    },
+    {
+      "label": "Laravel",
+      "icon": "laravel"
+    },
+    {
+      "label": "MySQL",
+      "icon": "mysql"
+    },
+    {
+      "label": "Java",
+      "icon": "java"
+    },
+    {
+      "label": "Android Studio",
+      "icon": "androidstudio"
+    },
+    {
+      "label": "Bootstrap",
+      "icon": "bootstrap"
+    }
+  ],
+  "projects": [
+    {
+      "id": "wetrack-app",
+      "title": "WeTrack App",
+      "summary": "Development of project management app for thesis using NextJS v13 and Firebase",
+      "description": "Development of project management app for thesis using NextJS v13 and Firebase",
+      "technologies": [
+        "nextjs",
+        "tailwind",
+        "nodejs",
+        "firebase",
+        "html",
+        "css",
+        "js"
+      ],
+      "links": {
+        "demo": "https://wetrack-app.vercel.app",
+        "source": "https://github.com/ervin-sungkono/WeTrack-App"
+      },
+      "cover": "/project-media/wetrack-app.webp",
+      "featured": true,
+      "published": true,
+      "sortOrder": 10,
+      "study": {
+        "focus": "Product workflows & integrations",
+        "context": "A Computer Science thesis project created by Ervin Cahyadinata Sungkono, Christopher Vinantius, and Kenneth Nathanael. The application brings task tracking, scheduling, and collaboration into one workspace.",
+        "challenge": "A task is more than a title: it has a schedule, attachments, collaborators, and a history. The interface needs to make that information usable across boards, calendars, and dashboards.",
+        "highlights": [
+          "Kanban boards for organising and tracking tasks",
+          "Scheduling, attachments, dashboards, history, and notifications",
+          "AI-assisted task creation and recommendations"
+        ],
+        "decisions": [
+          {
+            "title": "Use specialised tools for complex interactions",
+            "implementation": "The documented stack combines Next.js and Firebase with FullCalendar, drag-and-drop, Chart.js, and table components to support different views of the work.",
+            "tradeoff": "Specialised libraries reduce the amount of interaction code to write, but their behaviour, accessibility, and upgrade paths still need to work together."
+          },
+          {
+            "title": "Add AI assistance to an existing task workflow",
+            "implementation": "Task creation and recommendations use the OpenAI API alongside the application’s conventional task-management features.",
+            "tradeoff": "AI output adds value only when users can review it. Network failures, latency, and incomplete suggestions need clear handling at the point of use."
+          }
+        ],
+        "nextStep": "A useful next validation step is an end-to-end test of task creation, board updates, and scheduling, including failed requests and keyboard interaction.",
+        "reference": {
+          "label": "Project README & team credits",
+          "href": "https://github.com/ervin-sungkono/WeTrack-App#readme"
+        }
+      }
+    },
+    {
+      "id": "chatgpt-clone",
+      "title": "ChatGPT Clone",
+      "summary": "A clone of ChatGPT website, made using the ChatGPT API. Additional features like .txt or .pdf upload and speech recognition are also included.",
+      "description": "A clone of ChatGPT website, made using the ChatGPT API. Additional features like .txt or .pdf upload and speech recognition are also included.",
+      "technologies": [
+        "nextjs",
+        "tailwind",
+        "chatgpt",
+        "speech-recognition",
+        "server-sent-events"
+      ],
+      "links": {
+        "demo": "https://chatgpt-clone-ervin-sungkono.vercel.app",
+        "source": "https://github.com/ervin-sungkono/ChatGPT-Clone"
+      },
+      "cover": "/project-media/chatgpt-clone.webp",
+      "featured": true,
+      "published": true,
+      "sortOrder": 20,
+      "study": {
+        "focus": "Streaming UI & browser persistence",
+        "context": "An educational chat application that explores incremental responses, document input, and conversation history stored in the browser.",
+        "challenge": "Chat responses arrive over time. The interface needs to display partial content while keeping the conversation readable and preserving history between visits.",
+        "highlights": [
+          "Server-sent events handled through ReadableStream",
+          "Text and PDF input, speech recognition, and Markdown rendering",
+          "Conversation history in localStorage, with light and dark themes"
+        ],
+        "decisions": [
+          {
+            "title": "Render a response as it arrives",
+            "implementation": "ReadableStream handles server-sent events so the interface can present a response incrementally instead of waiting for the entire message.",
+            "tradeoff": "Streaming offers earlier feedback, but requires handling interrupted connections and content split across chunks. It does not make the model finish sooner."
+          },
+          {
+            "title": "Keep conversation history in the browser",
+            "implementation": "The application uses localStorage instead of an application database for chat history.",
+            "tradeoff": "This keeps persistence simple for an educational app. History remains tied to one browser, has storage limits, and can disappear when site data is cleared."
+          }
+        ],
+        "nextStep": "A useful next step is to test stream interruption and recovery, storage failures, and accessible announcements while a response is being generated.",
+        "reference": {
+          "label": "Project README & feature history",
+          "href": "https://github.com/ervin-sungkono/ChatGPT-Clone#readme"
+        }
+      }
+    },
+    {
+      "id": "next-pokedex",
+      "title": "Next Pokedex",
+      "summary": "Pokedex using PokeAPI, built in Next.js using SSG and SSR",
+      "description": "Pokedex using PokeAPI, built in Next.js using SSG and SSR",
+      "technologies": [
+        "nextjs",
+        "react",
+        "sass",
+        "poke-api"
+      ],
+      "links": {
+        "demo": "https://next-pokedex-ervin-sungkono.vercel.app/",
+        "source": "https://github.com/ervin-sungkono/Next-Pokedex"
+      },
+      "cover": "/project-media/next-pokedex.webp",
+      "featured": true,
+      "published": true,
+      "sortOrder": 30,
+      "study": {
+        "focus": "API-driven interfaces & rendering",
+        "context": "A Pokémon catalogue built with Next.js, React, Sass, and PokéAPI. The public project description identifies static generation and server-side rendering as areas explored.",
+        "challenge": "A catalogue needs to turn external API data into a consistent browsing experience. The rendering strategy affects when data is fetched and how fresh each page can be.",
+        "highlights": [
+          "Catalogue data from the public PokéAPI",
+          "Exploration of static generation and server-side rendering",
+          "A React interface styled with Sass"
+        ],
+        "decisions": [
+          {
+            "title": "Explore more than one rendering strategy",
+            "implementation": "The repository description explicitly lists SSG and SSR. This project provides a concrete setting for comparing build-time and request-time data fetching.",
+            "tradeoff": "Static generation can serve prepared content quickly; request-time rendering can use fresher data but adds work to the request. Neither is automatically the best choice for every route."
+          }
+        ],
+        "nextStep": "A useful next step is to document which routes use each strategy and compare behaviour when the API is slow or unavailable, before making performance claims.",
+        "reference": {
+          "label": "Repository description & source",
+          "href": "https://github.com/ervin-sungkono/Next-Pokedex"
+        }
+      }
+    }
+  ]
+}

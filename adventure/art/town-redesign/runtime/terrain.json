@@ -1,0 +1,655 @@
+{
+  "schemaVersion": 1,
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "tilesets": [
+    {
+      "name": "town",
+      "path": "/game/town-v2/ground-base.png",
+      "firstgid": 1,
+      "tilecount": 32,
+      "columns": 8,
+      "imageWidth": 256,
+      "imageHeight": 128
+    },
+    {
+      "name": "town-edges",
+      "path": "/game/tiles/town-edges.png",
+      "firstgid": 33,
+      "tilecount": 16,
+      "columns": 4,
+      "imageWidth": 128,
+      "imageHeight": 128,
+      "legacy": true
+    },
+    {
+      "name": "town-water",
+      "path": "/game/tiles/town-water.png",
+      "firstgid": 49,
+      "tilecount": 1,
+      "columns": 1,
+      "imageWidth": 32,
+      "imageHeight": 32
+    },
+    {
+      "name": "town-riverbank",
+      "path": "/game/tiles/town-riverbank.png",
+      "firstgid": 50,
+      "tilecount": 2,
+      "columns": 2,
+      "imageWidth": 64,
+      "imageHeight": 32
+    },
+    {
+      "name": "town-additions",
+      "path": "/game/town-v2/ground-additions.png",
+      "firstgid": 52,
+      "tilecount": 32,
+      "columns": 8,
+      "imageWidth": 256,
+      "imageHeight": 128
+    },
+    {
+      "name": "town-transitions",
+      "path": "/game/town-v2/ground-transitions.png",
+      "firstgid": 84,
+      "tilecount": 96,
+      "columns": 8,
+      "imageWidth": 256,
+      "imageHeight": 384,
+      "renderMode": "transparent-overlay"
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "grass",
+      "path": "/game/town-v2/ground-base.png",
+      "firstgid": 1,
+      "tileIds": [
+        1,
+        2,
+        3,
+        4,
+        9,
+        10,
+        11,
+        12,
+        17,
+        18,
+        19,
+        20,
+        25,
+        26,
+        27,
+        28
+      ],
+      "tilecount": 16,
+      "columns": 8,
+      "imageWidth": 256,
+      "imageHeight": 128,
+      "isPaved": false,
+      "sourceSwatch": "public/art-review/assets/grass.png",
+      "repeatEdgeMeanRgbDelta": {
+        "horizontalMeanRgbDelta": 4.42,
+        "verticalMeanRgbDelta": 7.18
+      }
+    },
+    {
+      "id": "plaza",
+      "path": "/game/town-v2/ground-base.png",
+      "firstgid": 5,
+      "tileIds": [
+        5,
+        6,
+        7,
+        8,
+        13,
+        14,
+        15,
+        16,
+        21,
+        22,
+        23,
+        24,
+        29,
+        30,
+        31,
+        32
+      ],
+      "tilecount": 16,
+      "columns": 8,
+      "imageWidth": 256,
+      "imageHeight": 128,
+      "isPaved": true,
+      "sourceSwatch": "public/art-review/assets/plaza.png",
+      "repeatEdgeMeanRgbDelta": {
+        "horizontalMeanRgbDelta": 3.77,
+        "verticalMeanRgbDelta": 3.5
+      }
+    },
+    {
+      "id": "garden-path",
+      "path": "/game/town-v2/ground-additions.png",
+      "firstgid": 52,
+      "tileIds": [
+        52,
+        53,
+        54,
+        55,
+        60,
+        61,
+        62,
+        63,
+        68,
+        69,
+        70,
+        71,
+        76,
+        77,
+        78,
+        79
+      ],
+      "tilecount": 16,
+      "columns": 8,
+      "imageWidth": 256,
+      "imageHeight": 128,
+      "isPaved": true,
+      "sourceSwatch": "public/art-review/assets/garden-path.png",
+      "repeatEdgeMeanRgbDelta": {
+        "horizontalMeanRgbDelta": 11.26,
+        "verticalMeanRgbDelta": 8.47
+      }
+    },
+    {
+      "id": "promenade",
+      "path": "/game/town-v2/ground-additions.png",
+      "firstgid": 56,
+      "tileIds": [
+        56,
+        57,
+        58,
+        59,
+        64,
+        65,
+        66,
+        67,
+        72,
+        73,
+        74,
+        75,
+        80,
+        81,
+        82,
+        83
+      ],
+      "tilecount": 16,
+      "columns": 8,
+      "imageWidth": 256,
+      "imageHeight": 128,
+      "isPaved": true,
+      "sourceSwatch": "public/art-review/assets/promenade.png",
+      "repeatEdgeMeanRgbDelta": {
+        "horizontalMeanRgbDelta": 8.43,
+        "verticalMeanRgbDelta": 5.66
+      }
+    }
+  ],
+  "transitionFamilies": [
+    {
+      "id": "grass-to-plaza",
+      "baseSurface": "grass",
+      "overlaySurface": "plaza",
+      "firstgid": 84,
+      "tileIds": [
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "plaza-to-grass",
+      "baseSurface": "plaza",
+      "overlaySurface": "grass",
+      "firstgid": 92,
+      "tileIds": [
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "grass-to-garden-path",
+      "baseSurface": "grass",
+      "overlaySurface": "garden-path",
+      "firstgid": 100,
+      "tileIds": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "garden-path-to-grass",
+      "baseSurface": "garden-path",
+      "overlaySurface": "grass",
+      "firstgid": 108,
+      "tileIds": [
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "grass-to-promenade",
+      "baseSurface": "grass",
+      "overlaySurface": "promenade",
+      "firstgid": 116,
+      "tileIds": [
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "promenade-to-grass",
+      "baseSurface": "promenade",
+      "overlaySurface": "grass",
+      "firstgid": 124,
+      "tileIds": [
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "plaza-to-garden-path",
+      "baseSurface": "plaza",
+      "overlaySurface": "garden-path",
+      "firstgid": 132,
+      "tileIds": [
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "garden-path-to-plaza",
+      "baseSurface": "garden-path",
+      "overlaySurface": "plaza",
+      "firstgid": 140,
+      "tileIds": [
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "plaza-to-promenade",
+      "baseSurface": "plaza",
+      "overlaySurface": "promenade",
+      "firstgid": 148,
+      "tileIds": [
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "promenade-to-plaza",
+      "baseSurface": "promenade",
+      "overlaySurface": "plaza",
+      "firstgid": 156,
+      "tileIds": [
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "garden-path-to-promenade",
+      "baseSurface": "garden-path",
+      "overlaySurface": "promenade",
+      "firstgid": 164,
+      "tileIds": [
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    },
+    {
+      "id": "promenade-to-garden-path",
+      "baseSurface": "promenade",
+      "overlaySurface": "garden-path",
+      "firstgid": 172,
+      "tileIds": [
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179
+      ],
+      "variants": [
+        "north-edge",
+        "east-edge",
+        "south-edge",
+        "west-edge",
+        "northwest-corner",
+        "northeast-corner",
+        "southwest-corner",
+        "southeast-corner"
+      ],
+      "renderMode": "transparent-overlay"
+    }
+  ],
+  "riverWater": {
+    "id": "river-water",
+    "path": "/game/town-v2/river-water.png",
+    "frameWidth": 96,
+    "frameHeight": 96,
+    "frameCount": 4,
+    "repeatTiles": {
+      "columns": 3,
+      "rows": 3
+    },
+    "repeatFrameMeanRgbDeltaMax": 12.01,
+    "renderMode": "animate-one-repeating-surface",
+    "repeatEdgeMeanRgbDelta": [
+      {
+        "frame": 0,
+        "horizontalMeanRgbDelta": 9.48,
+        "verticalMeanRgbDelta": 3.35
+      },
+      {
+        "frame": 1,
+        "horizontalMeanRgbDelta": 8.06,
+        "verticalMeanRgbDelta": 9.25
+      },
+      {
+        "frame": 2,
+        "horizontalMeanRgbDelta": 12.01,
+        "verticalMeanRgbDelta": 11.24
+      },
+      {
+        "frame": 3,
+        "horizontalMeanRgbDelta": 11.72,
+        "verticalMeanRgbDelta": 11.42
+      }
+    ]
+  },
+  "transitionPlacement": {
+    "layer": "ground-edges",
+    "baseCellRule": "Place one A-to-B transparent overlay in a base-A cell when its cardinal neighbor is B; the named edge places B on the side facing that neighbor.",
+    "edgeDirectionOrder": [
+      "north",
+      "east",
+      "south",
+      "west"
+    ],
+    "cornerRule": "When two perpendicular sides neighbor the same B, use the corner variant named for those sides; it covers both sides and rounds their inside join.",
+    "mixedNeighborRule": "Choose the most frequent non-base neighbor material; resolve ties by materialPriority, then edgeDirectionOrder.",
+    "materialPriority": [
+      "garden-path",
+      "promenade",
+      "plaza",
+      "grass"
+    ],
+    "variants": [
+      "north-edge",
+      "east-edge",
+      "south-edge",
+      "west-edge",
+      "northwest-corner",
+      "northeast-corner",
+      "southwest-corner",
+      "southeast-corner"
+    ]
+  },
+  "proof": {
+    "groundRepeatEdges": {
+      "grass": {
+        "horizontalMeanRgbDelta": 4.42,
+        "verticalMeanRgbDelta": 7.18
+      },
+      "plaza": {
+        "horizontalMeanRgbDelta": 3.77,
+        "verticalMeanRgbDelta": 3.5
+      },
+      "garden-path": {
+        "horizontalMeanRgbDelta": 11.26,
+        "verticalMeanRgbDelta": 8.47
+      },
+      "promenade": {
+        "horizontalMeanRgbDelta": 8.43,
+        "verticalMeanRgbDelta": 5.66
+      }
+    },
+    "riverRepeatEdges": [
+      {
+        "frame": 0,
+        "horizontalMeanRgbDelta": 9.48,
+        "verticalMeanRgbDelta": 3.35
+      },
+      {
+        "frame": 1,
+        "horizontalMeanRgbDelta": 8.06,
+        "verticalMeanRgbDelta": 9.25
+      },
+      {
+        "frame": 2,
+        "horizontalMeanRgbDelta": 12.01,
+        "verticalMeanRgbDelta": 11.24
+      },
+      {
+        "frame": 3,
+        "horizontalMeanRgbDelta": 11.72,
+        "verticalMeanRgbDelta": 11.42
+      }
+    ],
+    "staticMaskPixelsUnchanged": true,
+    "distinctAnimationPixelsByLoop": {
+      "fountain": [
+        4180,
+        4123,
+        4099,
+        3519
+      ],
+      "waterfall": [
+        3415,
+        3414,
+        3418,
+        3412
+      ],
+      "tree": [
+        11503,
+        11661,
+        11613,
+        11501
+      ],
+      "river-water": [
+        9014,
+        9056,
+        9074,
+        9146
+      ]
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "background-guide": {
+    "start": "welcome",
+    "nodes": {
+      "welcome": {
+        "text": "Hello, explorer! I’m Milo. Welcome to Ervin’s little town. What would you like to know?",
+        "options": [
+          { "label": "Who is Ervin?", "next": "about" },
+          { "label": "What is this place?", "next": "town" },
+          { "label": "What does he enjoy?", "next": "hobbies", "requires": "hobbies" }
+        ]
+      },
+      "about": {
+        "text": "Ervin studied computer science at BINUS University. This little town brings together some of the things he has made and learned along the way.",
+        "options": [{ "label": "Ask something else", "next": "welcome" }]
+      },
+      "town": {
+        "text": "Think of it as a place to wander! The workshop shows Ervin’s skills. The arcade is southwest of the fountain, and the photo garden is to its east.",
+        "options": [{ "label": "Ask something else", "next": "welcome" }]
+      },
+      "hobbies": {
+        "text": "Here are a few things Ervin enjoys!",
+        "content": "hobbies",
+        "options": [{ "label": "Ask something else", "next": "welcome" }]
+      }
+    }
+  },
+  "skills-guide": {
+    "start": "welcome",
+    "nodes": {
+      "welcome": {
+        "text": "Hey there! I’m Ivy. Welcome to the workshop. Curious about what Ervin likes to build?",
+        "options": [
+          { "label": "What skills has he learned?", "next": "skills" },
+          { "label": "What has he made?", "next": "creations" },
+          { "label": "What’s around town?", "next": "town" }
+        ]
+      },
+      "skills": {
+        "text": "Here are some of the tools and technologies he has picked up along the way!",
+        "content": "skills",
+        "options": [{ "label": "Ask something else", "next": "welcome" }]
+      },
+      "creations": {
+        "text": "There’s a project-management app made with friends, a chat experiment, and a little Pokédex. Look for the display near the plaza!",
+        "options": [{ "label": "Ask something else", "next": "welcome" }]
+      },
+      "town": {
+        "text": "The town guide can tell you more about Ervin, and there’s a noticeboard if you’d like to say hello.",
+        "options": [{ "label": "Ask something else", "next": "welcome" }]
+      }
+    }
+  }
+}

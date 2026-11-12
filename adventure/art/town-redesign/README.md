@@ -1,0 +1,15 @@
+# Approved and integrated town environment pack
+
+The site owner explicitly approved this environment art pack for gameplay integration on 2026-11-12, and the approved environment is now integrated into the town map. The approval covers the assets listed in `public/art-review/manifest.json`. The gallery at `/art-review/index.html` remains available as the approved pack record; its layout image is illustrative and does not depict the exact runtime map placement.
+
+The original approved direction is retained in `approved-reference.png`; the original image-generation outputs and cleaned botanical source are preserved in `sources/`. These files document the source and construction of the approved exports. `public/art-review/manifest.json` preserves the hash of the originally reviewed map as historical provenance and records the final integrated map hash. The offline composition preview was checked against the approved reference. Browser and device QA has not been performed, so movement feel and live rendering remain unverified.
+
+Run `bash scripts/build-town-review-art.sh` to reproduce the gallery exports with ImageMagick. It crops and scales the source cells, removes soft alpha haze, keeps sprite frames aligned, and writes only under `public/art-review/assets/`. Run `npm run validate:art-review` after rebuilding. The validator checks manifest dimensions and runtime URL isolation; its companion `verify.py` checks animation masks and fixed pixels. PNG exports retain transparency; original high-resolution generation sources stay outside the static export.
+
+The fountain, waterfall, tree, and river surface each have four exported frames. The pipeline composites a shared static cel with generated water/canopy regions using the reproducible masks in `masks/`, so stonework and tree roots stay fixed. `verify.py` checks that pixels outside those masks remain identical. Runtime art and grouped districts are exported under `public/game/town-v2/`; gameplay does not load assets from `/art-review/`.
+
+The garden, café patio, and arcade are integrated as a base floor with separate foreground art, collision footprints, and replaceable photo windows. Main streets provide 96 world pixels of clearance. The garden and café stair approaches narrow to 66 and 78 pixels to follow the actual stone openings. The northeast garden arch is 69.75 pixels wide. Raised beds and curved walls use filled, stepped rectangles in native group coordinates; thin strips at their bottom edges alone leave the visible bed interiors passable. The grouped scenes are not used as single passable backgrounds. Live movement has not been device-tested.
+
+The offline overview was reviewed at native map scale for terrain joins, scene placement, easel-window alignment, entrances, and depth. The reference images inside the easels are samples, not the owner's photos.
+
+The photo garden sits 96 world pixels beyond the right edge of the complete fountain medallion. Keep the entire landing outside that circle; `test:group-collisions` checks the visible-art gap and walks the passage using Phaser physics.

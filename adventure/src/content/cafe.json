@@ -1,0 +1,14 @@
+{
+  "greeting": "Welcome to the café! Pull up a chair. What would you like to talk about?",
+  "townTopics": [
+    {
+      "question": "What can I explore around town?",
+      "answer": "Meet Milo and Ivy, stroll through the photo park, or visit the arcade for a game. Take your time!"
+    },
+    {
+      "question": "Can I just take a break here?",
+      "answer": "Of course! Pick a seat, take a breather, and head back out whenever you’re ready."
+    }
+  ],
+  "personalTopics": []
+}

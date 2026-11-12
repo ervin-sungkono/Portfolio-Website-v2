@@ -1,0 +1,30 @@
+[
+  {
+    "id": "background-guide",
+    "sprite": "guide",
+    "originY": 0.953125,
+    "scale": 0.7,
+    "title": "Milo, the Navigator",
+    "banner": "MEET ERVIN",
+    "collision": {
+      "offsetX": 1,
+      "offsetY": -6,
+      "width": 22,
+      "height": 12
+    }
+  },
+  {
+    "id": "skills-guide",
+    "sprite": "workshop",
+    "originY": 0.96875,
+    "scale": 0.7,
+    "title": "Ivy, the Maker",
+    "banner": "SKILL BOOK",
+    "collision": {
+      "offsetX": 1,
+      "offsetY": -6,
+      "width": 22,
+      "height": 12
+    }
+  }
+]

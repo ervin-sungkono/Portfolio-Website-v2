@@ -1,0 +1,135 @@
+{
+  "status": "approved-for-integration",
+  "approvedOn": "2026-11-12",
+  "approvedBy": "site owner",
+  "approvalRecord": "The owner explicitly approved this environment art pack for integration in this conversation.",
+  "approvalScope": "The listed environment assets are approved for gameplay integration. The illustrative layout remains a planning diagram; integration status is tracked separately.",
+  "integrationStatus": "integrated",
+  "integratedOn": "2026-11-12",
+  "logicalTileSize": 32,
+  "reviewedMapSha256": "78195f7b30f529dc82a26a2c4851944e8df242ce33f788ffed1d7e52672abaff",
+  "integratedMapSha256": "62ccf1d49b90f739b77117c6369d2037b782adfcb2052fe6eb31a4a5bb11af29",
+  "integrationEvidence": "Offline composition preview compared with the approved reference; browser and device QA not run.",
+  "animations": [
+    {
+      "id": "fountain",
+      "title": "Plaza fountain",
+      "file": "fountain.png",
+      "width": 160,
+      "height": 176,
+      "frames": 4,
+      "mode": "frames",
+      "description": "A taller stone basin, changing jets, and moving pool ripples."
+    },
+    {
+      "id": "waterfall",
+      "title": "Raised river spillway",
+      "file": "waterfall.png",
+      "width": 192,
+      "height": 128,
+      "frames": 4,
+      "mode": "frames",
+      "description": "A deep masonry face separates the promenade from the flowing water below."
+    },
+    {
+      "id": "tree",
+      "title": "Garden tree",
+      "file": "tree.png",
+      "width": 160,
+      "height": 176,
+      "frames": 4,
+      "mode": "frames",
+      "description": "Frame animation moves the canopy while the lower trunk stays anchored."
+    },
+    {
+      "id": "river-water",
+      "title": "River surface",
+      "file": "river-water.png",
+      "width": 96,
+      "height": 96,
+      "frames": 4,
+      "mode": "repeat",
+      "description": "A repeated surface proof. Inspect the seams and the transition back to frame one."
+    }
+  ],
+  "statics": [
+    {
+      "id": "grass",
+      "file": "grass.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "id": "plaza",
+      "file": "plaza.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "id": "garden-path",
+      "file": "garden-path.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "id": "promenade",
+      "file": "promenade.png",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "id": "raised-wall",
+      "file": "raised-wall.png",
+      "width": 256,
+      "height": 128
+    },
+    {
+      "id": "stairs",
+      "file": "stairs.png",
+      "width": 128,
+      "height": 144
+    },
+    {
+      "id": "garden-corner",
+      "file": "garden-corner.png",
+      "width": 176,
+      "height": 144
+    },
+    {
+      "id": "photo-garden",
+      "file": "photo-garden.png",
+      "width": 768,
+      "height": 576
+    },
+    {
+      "id": "cafe-patio",
+      "file": "cafe-patio.png",
+      "width": 448,
+      "height": 416
+    },
+    {
+      "id": "arcade-nook",
+      "file": "arcade-nook.png",
+      "width": 448,
+      "height": 416
+    },
+    {
+      "id": "willow",
+      "file": "willow.png",
+      "width": 160,
+      "height": 192
+    },
+    {
+      "id": "blossom-tree",
+      "file": "blossom-tree.png",
+      "width": 176,
+      "height": 176
+    },
+    {
+      "id": "waterside-planting",
+      "file": "waterside-planting.png",
+      "width": 192,
+      "height": 144
+    }
+  ]
+}

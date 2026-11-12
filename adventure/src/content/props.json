@@ -1,0 +1,631 @@
+{
+  "tree": {
+    "url": "/game/town-v2/tree.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -14,
+      "width": 42,
+      "height": 26
+    },
+    "kind": "animated-sprite",
+    "displayMode": "sprite",
+    "frameWidth": 160,
+    "frameHeight": 176,
+    "frameCount": 4,
+    "frameRate": 4,
+    "repeat": -1
+  },
+  "workshop": {
+    "url": "/game/drafts/prop-workshop.png",
+    "originX": 0.5,
+    "originY": 0.8382352941,
+    "scale": 1.2,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -39,
+      "width": 300,
+      "height": 78
+    }
+  },
+  "cafe": {
+    "url": "/game/decor/city-cafe.webp",
+    "originX": 0.5,
+    "originY": 0.908,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -30,
+      "width": 282,
+      "height": 60
+    }
+  },
+  "river-bridge": {
+    "url": "/game/decor/river-bridge.png",
+    "originX": 0.5,
+    "originY": 0.5,
+    "scale": 1,
+    "collision": null
+  },
+  "river-waterfall": {
+    "url": "/game/town-v2/waterfall.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": null,
+    "kind": "animated-sprite",
+    "displayMode": "sprite",
+    "frameWidth": 192,
+    "frameHeight": 128,
+    "frameCount": 4,
+    "frameRate": 4,
+    "repeat": -1
+  },
+  "river-wall": {
+    "url": "/game/town-v2/raised-wall.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 0.75,
+    "collision": null,
+    "kind": "static-sprite",
+    "displayMode": "sprite"
+  },
+  "stone-stairs": {
+    "url": "/game/decor/stone-stairs.png",
+    "originX": 0.5,
+    "originY": 0.5,
+    "scale": 1,
+    "collision": null
+  },
+  "river-lilies": {
+    "url": "/game/decor/river-lilies.png",
+    "originX": 0.5,
+    "originY": 0.5,
+    "scale": 1,
+    "collision": null
+  },
+  "plaza-medallion": {
+    "url": "/game/decor/plaza-medallion.png",
+    "originX": 0.5,
+    "originY": 0.5,
+    "scale": 1,
+    "collision": null
+  },
+  "garden-fence": {
+    "url": "/game/decor/garden-fence.png",
+    "originX": 0.5,
+    "originY": 0.9,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -3,
+      "width": 64,
+      "height": 8
+    }
+  },
+  "arcade-awning": {
+    "url": "/game/decor/arcade-awning.png",
+    "originX": 0.5,
+    "originY": 0.5,
+    "scale": 1,
+    "collision": null
+  },
+  "flower-hedge": {
+    "url": "/game/decor/flower-hedge.png",
+    "originX": 0.5,
+    "originY": 0.9,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -4,
+      "width": 60,
+      "height": 10
+    }
+  },
+  "stone-edging": {
+    "url": "/game/decor/stone-edging.png",
+    "originX": 0.5,
+    "originY": 0.9,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -3,
+      "width": 64,
+      "height": 8
+    }
+  },
+  "painting-frame": {
+    "url": "/game/decor/painting-frame.png",
+    "originX": 0.5,
+    "originY": 0.95,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -6,
+      "width": 60,
+      "height": 12
+    }
+  },
+  "bench": {
+    "url": "/game/drafts/prop-bench.png",
+    "originX": 0.52,
+    "originY": 0.78,
+    "scale": 0.8,
+    "collision": {
+      "offsetX": 2,
+      "offsetY": -6,
+      "width": 58,
+      "height": 12
+    }
+  },
+  "flowerpot": {
+    "url": "/game/drafts/prop-flowerpot.png",
+    "originX": 0.52,
+    "originY": 0.78,
+    "scale": 0.75,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -6,
+      "width": 20,
+      "height": 12
+    }
+  },
+  "sign": {
+    "url": "/game/drafts/prop-sign.png",
+    "originX": 0.42,
+    "originY": 0.78,
+    "scale": 0.8,
+    "collision": {
+      "offsetX": 1,
+      "offsetY": -6,
+      "width": 18,
+      "height": 12
+    }
+  },
+  "terminal": {
+    "url": "/game/drafts/prop-terminal.png",
+    "originX": 0.38,
+    "originY": 0.78,
+    "scale": 0.85,
+    "collision": {
+      "offsetX": 1,
+      "offsetY": -6,
+      "width": 58,
+      "height": 12
+    }
+  },
+  "flowerbed": {
+    "url": "/game/decor/flowerbed.png",
+    "originX": 0.5046728972,
+    "originY": 0.8515625,
+    "scale": 0.7,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -6,
+      "width": 58,
+      "height": 12
+    }
+  },
+  "lantern": {
+    "url": "/game/decor/lantern.png",
+    "originX": 0.4153846154,
+    "originY": 0.8671875,
+    "scale": 0.75,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -6,
+      "width": 14,
+      "height": 12
+    }
+  },
+  "flower-bush": {
+    "url": "/game/decor/flower-bush.png",
+    "originX": 0.4948453608,
+    "originY": 0.859375,
+    "scale": 0.7,
+    "collision": {
+      "offsetX": 1,
+      "offsetY": -6,
+      "width": 52,
+      "height": 12
+    }
+  },
+  "mossy-rocks": {
+    "url": "/game/decor/mossy-rocks.png",
+    "originX": 0.375,
+    "originY": 0.84375,
+    "scale": 0.7,
+    "collision": {
+      "offsetX": 9,
+      "offsetY": -6,
+      "width": 54,
+      "height": 12
+    }
+  },
+  "fountain": {
+    "url": "/game/town-v2/fountain.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -22,
+      "width": 132,
+      "height": 40
+    },
+    "kind": "animated-sprite",
+    "displayMode": "sprite",
+    "frameWidth": 160,
+    "frameHeight": 176,
+    "frameCount": 4,
+    "frameRate": 4,
+    "repeat": -1
+  },
+  "mailbox": {
+    "url": "/game/decor/mailbox.png",
+    "originX": 0.5,
+    "originY": 0.8671875,
+    "scale": 0.7,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -6,
+      "width": 28,
+      "height": 12
+    }
+  },
+  "bunting": {
+    "url": "/game/decor/bunting.png",
+    "originX": 0.4939759036,
+    "originY": 0.8671875,
+    "scale": 0.8,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -6,
+      "width": 18,
+      "height": 12
+    }
+  },
+  "planter-crates": {
+    "url": "/game/decor/planter-crates.png",
+    "originX": 0.5,
+    "originY": 0.859375,
+    "scale": 0.7,
+    "collision": {
+      "offsetX": 1,
+      "offsetY": -6,
+      "width": 46,
+      "height": 12
+    }
+  },
+  "arcade": {
+    "url": "/game/decor/arcade.png",
+    "originX": 0.5,
+    "originY": 0.9609375,
+    "scale": 0.8,
+    "collision": {
+      "offsetX": 1,
+      "offsetY": -6,
+      "width": 44,
+      "height": 12
+    }
+  },
+  "river-water": {
+    "url": "/game/town-v2/river-water.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": null,
+    "kind": "animated-texture",
+    "displayMode": "repeat-texture",
+    "frameWidth": 96,
+    "frameHeight": 96,
+    "frameCount": 4,
+    "frameRate": 4,
+    "repeat": -1
+  },
+  "willow": {
+    "url": "/game/town-v2/willow.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -10,
+      "width": 34,
+      "height": 18
+    },
+    "kind": "static-sprite",
+    "displayMode": "sprite"
+  },
+  "blossom-tree": {
+    "url": "/game/town-v2/blossom-tree.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -11,
+      "width": 48,
+      "height": 22
+    },
+    "kind": "static-sprite",
+    "displayMode": "sprite"
+  },
+  "waterside-planting": {
+    "url": "/game/town-v2/waterside-planting.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -12,
+      "width": 136,
+      "height": 24
+    },
+    "kind": "static-sprite",
+    "displayMode": "sprite"
+  },
+  "stairs": {
+    "url": "/game/town-v2/stairs.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": null,
+    "kind": "static-sprite",
+    "displayMode": "sprite"
+  },
+  "raised-wall": {
+    "url": "/game/town-v2/raised-wall.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -41,
+      "width": 240,
+      "height": 74
+    },
+    "kind": "static-sprite",
+    "displayMode": "sprite"
+  },
+  "garden-corner": {
+    "url": "/game/town-v2/garden-corner.png",
+    "originX": 0.5,
+    "originY": 1,
+    "scale": 1,
+    "collision": {
+      "offsetX": 0,
+      "offsetY": -44,
+      "width": 146,
+      "height": 80
+    },
+    "kind": "static-sprite",
+    "displayMode": "sprite"
+  },
+  "town-v2-photo-garden-base": {
+    "url": "/game/town-v2/groups/photo-garden/base.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-arch": {
+    "url": "/game/town-v2/groups/photo-garden/arch.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-bench-west": {
+    "url": "/game/town-v2/groups/photo-garden/bench-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-bench-east": {
+    "url": "/game/town-v2/groups/photo-garden/bench-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-easel-1": {
+    "url": "/game/town-v2/groups/photo-garden/easel-1.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-easel-2": {
+    "url": "/game/town-v2/groups/photo-garden/easel-2.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-easel-3": {
+    "url": "/game/town-v2/groups/photo-garden/easel-3.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-planter-front": {
+    "url": "/game/town-v2/groups/photo-garden/planter-front.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-south-stonefront": {
+    "url": "/game/town-v2/groups/photo-garden/south-stonefront.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-base": {
+    "url": "/game/town-v2/groups/cafe-patio/base.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-rear-planting": {
+    "url": "/game/town-v2/groups/cafe-patio/rear-planting.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-umbrella": {
+    "url": "/game/town-v2/groups/cafe-patio/umbrella.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-table-west": {
+    "url": "/game/town-v2/groups/cafe-patio/table-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-table-east": {
+    "url": "/game/town-v2/groups/cafe-patio/table-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-front-west": {
+    "url": "/game/town-v2/groups/cafe-patio/front-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-front-east": {
+    "url": "/game/town-v2/groups/cafe-patio/front-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-base": {
+    "url": "/game/town-v2/groups/arcade-nook/base.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-canopy": {
+    "url": "/game/town-v2/groups/arcade-nook/canopy.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-garden-glide": {
+    "url": "/game/town-v2/groups/arcade-nook/cabinet-garden-glide.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-market-match": {
+    "url": "/game/town-v2/groups/arcade-nook/cabinet-market-match.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-planter-west": {
+    "url": "/game/town-v2/groups/arcade-nook/planter-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-planter-east": {
+    "url": "/game/town-v2/groups/arcade-nook/planter-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-front-west": {
+    "url": "/game/town-v2/groups/arcade-nook/front-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-front-east": {
+    "url": "/game/town-v2/groups/arcade-nook/front-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-rear-bed-west": {
+    "url": "/game/town-v2/groups/photo-garden/rear-bed-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-rear-bed-east": {
+    "url": "/game/town-v2/groups/photo-garden/rear-bed-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-sidewall-west": {
+    "url": "/game/town-v2/groups/photo-garden/sidewall-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-photo-garden-sidewall-east": {
+    "url": "/game/town-v2/groups/photo-garden/sidewall-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-sidewall-west": {
+    "url": "/game/town-v2/groups/cafe-patio/sidewall-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-cafe-patio-sidewall-east": {
+    "url": "/game/town-v2/groups/cafe-patio/sidewall-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-sidewall-west": {
+    "url": "/game/town-v2/groups/arcade-nook/sidewall-west.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  },
+  "town-v2-arcade-nook-sidewall-east": {
+    "url": "/game/town-v2/groups/arcade-nook/sidewall-east.png",
+    "originX": 0,
+    "originY": 0,
+    "scale": 1,
+    "collision": null
+  }
+}

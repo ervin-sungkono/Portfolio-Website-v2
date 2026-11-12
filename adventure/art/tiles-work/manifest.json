@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "styleReference": "art/concepts/direction-a-selected.png",
+  "created": "2026-11-11",
+  "generation": {
+    "method": "image_gen imagegen",
+    "processing": "LibreSprite 1.3 crop, nearest-neighbor resize, alpha cleanup on props",
+    "sources": [
+      {"path": "art/tiles-work/sources/grass-generated.png", "sha256": "1c821a5e21f17fe0138866e486682e35a35caa8b5e750fef9be64f6d21cc5bc4"},
+      {"path": "art/tiles-work/sources/paving-generated.png", "sha256": "ba09ca6411f54aa6d97baac0272136861c337e02795fb08da1d370897afe26fb"},
+      {"path": "art/tiles-work/sources/props-generated.png", "sha256": "395d2e94d652bb82aaf95a62f86485cc310cff72794b116dbc1591816f505680"},
+      {"path": "art/tiles-work/sources/tree-generated.png", "sha256": "9ca99d7bd07ca73d1f24d766b3bd8b84746b0c3e04bb80566e9f1d9fa4545e82"},
+      {"path": "art/tiles-work/sources/workshop-generated.png", "sha256": "3e954ad71c583fee06ba81ff3c24631ceb4df7e54703f264b9303dc1325e594a"},
+      {"path": "art/tiles-work/sources/grass-v2-generated.png", "sha256": "d340a06182c097c74cd98b184943416d0428b725c5645c270e46cbc054317753"},
+      {"path": "art/tiles-work/sources/grass-v3-generated.png", "sha256": "f17f76005a1104753830d7f1ba7d4e8444f6f50e02f4cc3460b4e612bdd943ce"},
+      {"path": "art/tiles-work/sources/paving-v2-generated.png", "sha256": "56adfa60c285548d9da37e03af49699808d2f952689ecd8c205f8ce21cd8f15d"}
+    ]
+  },
+  "terrain": [
+    {
+      "id": "grass-v3",
+      "png": "art/tiles-work/outputs/grass-v3.png",
+      "source": "art/tiles-work/sources/grass-v3.aseprite",
+      "sha256": "4a8727c0b5f785b1d30dc79aa960954ff9bb7869ac0c8da6cb96a76d36679179",
+      "width": 128, "height": 128,
+      "preview": "art/tiles-work/previews/grass-v3-raw-repeat.png",
+      "cellSize": 32,
+      "placement": "Preserve 4x4 order; repeat every 128px.",
+      "limitations": "Dense microtexture with subtle repeating larger clumps; seams evaluated only for full 128px repeat, not arbitrary cell arrangements."
+    },
+    {
+      "id": "paving-v2",
+      "png": "art/tiles-work/outputs/paving-v2.png",
+      "source": "art/tiles-work/sources/paving-v2.aseprite",
+      "sha256": "4723fd09a477c467e5a6b4f0bcca6254f0e93060ee9623d23b0f5d74383e4d61",
+      "width": 128, "height": 128,
+      "preview": "art/tiles-work/previews/paving-v2-raw-repeat.png",
+      "cellSize": 32,
+      "placement": "Preserve 4x4 order; repeat every 128px.",
+      "limitations": "Some color repetition every four stones, grout wrap verified against internal grout edges; not tested with terrain transitions."
+    },
+    {
+      "id": "grass",
+      "png": "art/tiles-work/outputs/grass-draft.png",
+      "source": "art/tiles-work/sources/grass-draft.aseprite",
+      "sha256": "27795a8dddb3affeb9acea605f6d1bc94f751abbba7a352f5665e112f8f23f5b",
+      "width": 32, "height": 32,
+      "preview": "art/tiles-work/previews/grass-repeat.png",
+      "limitations": "Noticeable 32px pattern repetition and edge discontinuities; requires additional variation and artist cleanup."
+    },
+    {
+      "id": "paving",
+      "png": "art/tiles-work/outputs/paving-draft.png",
+      "source": "art/tiles-work/sources/paving-draft.aseprite",
+      "sha256": "946a3544e804318718dbd793e1414288a65dfa1bf84d1bdb936630a47af183c0",
+      "width": 32, "height": 32,
+      "preview": "art/tiles-work/previews/paving-repeat.png",
+      "limitations": "Strong grout at repeated edges and little stone variation; intentional lines should be visually refined for the selected scene."
+    }
+  ],
+  "props": [
+    {"id": "sign", "png": "art/tiles-work/outputs/sign-draft.png", "source": "art/tiles-work/sources/sign-draft.aseprite", "sha256": "b900fcf724b6eac3bb4d27d925875e855f395f25c53db44437281934d8affc37", "width": 96, "height": 128, "visualBounds": [17, 28, 63, 100], "suggestedBaseAnchor": [40, 100]},
+    {"id": "terminal", "png": "art/tiles-work/outputs/terminal-draft.png", "source": "art/tiles-work/sources/terminal-draft.aseprite", "sha256": "8306916bea0975b4bc2b0ea48d43759b14fc7fae73200ab57811f8739642b9fc", "width": 96, "height": 128, "visualBounds": [1, 39, 74, 99], "suggestedBaseAnchor": [37, 99]},
+    {"id": "bench", "png": "art/tiles-work/outputs/bench-draft.png", "source": "art/tiles-work/sources/bench-draft.aseprite", "sha256": "538b094ffb8da2a4b6744b617c12eccfe50a918445e1e58df7f974c993a83987", "width": 96, "height": 128, "visualBounds": [14, 44, 91, 99], "suggestedBaseAnchor": [52, 99]},
+    {"id": "flowerpot", "png": "art/tiles-work/outputs/flowerpot-draft.png", "source": "art/tiles-work/sources/flowerpot-draft.aseprite", "sha256": "ce020da0ad49acc9dae0ef744ded4be1e06948cce1490188d877844bd8544b62", "width": 96, "height": 128, "visualBounds": [21, 36, 80, 99], "suggestedBaseAnchor": [50, 99]},
+    {"id": "tree", "png": "art/tiles-work/outputs/tree-draft.png", "source": "art/tiles-work/sources/tree-draft.aseprite", "sha256": "faff622c11de2ebfe4e57cac2d5a47a31b849cea3408f0d68ec8289196bec32b", "width": 256, "height": 336, "visualBounds": [8, 11, 248, 318], "suggestedBaseAnchor": [128, 318]},
+    {"id": "workshop", "png": "art/tiles-work/outputs/workshop-draft.png", "source": "art/tiles-work/sources/workshop-draft.aseprite", "sha256": "99343e9bd5de92954a23656042730bc28fa1190683b2b85c8bf2d9c5dc38d9bc", "width": 400, "height": 272, "visualBounds": [61, 42, 340, 228], "suggestedBaseAnchor": [200, 228]}
+  ]
+}

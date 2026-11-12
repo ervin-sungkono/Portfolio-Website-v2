@@ -1,0 +1,11 @@
+.tools/
+__pycache__/
+*.py[cod]
+node_modules
+.next/
+out/
+*.tsbuildinfo
+art/**/.config/
+art/**/.cache/
+art/**/.runtime/
+art/**/.temp/

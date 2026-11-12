@@ -1,0 +1,131 @@
+{
+  "status": "provisional",
+  "frameWidth": 96,
+  "frameHeight": 128,
+  "frameRate": 6,
+  "note": "Generated studies cropped, resized and thresholded; frames visually unapproved. Editable single-frame .aseprite copies under art/animation-work/sources. Blink only faces down.",
+  "characters": {
+    "male": {
+      "idle": {
+        "down": "/game/characters/male/idle-down.png",
+        "left": "/game/characters/male/idle-left.png",
+        "up": "/game/characters/male/idle-up.png",
+        "right": "/game/characters/male/idle-right.png"
+      },
+      "walk": {
+        "down": [
+          "/game/characters/male/walk-down-0.png",
+          "/game/characters/male/walk-down-1.png",
+          "/game/characters/male/walk-down-2.png",
+          "/game/characters/male/walk-down-3.png"
+        ],
+        "left": [
+          "/game/characters/male/walk-left-0.png",
+          "/game/characters/male/walk-left-1.png",
+          "/game/characters/male/walk-left-2.png",
+          "/game/characters/male/walk-left-3.png"
+        ],
+        "up": [
+          "/game/characters/male/walk-up-0.png",
+          "/game/characters/male/walk-up-1.png",
+          "/game/characters/male/walk-up-2.png",
+          "/game/characters/male/walk-up-3.png"
+        ],
+        "right": [
+          "/game/characters/male/walk-right-0.png",
+          "/game/characters/male/walk-right-1.png",
+          "/game/characters/male/walk-right-2.png",
+          "/game/characters/male/walk-right-3.png"
+        ]
+      },
+      "blink": {
+        "idle_down": "/game/characters/male/blink-idle-down.png",
+        "walk_down_1": "/game/characters/male/blink-walk-down-1.png"
+      }
+    },
+    "female": {
+      "idle": {
+        "down": "/game/characters/female/idle-down.png",
+        "left": "/game/characters/female/idle-left.png",
+        "up": "/game/characters/female/idle-up.png",
+        "right": "/game/characters/female/idle-right.png"
+      },
+      "walk": {
+        "down": [
+          "/game/characters/female/walk-down-0.png",
+          "/game/characters/female/walk-down-1.png",
+          "/game/characters/female/walk-down-2.png",
+          "/game/characters/female/walk-down-3.png"
+        ],
+        "left": [
+          "/game/characters/female/walk-left-0.png",
+          "/game/characters/female/walk-left-1.png",
+          "/game/characters/female/walk-left-2.png",
+          "/game/characters/female/walk-left-3.png"
+        ],
+        "up": [
+          "/game/characters/female/walk-up-0.png",
+          "/game/characters/female/walk-up-1.png",
+          "/game/characters/female/walk-up-2.png",
+          "/game/characters/female/walk-up-3.png"
+        ],
+        "right": [
+          "/game/characters/female/walk-right-0.png",
+          "/game/characters/female/walk-right-1.png",
+          "/game/characters/female/walk-right-2.png",
+          "/game/characters/female/walk-right-3.png"
+        ]
+      },
+      "blink": {
+        "idle_down": "/game/characters/female/blink-idle-down.png",
+        "walk_down_1": "/game/characters/female/blink-walk-down-1.png"
+      }
+    }
+  },
+  "files": {
+    "public/game/characters/female/blink-idle-down.png": "f4a780ffbe9d02cd1a5e6f43956269f8918fa251c91842868f382d9bc57879dc",
+    "public/game/characters/female/blink-walk-down-1.png": "4d10d5d0fd2065d559d3a809a48865a7fad0fce1290a839a46510faf661b5ba3",
+    "public/game/characters/female/idle-down.png": "2b45e10dca587e8770bf28dfe092f200111fa160556ff28341bd30c7949913f1",
+    "public/game/characters/female/idle-left.png": "54f5ce58b4a8603d4550a336d6d98102d83f354fa03de6168ab44cb707b1ee47",
+    "public/game/characters/female/idle-right.png": "3e8f6840a63299f52eece24461c9c1a83fc05a6597daec3077a929c7e6558aff",
+    "public/game/characters/female/idle-up.png": "1e0f16c9e7ca1311cf929adcb4f8c5eabec4193694cd4404c177b2ce66e509c0",
+    "public/game/characters/female/walk-down-0.png": "cd3088dc0bd1df3c9ffc3ecf2508114f9e9dcec98e8f424b288b5b99bc468b78",
+    "public/game/characters/female/walk-down-1.png": "4ac0f09e39ac4db4c2bb68f84583a64d55a984c587e293af5006b7cfb3da5279",
+    "public/game/characters/female/walk-down-2.png": "be2924f4e8b3e2d038bffc9119b54836567224beb38b06de3c48f31efe240110",
+    "public/game/characters/female/walk-down-3.png": "e2392af56144b5f9c1c0848b4fb73d0edc54aae696f6c7245e5e7078e13dab7c",
+    "public/game/characters/female/walk-left-0.png": "852881d34be8ff3e3d4b65723c8e96bf3bc8c09583f66e682ebbfa3ff1e40ff4",
+    "public/game/characters/female/walk-left-1.png": "2ff178189404b39daf05775228f1f68a9f085ae603259faca223cc60c8cc2532",
+    "public/game/characters/female/walk-left-2.png": "a14f97807112e71bc0a3a2b9737056046d2fd4243a78dcb3315b1a0d68954086",
+    "public/game/characters/female/walk-left-3.png": "988ea17fc2c761a1e3ce526cd8e73c034a51715bcc688060fdc5f4b74179de22",
+    "public/game/characters/female/walk-right-0.png": "0b6b8c31eb5dbac2f3d0b592af5d74895db5ab8e13951a42d0c86562d3e4e8b2",
+    "public/game/characters/female/walk-right-1.png": "386f7c67416e9e0dc908c3c4502de9e1294b5daff41a3d54ff7711dc25cff70b",
+    "public/game/characters/female/walk-right-2.png": "07798e9b1e273cdb0b1d679303e18d1e443c192af6c7baf1f84c997e8f1a4913",
+    "public/game/characters/female/walk-right-3.png": "71af51d278d3eafbdc8c0e99f9d24fa5db1383d3d795fa5f67514d7a0d4f2fa1",
+    "public/game/characters/female/walk-up-0.png": "d51d86482d67ba7b7e94d2ad613af3e7ea6e63645dcdc1d38a57d833c75711ae",
+    "public/game/characters/female/walk-up-1.png": "2007d1a9e4e4560afbd156f0fc2981aae80b7342b13fcee1e08362fe7a88e6e2",
+    "public/game/characters/female/walk-up-2.png": "984f02d80ecee3ede40a5f1aacd133679cefddda3b7343208138dde0db907d33",
+    "public/game/characters/female/walk-up-3.png": "962c4a898c900b42cf7df18b61e476d797b0a757c4905602e2f776888ddd94fc",
+    "public/game/characters/male/blink-idle-down.png": "6bc6a5c79f3c0d0424d2819fb38d341d03de5b979e81c7ee472027c03e24d78b",
+    "public/game/characters/male/blink-walk-down-1.png": "a2723c688bf6678460c8fc96492a5ff885dbe31d6b5383c8fa7e2653fdb1c2cf",
+    "public/game/characters/male/idle-down.png": "4248c236defb14d4b2057bd31668a70e0ae2523b26044289ce01ec77d2623259",
+    "public/game/characters/male/idle-left.png": "8a401c021b19cd197a978c7fe174a3f9f85f4c750f19929a103b2d05b963d1d4",
+    "public/game/characters/male/idle-right.png": "f42145edf8a39d67cb431086613305816f4c38d096b5af138a92f69909a0f0f0",
+    "public/game/characters/male/idle-up.png": "4396e38bbfbc2f2fa579b2153a07496d5986437aaf8a9b7a6b0edd1b4c20f56d",
+    "public/game/characters/male/walk-down-0.png": "5a3494e44ddceda60d0dc87bcb0b2efdbf8cb475e3f5c49722e8dbdb67e3f1ef",
+    "public/game/characters/male/walk-down-1.png": "2d9412b7d2ae23a16bdcd8fcfcd263374f1b0e7ef1cbc21b69f9bf2527fd99a0",
+    "public/game/characters/male/walk-down-2.png": "b460abdf147970e5e0864546eebe64163b78099369e0e31a74643f80e6d27a09",
+    "public/game/characters/male/walk-down-3.png": "9fab34b4ec6622194d8da32b7b305be5d1b9590f1d60db38f595dc43ddef1035",
+    "public/game/characters/male/walk-left-0.png": "5b85fbb94c83f7eaf176372ec03fb358db398c1b6032c457042a6ab9250ce37b",
+    "public/game/characters/male/walk-left-1.png": "0a5fe84084477004c6e732aa26934477c25005c5952d7120f62ce93eebbccd3f",
+    "public/game/characters/male/walk-left-2.png": "3a24eb9f981a8092b2d5052c9b55c264238f3c1571aa2934ad437fedcd2ede71",
+    "public/game/characters/male/walk-left-3.png": "f25639972388cdb0e7b880c25af3aade951a5871fde2f9301f0952b547d2469d",
+    "public/game/characters/male/walk-right-0.png": "7a3eac525871a3bd730e2e76238d4068c5417a5ee40aee360c8c3db967c394b3",
+    "public/game/characters/male/walk-right-1.png": "e474aba8412f73eccc05f98b5bf139852561c4cbe08ecc768a1deaae91035c0b",
+    "public/game/characters/male/walk-right-2.png": "43ad2d64c3c49333ec2cdbf158c6ae20580101a0f38fdf98ded227902b49a15e",
+    "public/game/characters/male/walk-right-3.png": "539c68837b47ecc165820fdea92ded922d69971132fe01e1361fc9ed824c4178",
+    "public/game/characters/male/walk-up-0.png": "fcb6cbb0c6aff75102c1887c348d16351d9cea05ea3b5055b251a3076f506d11",
+    "public/game/characters/male/walk-up-1.png": "9b383430d5c928fc8b608054385cefe76ce8211918afc2b3bc0be0e08bab3618",
+    "public/game/characters/male/walk-up-2.png": "67ba3474cc43346cacc41f801d18e596e9ae47455fb4892b554c78bdd2d61c21",
+    "public/game/characters/male/walk-up-3.png": "7b12e1b9ac6f3606348403779c0914483c6426521b73cd2135380260bd58b273"
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "basePath": "/game/town-v2/",
+  "props": {
+    "fountain": {
+      "id": "fountain",
+      "url": "/game/town-v2/fountain.png",
+      "kind": "animated-sprite",
+      "sourceWidth": 640,
+      "sourceHeight": 176,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ],
+      "frameWidth": 160,
+      "frameHeight": 176,
+      "frameCount": 4,
+      "frameRate": 4,
+      "repeat": -1
+    },
+    "river-waterfall": {
+      "id": "river-waterfall",
+      "url": "/game/town-v2/waterfall.png",
+      "kind": "animated-sprite",
+      "sourceWidth": 768,
+      "sourceHeight": 128,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ],
+      "frameWidth": 192,
+      "frameHeight": 128,
+      "frameCount": 4,
+      "frameRate": 4,
+      "repeat": -1
+    },
+    "tree": {
+      "id": "tree",
+      "url": "/game/town-v2/tree.png",
+      "kind": "animated-sprite",
+      "sourceWidth": 640,
+      "sourceHeight": 176,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ],
+      "frameWidth": 160,
+      "frameHeight": 176,
+      "frameCount": 4,
+      "frameRate": 4,
+      "repeat": -1
+    },
+    "river-water": {
+      "id": "river-water",
+      "url": "/game/town-v2/river-water.png",
+      "kind": "animated-texture",
+      "sourceWidth": 384,
+      "sourceHeight": 96,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "repeat-texture",
+      "layers": [
+        "single-composited-sprite"
+      ],
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "frameCount": 4,
+      "frameRate": 4,
+      "repeat": -1
+    },
+    "willow": {
+      "id": "willow",
+      "url": "/game/town-v2/willow.png",
+      "kind": "static-sprite",
+      "sourceWidth": 160,
+      "sourceHeight": 192,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ]
+    },
+    "blossom-tree": {
+      "id": "blossom-tree",
+      "url": "/game/town-v2/blossom-tree.png",
+      "kind": "static-sprite",
+      "sourceWidth": 176,
+      "sourceHeight": 176,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ]
+    },
+    "waterside-planting": {
+      "id": "waterside-planting",
+      "url": "/game/town-v2/waterside-planting.png",
+      "kind": "static-sprite",
+      "sourceWidth": 192,
+      "sourceHeight": 144,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ]
+    },
+    "stairs": {
+      "id": "stairs",
+      "url": "/game/town-v2/stairs.png",
+      "kind": "static-sprite",
+      "sourceWidth": 128,
+      "sourceHeight": 144,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ]
+    },
+    "raised-wall": {
+      "id": "raised-wall",
+      "url": "/game/town-v2/raised-wall.png",
+      "kind": "static-sprite",
+      "sourceWidth": 256,
+      "sourceHeight": 128,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ]
+    },
+    "garden-corner": {
+      "id": "garden-corner",
+      "url": "/game/town-v2/garden-corner.png",
+      "kind": "static-sprite",
+      "sourceWidth": 176,
+      "sourceHeight": 144,
+      "originX": 0.5,
+      "originY": 1,
+      "scale": 1,
+      "collision": null,
+      "displayMode": "sprite",
+      "layers": [
+        "single-composited-sprite"
+      ]
+    }
+  }
+}
