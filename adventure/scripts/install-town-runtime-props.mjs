@@ -20,6 +20,8 @@ for (const [id, style] of Object.entries(runtime.props)) {
   props[id] = { url, originX, originY, scale, collision: footprints[id] ?? null, kind, displayMode,
     ...(frameCount > 1 ? { frameWidth, frameHeight, frameCount, frameRate, repeat } : {}) };
 }
+// Trace the rounded basin without blocking the surrounding diagonal path.
+props.fountain.collisionParts = [{"offsetX": 0, "offsetY": -83, "width": 88, "height": 34}, {"offsetX": 0, "offsetY": -59, "width": 124, "height": 22}, {"offsetX": 0, "offsetY": -37, "width": 132, "height": 22}];
 // A shorter, repeating retaining face aligns the river cap with the water boundary.
 props['river-wall'] = { ...props['raised-wall'], scale: 0.75, collision: null };
 for (const group of Object.values(districts.groups)) {

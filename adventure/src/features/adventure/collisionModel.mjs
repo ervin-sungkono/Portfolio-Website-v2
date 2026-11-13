@@ -26,7 +26,7 @@ export function colliderAt(point, profile, source) {
 
 /** Derive colliders from the exact objects drawn by the map so moved props cannot leave stale blockers.
  * @param {MapPoint[]} decorations @param {MapPoint[]} interactions
- * @param {Record<string,{collision?:CollisionProfile|null}>} props
+ * @param {Record<string,{collision?:CollisionProfile|null,collisionParts?:CollisionProfile[]}>} props
  * @param {{id:string,collision?:CollisionProfile|null}[]} npcs
  * @returns {CollisionRect[]}
  */
@@ -34,8 +34,11 @@ export function townColliders(decorations, interactions, props, npcs) {
   /** @type {CollisionRect[]} */
   const result = [];
   for (const object of decorations) {
-    const rect = colliderAt(object, props[object.name]?.collision, `decoration:${object.name}`);
-    if (rect) result.push(rect);
+    const style = props[object.name];
+    for (const profile of [style?.collision, ...(style?.collisionParts ?? [])]) {
+      const rect = colliderAt(object, profile, `decoration:${object.name}`);
+      if (rect) result.push(rect);
+    }
   }
   const interactionProps = { project: 'terminal', collection: 'terminal', contact: 'mailbox', arcade: 'arcade', match: 'arcade', cafe: 'sign', moments: 'painting-frame' };
   for (const object of interactions) {

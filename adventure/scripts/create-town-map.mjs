@@ -130,6 +130,9 @@ for (const [groupId, group] of Object.entries(groups)) {
   }
 }
 const collision = [
+  // The retaining face begins above the water; only the central stair/bridge gap is open.
+  object('river-retaining-west', 'retaining-wall', 0, 1184, { width: 944, height: 32 }),
+  object('river-retaining-east', 'retaining-wall', 1072, 1184, { width: world.width - 1072, height: 32 }),
   object('river-west', 'water', 0, 1216, { width: 944, height: 96 }),
   object('river-east', 'water', 1072, 1216, { width: world.width - 1072, height: 96 }),
   object('bridge-west-rail', 'bridge-rail', 944, 1192, { width: 16, height: 144 }),

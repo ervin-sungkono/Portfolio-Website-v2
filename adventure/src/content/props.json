@@ -25,9 +25,9 @@
     "scale": 1.2,
     "collision": {
       "offsetX": 0,
-      "offsetY": -39,
+      "offsetY": -58,
       "width": 300,
-      "height": 78
+      "height": 116
     }
   },
   "cafe": {
@@ -37,9 +37,9 @@
     "scale": 1,
     "collision": {
       "offsetX": 0,
-      "offsetY": -30,
+      "offsetY": -54,
       "width": 282,
-      "height": 60
+      "height": 108
     }
   },
   "river-bridge": {
@@ -261,7 +261,27 @@
     "frameHeight": 176,
     "frameCount": 4,
     "frameRate": 4,
-    "repeat": -1
+    "repeat": -1,
+    "collisionParts": [
+      {
+        "offsetX": 0,
+        "offsetY": -83,
+        "width": 88,
+        "height": 34
+      },
+      {
+        "offsetX": 0,
+        "offsetY": -59,
+        "width": 124,
+        "height": 22
+      },
+      {
+        "offsetX": 0,
+        "offsetY": -37,
+        "width": 132,
+        "height": 22
+      }
+    ]
   },
   "mailbox": {
     "url": "/game/decor/mailbox.png",

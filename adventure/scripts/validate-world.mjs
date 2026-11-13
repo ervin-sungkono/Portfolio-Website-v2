@@ -37,6 +37,7 @@ if (!Array.isArray(mapInteractions) || !Array.isArray(mapObstacles) || !Array.is
 for (const [id, prop] of Object.entries(props)) {
   if (typeof prop.url !== 'string' || !prop.url.startsWith('/game/') || prop.url.includes('..') || !existsSync(join('public', prop.url)) || !Number.isFinite(prop.scale) || prop.scale <= 0 || !Number.isFinite(prop.originX) || !Number.isFinite(prop.originY)) errors.push(`Invalid or missing prop: ${id}`);
   if (!('collision' in prop) || (prop.collision !== null && !validCollisionProfile(prop.collision))) errors.push(`Invalid or missing prop collision profile: ${id}`);
+  if (prop.collisionParts !== undefined && (!Array.isArray(prop.collisionParts) || prop.collisionParts.some(part => !validCollisionProfile(part)))) errors.push(`Invalid additional prop collision profile: ${id}`);
   if (prop.frameCount !== undefined) {
     if (![prop.frameCount, prop.frameWidth, prop.frameHeight].every(value => Number.isInteger(value) && value > 0) || !Number.isFinite(prop.frameRate) || prop.frameRate <= 0) errors.push(`Invalid prop animation: ${id}`);
     else if (existsSync(join('public', prop.url))) {

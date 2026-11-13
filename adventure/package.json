@@ -36,7 +36,8 @@
     "test:residents": "node tests/residents.test.mjs && node tests/resident-physics.test.mjs && node tests/resident-routes.test.mjs",
     "test:world-layering": "node tests/world-layering.test.mjs",
     "test:pixel-photos": "node tests/pixel-photo-preview.test.mjs",
-    "test:group-collisions": "node tests/group-collisions.test.mjs"
+    "test:group-collisions": "node tests/group-collisions.test.mjs",
+    "audit:collisions": "node scripts/audit-town-collisions.mjs --physics --check"
   },
   "dependencies": {
     "next": "16.4.6",
