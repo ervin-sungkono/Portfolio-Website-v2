@@ -1,181 +1,93 @@
-# Portfolio architecture and operations
+# Architecture and operations
 
-Updated for the GitHub and Dribbble CMS flow on **3 November 2026 (Asia/Jakarta)**. This document owns application boundaries, content, metadata, contact integration, and image delivery. [UI behavior](responsive-and-motion.md) owns presentation and interaction; [verification](verification.md) records dated evidence, repository status, and remaining checks.
-
-## Scope and stack
-
-The portfolio preserves verified project facts, artwork, CV, social links, and team credits through server-rendered pages. The stack is Next.js 16.4.3 App Router, React 19.2, strict TypeScript, native CSS, next-themes, Motion 14, Nodemailer 10.2, Auth.js 5 beta, Zod 4, and React Hook Form. Install with the committed lockfile using Node.js 24; the package requires Node.js 22 or newer, while the isolated CMS browser fixture runner requires Node.js 24.
-
-The owner-only GitHub CMS lives inside this Next.js application. A separate public repository stores JSON and modest images; there is no database, separate backend, or object-storage provider. The earlier Neon-based PR #3 is closed and unmerged. Professional content expansion remains deferred: do not infer new responsibilities, contributions, seniority, or measured outcomes from the implementation.
+This document owns code/content boundaries, metadata, CMS operation, contact integration, image delivery, and release limits. See [responsive and motion](responsive-and-motion.md) for UI behavior and [verification](verification.md) for check coverage and dated evidence.
 
 ## Code boundaries
 
-| Location                 | Responsibility                                                                     |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| `src/app`                | Routes, layouts, metadata endpoints, page composition, and the contact API.        |
-| `src/components`         | Reusable UI and focused browser interactions.                                      |
-| `src/styles/globals.css` | Shared theme, typography, spacing, layout utilities, and accessibility primitives. |
-| `web-assets/content`     | Published profile, engineering walkthroughs, projects, and selected design IDs.    |
-| `src/lib/content.ts`     | Collection exports, project lookup, filtering, and related-project selection.      |
-| `src/lib/metadata.ts`    | Public origin and shared page/social metadata.                                     |
-| `src/lib/contact`        | Shared validation, bounded request parsing, and server-only provider integration.  |
-| `src/lib/image-sizes.ts` | Layout-specific image slot hints.                                                  |
+| Area                     | Responsibility                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| `src/app`                | Routes, layouts, metadata, page composition, API handlers                                |
+| `src/components`         | Reusable UI and focused browser interactions                                             |
+| `src/styles/globals.css` | Shared theme tokens, typography, layout and accessibility primitives                     |
+| `web-assets/content`     | Published profile, engineering walkthroughs, projects, selected Dribbble IDs             |
+| `src/lib/content.ts`     | Public collections, lookups, filters, related-project selection                          |
+| `src/lib/metadata.ts`    | Canonical public origin and shared metadata                                              |
+| `src/lib/contact`        | Validation, bounded request parsing, server-only delivery                                |
+| `src/lib/cms`            | CMS schemas, auth policy, GitHub repository operations, publication and cache boundaries |
 
-Components use PascalCase directories with `index.tsx`, and a `type.ts` where useful. Shared links, cards, experience, and motion wrappers live in `src/components/common`; `src/components/layout` owns site-wide layout and motion. Page sections live under `home`, `about`, `project`, `design`, `contact`, or `admin`, while routes in `src/app` compose them and retain metadata and data loading. Component-specific CSS Modules are named `style.module.css` and imported from the component's own directory; route-owned modules use the same name beside the route. Existing shared global styles remain in their established stylesheets. The shared scroll hook is at `src/lib/hooks/use-scroll-motion.ts`. See [verification](verification.md) for dated check coverage and its limits.
+The app uses Next.js 16.4 App Router, React 19, strict TypeScript, CSS/CSS Modules, Motion, Auth.js, Zod, React Hook Form, and Nodemailer. Shared UI belongs in `src/components/common`; route sections and admin UI stay scoped to their respective component directories. `Contact` groups shared message validation, formatting, and bounded body parsing; provider access remains in the server-only contact service. The CMS repository module owns project-index serialization and comparison. Use the installed Next.js docs before changing framework APIs.
 
-Pages and content stay in Server Components. Header navigation, contact submission, motion, and particles use small Client Components. Server-rendered content passes into motion wrappers and remains visible without JavaScript. Continuous pointer and scroll coordinates use Motion values or engine state rather than React state on each frame. Media subscriptions, observers, event listeners, animation frames, and particle engines clean up when their scope ends.
+## Request and publishing flows
 
-Keep functions and boundaries small. Add abstractions or dependencies only when the requested behavior needs them. Read the relevant installed Next.js guide in `node_modules/next/dist/docs/` before changing framework APIs.
+- Public pages in `src/app` use `src/lib/content.ts`; the CMS public reader resolves and validates the GitHub content tree through `src/lib/cms/public.ts`, `repository.ts`, and `schemas.ts`.
+- The owner editor and importer live in `src/components/admin`. `CmsDraftProvider` stores local drafts and media; `CmsEditor/useCmsDraftAutosave.ts` stages form changes into that draft.
+- CMS requests enter `src/app/api/cms`, check the owner through `src/lib/cms/auth.ts`, and publish through `draft-finalization.ts`, `git-data.ts`, and `publishing.ts`. Cache invalidation follows a successful commit.
+- A project page renders `ProjectHeader`, `ProjectGallery`, `ProjectStory`, and `RelatedProjects` directly. `src/proxy.ts` uses `/not-found` for complete project recovery HTML; `src/app/not-found.tsx` shares that view with the framework fallback.
 
-## Routes and collections
+Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, and `/contact`. Server rendering supplies the content; client components handle navigation, forms, and motion. `src/proxy.ts` and `/api/content/project` preserve project not-found responses as complete 404/noindex/no-store documents, including without JavaScript. Do not replace this path with a rewrite that loses the HTTP status or recovery HTML.
 
-Public pages are `/`, `/about`, `/project`, `/project/[slug]`, `/design`, and `/contact`. The content snapshot has 17 project detail pages, for 22 public pages in total, and 16 design entries.
-
-- Project search/category filters use shareable GET URLs with server rendering. The Design page shows all available selected shots in saved order, without category filters.
-- GitHub content uses explicit `featured` flags and `sortOrder`; unfiltered archives exclude featured entries. Filtering searches the complete published collection.
-- Project details can render newly published slugs after deployment. Their content is cached and invalidated after publication. Unknown/unpublished slugs use 404/noindex recovery; the current checks and any no-JavaScript limits are recorded in [verification](verification.md).
-- Related projects prioritize shared technologies, then category, through a small pure function.
-  Preserve public slugs, destinations, assets, and attribution during maintenance. Framework route filenames retain their required names.
-
-The 404 markup and its module live together in `src/app/not-found/`. The framework-required `src/app/not-found.tsx` delegates to that view. The project proxy buffers the same `/not-found` page and returns it with a 404 status, noindex, and no-store headers; the directly accessible `/not-found` route is also noindex. Header navigation treats the recovery document as a project path so the proxied HTML hydrates consistently at the visitor's requested URL.
+The former `/engineering` URL permanently redirects to the engineering overview on the home page. On Vercel, the project proxy uses the platform-provided production domain for production checks and the deployment URL for previews. Protected previews require Vercel's automation bypass to be configured and its system environment variables exposed; internal requests reject redirects and never derive their destination from the incoming host header.
 
 ## Content and provenance
 
-`profile.name` in `web-assets/content/portfolio.json` is authoritative: **Ervin Cahyadinata Sungkono**. Use the full name in visible identity, accessible alternatives, metadata, and structured data. Existing account URLs remain unchanged.
+The content repository is separate from this application and is public. `profile.name` in `content/portfolio.json` is authoritative: **Ervin Cahyadinata Sungkono**. Preserve verified project facts, public slugs, assets, links, CV/social destinations, and team attribution. Professional content expansion remains deferred; do not infer roles, metrics, or outcomes.
 
-Edit profile facts, skills, and project walkthroughs in the content repository's `content/portfolio.json`; the owner CMS edits homepage copy, projects, taxonomy, and the ordered selection of Dribbble shot IDs. Design titles, links, and images are read from Dribbble on the server. Access public collections through `src/lib/content.ts`. The homepage selects up to three featured projects, so ordering is editorial. WeTrack, ChatGPT Clone, and Next Pokedex have walkthroughs with documented features, tradeoff analysis, original sources, and explicitly proposed validation steps. WeTrack's team credits remain visible.
+The owner-maintained profile, skills, and project walkthroughs live in `content/portfolio.json`. The CMS manages homepage copy, projects, taxonomy, image references, and an ordered selection of Dribbble shot IDs. Design titles, links, and images are fetched from Dribbble. Application content reads go through `src/lib/content.ts`; there is no checked-in fallback. Directly adding or removing project documents also requires updating `content/project-index.json`; cache refresh does not rebuild that index.
 
-The inherited content was reviewed on **7 October 2026**; the documentation date does not refresh those external facts:
-
-| Material                                             | Source and limit                                                                                                                                                |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Original routes, assets, and integration conventions | [Legacy portfolio](https://github.com/ervin-sungkono/Portfolio-Website-v2/tree/6a2c71db6627ee06648a642c64d9c7ac426dfc8f).                                       |
-| Project descriptions, URLs, and topics               | Owner's public GitHub repository metadata. WeTrack and ChatGPT Clone notes use their READMEs; Next Pokedex's rendering summary uses its repository description. |
-| Screenshots and technology icons                     | Owner's [web-assets repository](https://github.com/ervin-sungkono/web-assets).                                                                                  |
-| Design titles and artwork                            | [ErvinCS on Dribbble](https://dribbble.com/ErvinCS) and linked shots.                                                                                           |
-| Experience and education                             | The owner's public [LinkedIn profile](https://www.linkedin.com/in/ervin-cahyadinata-sungkono), recorded in the content repository; it is not polled at runtime. |
-| CV                                                   | Original link retained; its currency has not been independently verified.                                                                                       |
-
-`src/lib/content.ts` is the public content boundary. Portfolio documents come from GitHub and selected design details come from Dribbble; there is no bundled portfolio-data fallback. A cold read of unavailable or invalid GitHub content fails visibly. When Dribbble is unavailable, the affected design section displays an unavailable message. The generic application shell remains available so the owner can reach CMS setup.
+The site document can select up to three published project slugs for the hero, in order; without a selection the hero uses the first three featured projects. Saving this optional field requires the updated reader to be deployed first, because older strict readers reject the additional field. Final submission validates the selection against the resulting published projects.
 
 ## GitHub CMS
 
-### Setup and source separation
+The single-owner CMS uses GitHub OAuth for sign-in and a server-side GitHub PAT for owner identity and repository access. The PAT `/user` identity must match the OAuth identity. The encrypted session stores the GitHub user ID without copying the OAuth access token, and protected CMS requests compare that ID to the current PAT owner. A server-side Dribbble token supplies design details. Never use `NEXT_PUBLIC_` for secrets, expose provider tokens to browser code, or connect the content repository as the Vercel deployment source. The application has no database or separate backend.
 
-Configure these server-only variables from `.env.example` in local `.env.local` or the intended Vercel environment:
+Configure `.env.local` from `.env.example`:
 
-| Variable             | Purpose                                                                                                       |
-| -------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `AUTH_SECRET`        | Random secret for Auth.js encrypted sessions; use at least 32 random characters.                              |
-| `AUTH_GITHUB_ID`     | GitHub OAuth application's client ID.                                                                         |
-| `AUTH_GITHUB_SECRET` | GitHub OAuth application's client secret.                                                                     |
-| `GITHUB_REPO`        | Separate public content repository name, without an owner or slash.                                           |
-| `GITHUB_PAT`         | Server-side GitHub personal access token for owner identity, repository discovery, content reads, and writes. |
-| `DRIBBBLE_TOKEN`     | Server-side Dribbble OAuth access token used to list the owner's shots.                                       |
+| Variable                               | Use                                                           |
+| -------------------------------------- | ------------------------------------------------------------- |
+| `AUTH_SECRET`                          | Auth.js encrypted session secret                              |
+| `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` | GitHub OAuth app credentials                                  |
+| `GITHUB_PAT`                           | Server-side owner identity and content repository access      |
+| `GITHUB_REPO`                          | Separate public content repository name, without owner prefix |
+| `DRIBBBLE_TOKEN`                       | Server-side Dribbble API access                               |
 
-Create an OAuth application with callback `https://<deployment-host>/api/auth/callback/github`; for local development use `http://localhost:3000/api/auth/callback/github` with a separate development OAuth app. OAuth requests `read:user` for sign-in only. The PAT needs access to the public content repository, including contents read/write; to list private repositories it also needs the corresponding repository access. Automatic creation requires a token permitted to create repositories; otherwise create the public repository with an initial README commit first. Grant only the access needed and keep every credential out of `NEXT_PUBLIC_`, browser storage, URLs, and logs. The PAT's `/user` response supplies the content owner, and GitHub supplies the configured repository's default branch; these are not separate settings.
+Use the callback `https://<deployment-host>/api/auth/callback/github`; local development uses `http://localhost:3000/api/auth/callback/github` and should have its own OAuth app. Grant only required repository access. Repository creation requires token permission to create repositories; otherwise initialize a compatible README-only repository. The PAT determines the owner and GitHub metadata determines the default branch.
 
-Do not connect the content repository as a Vercel deployment source. Only application source changes need builds. A template installer supplies their own OAuth app, PAT, Dribbble token, repository name, and Auth secret. GitHub configuration does not change the canonical public origin `https://ervincs.com`.
+`src/lib/cms/schemas.ts` defines strict documents. The repository contains `content/site.json`, `portfolio.json`, `categories.json`, `technologies.json`, `project-index.json`, and `projects/<slug>.json`; project media is under `media/projects/<slug>/`, optional technology icons under `media/technologies/`. The filename is the project URL identity. Version 2 projects use nullable unique `githubRepositoryId`; portfolio design selection stores IDs in order, not copied shot metadata.
 
-Opening `/admin` shows setup or GitHub sign-in. The OAuth identity must match the numeric ID returned by the PAT's GitHub `/user` endpoint at sign-in and on privileged requests; a missing, revoked, or unverifiable PAT fails closed. Rotating to a PAT for a different account changes the authorized owner. The encrypted HttpOnly, SameSite session retains the identity, not the OAuth access token; client session JSON exposes only allowlisted identity fields. The PAT and Dribbble token remain in trusted server code and never appear in CMS responses. Next.js resolves the `server-only` build marker itself; there is no `server-only` npm dependency.
+After sign-in, **Initialize repository** is for a new or compatible repository only. It adds seed documents and index without replacing existing README content; incompatible or populated repositories stop rather than reset. A new repository needs a valid `content/portfolio.json` before public pages can render. Do not initialize over incompatible or asset-only content.
 
-### Modules and storage
+CMS forms and the GitHub import wizard save drafts and staged image bytes to this browser profile's Cache Storage. Drafts are not uploaded until **Submit draft**. **Delete draft** asks for confirmation before clearing unsubmitted changes. A secure context and Web Locks support are required; one `/admin` or `/admin/import` tab per origin may edit. Storage quota, eviction, or clearing site data can remove an unsubmitted draft. A conflict returns the current server value and retains the local draft for review. Confirmed submission validates the full draft and writes changed content, index updates, deletions, and staged media in one Git commit/branch update. All committed content is publicly readable, including `published: false` documents and history. Private-repository metadata or staged images become public when submitted.
 
-- `src/lib/cms/schemas.ts`: shared strict Zod documents and mutations, used by React Hook Form and server validation.
-- `github.ts`, `github-repositories.ts`, `repository.ts`: GitHub access, repository discovery, owner/default-branch resolution, typed reads, and reference validation.
-- `git-data.ts`, `git-identity.ts`, `draft-finalization.ts`: create media/content blobs and one Git tree/commit for the final browser draft, then update the branch once.
-- `initialization.ts`, `project-index.ts`, `media.ts`, `media-path.ts`: repository setup, project-index validation, staged-media verification, and content-hashed paths.
-- `auth.ts`, `auth-policy.ts`, `http.ts`: trusted credential retrieval, owner policy, same-origin mutations, bounded JSON requests, and private responses.
-- `public.ts`, `cache.ts`, `publishing.ts`: public cached projection, batch invalidation, and separation of commit success from cache failures.
-- `src/lib/dribbble.ts`: server-side Dribbble shot listing, pagination, and mapping into public design details.
-- `src/components/admin/CmsDraftProvider`: repository-scoped browser Cache Storage for pending document edits and image bytes, with an exclusive Web Lock for one editing tab per origin. Editing requires a secure context and a Web Locks-capable browser; drafts remain local to the browser profile.
-- `src/components/admin/CmsEditor` and `GitHubImport`: structured forms, design selection, and repository mapping; per-section saves update the browser draft, while a final submit calls the application's CMS endpoints.
-- `src/proxy.ts` and `/api/content/project`: publication checks before project rendering, using the same cached public content boundary. Missing projects return a buffered recovery document with HTTP 404/noindex/no-store. This avoids Next.js PPR's blank no-JavaScript recovery and status replacement during rewrites. Internal requests use the platform's `VERCEL_URL` or local `127.0.0.1:PORT` (default 3000), never a visitor-supplied Host. Set `PORT` when running the app locally on another port.
+Editor and importer synchronize form values against the loaded repository baseline, removing a staged document when its values are restored. A saved empty draft can be rebound to a different repository or branch; drafts containing changes or a pending public refresh are retained for explicit recovery.
 
-Storage uses `content/site.json`, `content/portfolio.json`, `content/categories.json`, `content/technologies.json`, `content/project-index.json`, and `content/projects/<slug>.json`. The filename is the URL identity; project JSON has no duplicate slug. Strict version-2 projects have a nullable `githubRepositoryId`, which must be unique when present. The version-2 portfolio stores an ordered list of selected Dribbble IDs, not shot metadata. The CMS maintains the project index because raw GitHub URLs cannot list directories. Registries use stable IDs, projects refer to those IDs, and images use repository-relative paths under `media/projects/<slug>/` or `media/technologies/`. The application's existing route remains `/project/<slug>`.
+The Images section loads the managed project and technology media catalog through the owner-only `/api/cms/media` endpoint. Deleting a committed image stages its file removal and removes references from the resulting project and technology drafts. When a deleted image is a project cover, the first gallery image is promoted; a project with no replacement cover must be edited before deletion. Final submission checks the image's recorded Git SHA, rejects any remaining references, and publishes the removal in the same commit as the content changes. The review shown before confirmation lists affected fields, projects, taxonomy, designs, and media. Deleting a file does not erase earlier public Git history.
 
-### Initialization and editing
+Uploads accept PNG, JPEG, and WebP up to 1 MiB with matching MIME, extension, and byte signature; arbitrary SVG uploads are rejected. Media must be referenced by a project or technology before final submission. CMS commits do not deploy the app. Cache invalidation follows commit success; visitors may briefly see stale content while regeneration runs. **Retry public refresh** appears only when a successful commit leaves cache invalidation pending; it only retries cache invalidation and does not make another Git commit. Direct GitHub edits do not automatically invalidate caches, so public content may remain stale until regeneration or a subsequent CMS publication. Project additions and removals also require a matching `content/project-index.json` update.
 
-After authorized sign-in, choose **Initialize repository** only for a new or compatible public content repository. Public requests and builds never initialize storage. For a new repository, GitHub creates the initial branch and README. An existing repository without an initial branch first needs a README commit; a compatible README-only repository can then be initialized without replacing its README. The CMS adds missing seed documents and the project index in one Git commit. A new repository also needs an explicitly supplied `content/portfolio.json` matching `portfolioSchema` before public pages can render. Each CMS Git commit sets both author and committer to `Portfolio CMS <cms@portfolio.local>`, including bootstrap. Keep that email unassociated with the owner's GitHub account; GitHub may still show the authenticated account as the API actor. Retries inspect existing content and only complete an exact known seed subset. Private, legacy `web-assets`, unrelated populated, and incompatible repositories stop with an actionable error; nothing is erased or reset.
-
-Project, site-profile, category, and technology forms save drafts to browser Cache Storage; design toggles update the draft directly. The draft is keyed to the selected content repository and remains available after a page reload in that browser profile, subject to browser storage quotas, eviction, and manual clearing. Editing requires a secure context and Web Locks support. An exclusive origin lock allows one `/admin` or `/admin/import` tab to edit at a time; another tab remains read-only until the owner closes it and reloads. A browser before-unload prompt warns when a draft write is pending or needs retry. The draft is not sent to GitHub until the owner confirms **Submit all changes**. If a document changed after it was loaded, the server returns HTTP 409 and the editor shows the current repository value beside the local draft. The owner must explicitly choose **Use reviewed versions as baseline** before submitting those fields again; the draft is retained through the conflict and review.
-
-One confirmed submit validates the complete draft and publishes changed documents, the updated project index, deletes, and staged images in one Git commit and one branch update. Project references and media are checked against the resulting snapshot before the update; an unattached staged image must be added to a project or technology icon, or removed from the draft, before submission. A changed configured repository or default branch is rejected for review, as is a concurrent branch move. All committed content is public in GitHub, including `published: false` and earlier revisions; unpublishing only hides it from the portfolio.
-
-On `/admin/import`, choose an accessible GitHub repository and map it to a new or existing project. Review suggested metadata and complete the shared project form before saving it to the browser draft. Refreshing GitHub metadata leaves the draft untouched; applying available fields fills only blanks. The owner must acknowledge that final submission will place metadata from a private repository or a staged image in the public content repository, even for an unpublished project. The Designs panel provides show/hide controls without editing shot details. Missing selected IDs remain saved until explicitly removed.
-
-Images accept PNG, JPEG, and WebP only, at most 1 MiB, with matching MIME, extension, and byte signatures. Arbitrary SVG uploads are rejected. Existing technology SVG references are checked. Selecting **Stage images in browser draft** stores image bytes and content-hashed paths in Cache Storage; the owner can remove staged images before submission. For project media, the first staged image fills an empty cover and later images are added to the gallery. The browser sends each remaining image to `/api/cms/media` only after final submission is confirmed; the server validates it and creates a Git blob. Those blobs join the document changes in the same tree and commit. A failed submission leaves the browser draft available for retry.
-
-### Publishing and ISR
-
-At build time and after invalidation, the server derives the public source from the PAT owner and GitHub's repository metadata, resolves the latest branch commit through GitHub's public commit feed, then loads and validates all JSON at that immutable revision via raw GitHub URLs. Next.js Cache Components retains the result without time-based revalidation; individual project lookups also carry `project:<slug>` tags. Cache keys and cached results do not contain credentials. Authenticated editor reads use GitHub's REST API and bypass the public cache. A failed cold read is visible; a failed background refresh may retain the previous cached result. Selected design details are fetched from Dribbble's `GET /v2/user/shots`, following its pagination links, and cached for public rendering; failed API responses are not cached as successful empty selections.
-
-The finalizer validates all changed documents and media at one branch revision, updates `content/project-index.json` when projects change, and writes the resulting tree through one commit and branch update. It then invalidates the affected cache tags and paths in a batch. `revalidateTag(tag, 'max')` marks data stale; visitors may briefly receive the previous version while regeneration runs. “Cache refreshed” means invalidation was accepted, not instant global delivery.
-
-Design selection is part of the same browser draft and final commit. If cache invalidation fails after a successful commit, the editor retains a pending-refresh marker; **Retry public refresh** sends only cache invalidation and does not write another content commit. The owner can also use **Refresh public content** after direct GitHub edits. Dribbble's [published API terms](https://developer.dribbble.com/terms/) restrict storage of its data; whether saved shot IDs and ISR-cached responses are permitted requires clarification from Dribbble.
-
-`partialPrefetching` is explicitly disabled while migrating the existing portfolio to Cache Components. Existing project detail paths are prerendered at build time; new published paths can render after an authorized refresh without a build. Collection GET filters use blocking server rendering so native navigation remains usable. Direct GitHub edits require an authorized refresh; manually added or deleted project files also require the matching project-index update because refresh only invalidates caches. There is no webhook or scheduled refresh. Content commits never call a deploy hook or Vercel deployment API. `images.unoptimized: true` still serves original GitHub assets; the CMS does not enable image transformations.
-
-### Legacy content mapping and rollback
-
-Use [the LLM mapping instructions](web-assets-migration-agent.md) to audit old content against the shared schemas. The prior one-off conversion utility was removed after the authorized migration; no ongoing runtime behavior depends on it. The instructions treat `web-assets/legacy` as read-only source, compare it with the already migrated `master`, and require a mapping report before edits. No executable converter is maintained.
-
-On 25 October the owner separately authorized publishing to `web-assets/master`, with the old master preserved on `legacy`. Existing `images/` and `icons/` remain as compatibility directories until the application release; initialization can reuse them only with complete, valid CMS documents and never bootstraps over asset-only legacy storage. [Verification](verification.md#authorized-web-assets-publication) records exact refs, author/committer, schema/media read-back, and rollback limits.
+The public reader resolves the configured repository at an immutable Git revision and validates JSON before caching. Selected Dribbble details are also cached on the server. Both can be fetched during prerendering and again after invalidation or a cache miss; the configuration does not guarantee provider calls occur only at build time. Runtime cache persistence depends on the hosting environment. There is no webhook or scheduled refresh. Dribbble API terms may limit retention of API responses; check the current terms before changing caching behavior.
 
 ## Identity and discovery
 
-The public origin is **https://ervincs.com**, defined in `src/lib/metadata.ts`. A `SITE_URL` environment variable does not control it. Canonicals, social URLs, sitemap, robots, and structured data must use this origin in both local and preview builds.
-
-Routes have distinct descriptions and matching Open Graph/Twitter metadata. Filtered collection URLs canonicalize to the unfiltered collection. About renders ProfilePage/Person structured data using visible profile facts; serialization escapes `<`. Project shares use the project's title and screenshot. These are discovery foundations, without a promise of indexing or search rank.
-
-`src/app/robots.ts` and `src/app/sitemap.ts` own discovery endpoints. An old checkout may contain ignored generated `public/robots.txt`, `public/sitemap.xml`, or `public/sitemap-0.xml`; remove those obsolete files if present so they do not shadow the routes. Preview `noindex` is expected; actual deployment headers and production indexing require separate checks.
+The public origin is `https://ervincs.com` in `src/lib/metadata.ts`; `SITE_URL` does not override it. Canonicals, Open Graph/Twitter URLs, sitemap, robots, and structured data use that origin. Filtered collection URLs canonicalize to the unfiltered collection. Structured data must match visible facts and serialize safely. These settings do not prove search indexing or ranking.
 
 ## Contact integration
 
-The form validates on both client and server, associates errors with fields, focuses the first invalid field, announces status, and preserves drafts after errors. Fields are read-only during CAPTCHA verification and delivery; a synchronous guard prevents duplicate submissions. A successful provider acceptance clears the draft. Acceptance does not establish inbox receipt.
+`src/app/api/contact/route.ts` rejects foreign origins and non-JSON requests, caps streamed request bodies at 64 KiB, validates fields and honeypot, bounds CAPTCHA token length, and verifies reCAPTCHA v3 success, the `contact` action, request hostname, and a score of at least 0.5 before sending plain-text mail via Gmail. The standard badge is hidden on the contact page, with Google’s required reCAPTCHA branding and policy links kept visible in the form. Register a v3 site/secret pair for every hostname that serves the form; replace any previous v2 keys and use a separate key for testing environments. If provider configuration is absent, the API gives a LinkedIn fallback. `src/lib/contact` owns shared validation and server-only delivery. UI validation, field errors, first-error focus, status announcements, duplicate-submit protection, and failed-draft retention are part of the contract.
 
-The Node.js API handler at `src/app/api/contact/route.ts`:
+| Variable                    | Use                                                  |
+| --------------------------- | ---------------------------------------------------- |
+| `EMAIL`, `EMAIL_PASS`       | Gmail sender/recipient and app password; server-only |
+| `NEXT_PUBLIC_RECAPTCHA_KEY` | Public reCAPTCHA v3 site key included at build time  |
+| `RECAPTCHA_SECRET`          | Server-only reCAPTCHA v3 verification                |
 
-1. Rejects a supplied foreign Origin and non-JSON content types.
-2. Reads at most **64 KiB** from the request stream, cancelling oversized input before JSON parsing. This accommodates permitted Unicode and escaped JSON field lengths.
-3. Validates field types/lengths and rejects the honeypot. CAPTCHA tokens are limited to 4096 characters.
-4. Returns a graceful LinkedIn fallback when provider configuration is absent.
-5. Verifies invisible reCAPTCHA v2 and sends plain-text mail through Gmail. The configured account is sender and recipient; the visitor's address is `replyTo`.
-
-Provider code stays in a `server-only` module. Errors return usable feedback without exposing credentials or provider details. See `.env.example` for configuration:
-
-| Variable                    | Purpose                                                         |
-| --------------------------- | --------------------------------------------------------------- |
-| `EMAIL`                     | Gmail sender and recipient.                                     |
-| `EMAIL_PASS`                | Gmail app password; server-only.                                |
-| `NEXT_PUBLIC_RECAPTCHA_KEY` | Public invisible reCAPTCHA v2 site key, embedded at build time. |
-| `RECAPTCHA_SECRET`          | Server-only verification secret.                                |
-
-UI work, unit tests, typechecking, and builds do not require production credentials. Browser tests mock CAPTCHA/delivery and clear provider secrets in their server configuration. Never print or commit secret values. A real delivery test requires an explicit user request and verified hostname/provider setup.
+Tests mock CAPTCHA and delivery. A provider acceptance response does not prove inbox receipt. Never send real mail in automated checks; live verification needs an explicit request and confirmed provider/domain setup.
 
 ## Image delivery
 
-### Active behavior on 23 October
+`next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Next Image markup/dimensions remain, but remote images are served from their original sources without Next image transformations or generated responsive variants. Project screenshots use GitHub asset URLs, selected design artwork uses Dribbble URLs, and local static images use content-hashed paths. Browser fetches go directly to the remote hosts; current hosted transfer, availability, cache behavior, and Vercel usage have not been measured.
 
-Commit `112dceb` sets **`images.unoptimized: true`** in `next.config.ts` as a temporary workaround. Next Image remains responsible for component markup and dimensions, but normal image rendering currently serves original sources without Next's image transformations or generated responsive variants. The existing `sizes` hints and optimizer settings must not be described as active transformation or cache savings.
-
-Project screenshots use the original GitHub asset URLs; design artwork retains its Dribbble URLs and queries. Local avatar, organization, and header images use static imports with content-hashed paths. Explicit SVG/GIF and small-header-image bypasses remain. Original files in `public/images` also support existing references and metadata.
-
-With transformation bypassed, browser requests to remote originals are governed by those hosts. The configured optimizer allowlist does not restrict direct browser fetching. Current hosted image loading, transfer size, Vercel usage, and billing have not been measured in this review.
-
-### Retained optimizer configuration
-
-These settings remain for a future reactivation; the 10 October optimizer results in [verification](verification.md) are historical:
-
-- Remote optimizer patterns are not configured while transformations are disabled. Local patterns allow query-free `/_next/static/media/**` paths; define and validate a suitable remote allowlist before enabling optimization.
-- Allowed widths are 96, 192, 320, 480, 640, 768, 960, 1200, 1600, and 1920 pixels, with quality 75 and WebP output. The 1920 candidate accommodates original screenshots up to 1909px wide.
-- Minimum remote cache TTL is **2,678,400 seconds (31 days)**. When optimization is enabled, a longer upstream lifetime can take precedence. Changed remote artwork should receive a new filename/URL.
-- `src/lib/image-sizes.ts` describes actual slots in the 75rem container, including collection columns, featured cards, homepage compositions, hero, and artwork. Update hints when those layouts change.
-
-Re-enabling optimization needs a focused change and fresh checks of source selection at 1×/2× density, exact URL rejection, output, image coverage, and hosted cache/usage. Old local results or a redeploy do not prove current hosted delivery or savings. Image cropping, tilt, and parallax remain presentation concerns described in [UI behavior](responsive-and-motion.md).
+The config restricts local optimizer paths and widths and sets a 31-day minimum TTL. There is no configured remote optimizer allowlist while optimization is disabled. Before re-enabling it, configure and validate remote patterns, output, source selection, URL rejection, and hosted cache/usage. `src/lib/image-sizes.ts` documents layout slot hints; cropping/parallax behavior belongs to [responsive and motion](responsive-and-motion.md).
 
 ## Release boundaries
 
-Public component work normally targets `dev`; the earlier Neon CMS PR #3 was closed without merging. Preview work does not authorize merging, production promotion, DNS/domain changes, or production-secret changes. Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy-production setting; the current production runtime has not been inspected in this pass and must be checked before release.
-
-Production indexing, real Gmail receipt, field Core Web Vitals, external-link currency, and hosted image availability require their own evidence. See [remaining verification](verification.md#remaining-work) before making release claims.
+Preview and development work do not authorize merge, production promotion, DNS/domain changes, or production-secret changes. Before an authorized deployment, confirm the actual Vercel project/team, branch, commit, runtime, and target. Current production settings have not been inspected here. Production indexing, real email receipt, field performance, hosted image behavior, and third-party link currency need separate evidence.

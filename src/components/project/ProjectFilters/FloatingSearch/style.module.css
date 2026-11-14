@@ -1,0 +1,35 @@
+.floatingSearch {
+  position: sticky;
+  z-index: 10;
+  top: calc(var(--measured-header-height, var(--header-height)) + var(--space-3));
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+
+  &[data-hidden='true']:not(:focus-within) {
+    opacity: 0;
+    transform: translateY(-0.75rem);
+
+    .search {
+      pointer-events: none;
+    }
+  }
+}
+
+.search {
+  width: min(100%, 22rem);
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--surface-high) 92%, transparent);
+  box-shadow: 0 10px 28px rgb(10 31 36 / 14%);
+  backdrop-filter: blur(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floatingSearch {
+    transition: none;
+  }
+}

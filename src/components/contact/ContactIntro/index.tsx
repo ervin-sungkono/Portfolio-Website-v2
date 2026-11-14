@@ -1,12 +1,9 @@
-import { getPortfolio } from '@/lib/content';
 import styles from './style.module.css';
 
-export async function ContactIntro() {
-  const { profile } = await getPortfolio();
+export function ContactIntro() {
   return (
     <section className={`page-heading ${styles.heading}`}>
       <div className={styles.headingCopy}>
-        <p className="eyebrow">Contact {profile.name}</p>
         <h1>
           A Good Conversation
           <br />

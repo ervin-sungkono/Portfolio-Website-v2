@@ -20,7 +20,7 @@ describe('ScrollHero server rendering', () => {
     expect(html).not.toContain('data-hero-slide');
   });
 
-  test.each([1, 3, 4])('keeps only the first of %i slides available before hydration', (count) => {
+  test.each([1, 3, 4])('keeps all %i slides available before hydration', (count) => {
     const html = renderHero(count);
     const slides = [...html.matchAll(/<div\b[^>]*data-hero-slide="(\d+)"[^>]*>/g)];
     expect(slides).toHaveLength(count);
@@ -28,9 +28,9 @@ describe('ScrollHero server rendering', () => {
     expect(slides[0][0]).not.toMatch(/\sinert(?:=|\s|>)/);
     expect(slides[0][0]).toContain('opacity:1');
     for (const slide of slides.slice(1)) {
-      expect(slide[0]).toContain('aria-hidden="true"');
-      expect(slide[0]).toMatch(/\sinert(?:=|\s|>)/);
-      expect(slide[0]).toContain('opacity:0');
+      expect(slide[0]).toContain('aria-hidden="false"');
+      expect(slide[0]).not.toMatch(/\sinert(?:=|\s|>)/);
+      expect(slide[0]).toContain('opacity:1');
     }
     expect(html).toContain('href="/project/0"');
     expect(html).toContain('data-pinned="false"');

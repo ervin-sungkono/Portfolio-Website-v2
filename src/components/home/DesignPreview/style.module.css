@@ -13,6 +13,34 @@
 
 .designGallery {
   align-items: start;
+
+  :global(.design-tile) {
+    display: block;
+    padding: var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--surface-high) 80%, var(--line));
+    border-radius: 1.5rem;
+    background: color-mix(in srgb, var(--surface-high) 86%, transparent);
+    box-shadow: 0 10px 28px rgb(10 31 36 / 12%);
+    backdrop-filter: blur(12px);
+  }
+
+  :global(.design-image) {
+    border-radius: 1rem;
+
+    img {
+      object-fit: contain;
+    }
+  }
+
+  :global(.design-caption) {
+    padding: var(--space-3) 0 0;
+  }
+}
+
+.designMeta {
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
 
 @media (width >= 70rem) {

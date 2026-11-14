@@ -1,5 +1,4 @@
-import { validateContact } from '@/lib/contact/validation';
-import { readContactBody } from '@/lib/contact/request-body';
+import { Contact } from '@/lib/contact/validation';
 import {
   mailConfigured,
   captchaSecret,
@@ -22,7 +21,7 @@ export async function POST(request: Request) {
   }
   let input: Record<string, unknown>;
   try {
-    input = (await readContactBody(request.body)) as Record<string, unknown>;
+    input = (await Contact.readBody(request.body)) as Record<string, unknown>;
   } catch {
     return Response.json(
       {
@@ -35,7 +34,7 @@ export async function POST(request: Request) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     return Response.json({ success: false, message: 'Enter a valid message.' }, { status: 400 });
   }
-  const { data, errors } = validateContact(input);
+  const { data, errors } = Contact.validate(input);
   if (Object.keys(errors).length) {
     return Response.json(
       { success: false, message: 'Check the highlighted fields.', errors },
@@ -59,10 +58,13 @@ export async function POST(request: Request) {
   }
   try {
     if (
-      !(await verifyCaptcha(typeof input.recaptcha_token === 'string' ? input.recaptcha_token : ''))
+      !(await verifyCaptcha(
+        typeof input.recaptcha_token === 'string' ? input.recaptcha_token : '',
+        new URL(request.url).hostname,
+      ))
     ) {
       return Response.json(
-        { success: false, message: 'Verification expired. Please submit the form again.' },
+        { success: false, message: 'Verification failed. Please submit the form again.' },
         { status: 400 },
       );
     }

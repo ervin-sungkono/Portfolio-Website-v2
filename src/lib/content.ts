@@ -11,6 +11,7 @@ export type Project = {
   image: string;
   topics: string[];
   category: string;
+  year: number;
   source: string | null;
   demo: string | null;
   featured?: boolean;

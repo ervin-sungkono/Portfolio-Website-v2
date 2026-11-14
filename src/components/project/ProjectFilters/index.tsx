@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr';
+import { FloatingSearch } from './FloatingSearch';
 import styles from './style.module.css';
 import type { ProjectFiltersProps } from './type';
 
@@ -31,24 +31,9 @@ export function ProjectFilters({ query, category, categories, count }: ProjectFi
             </Link>
           ))}
         </nav>
-        <form action="/project" method="get" className="search-form">
-          <label htmlFor="project-search" className="sr-only">
-            Search projects and technologies
-          </label>
-          <input
-            id="project-search"
-            name="q"
-            type="search"
-            placeholder="Search projects…"
-            defaultValue={query}
-            autoComplete="off"
-          />
-          {category && <input type="hidden" name="category" value={category} />}
-          <button type="submit" aria-label="Search projects">
-            <MagnifyingGlassIcon size={20} aria-hidden="true" />
-          </button>
-        </form>
       </div>
+
+      <FloatingSearch query={query} category={category} />
 
       <p className="results-count" aria-live="polite">
         {new Intl.NumberFormat('en').format(count)} {count === 1 ? 'project' : 'projects'}

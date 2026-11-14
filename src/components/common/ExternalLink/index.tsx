@@ -1,9 +1,8 @@
 import type { ExternalLinkProps } from './type';
-import './style.css';
 
-export function ExternalLink({ children, ...props }: ExternalLinkProps) {
+export function ExternalLink({ children, rel, ...props }: ExternalLinkProps) {
   return (
-    <a {...props} target="_blank" rel="noopener noreferrer">
+    <a {...props} target="_blank" rel={`${rel ?? ''} noopener noreferrer`.trim()}>
       {children}
     </a>
   );

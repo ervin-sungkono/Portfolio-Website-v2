@@ -1,5 +1,7 @@
 {
   "name": "ervin-portfolio",
+  "author": "ervin-sungkono",
+  "license": "MIT",
   "version": "2.0.0",
   "private": true,
   "scripts": {
@@ -14,10 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:browser": "playwright test",
-    "test:live": "playwright test --config=playwright.live.config.ts",
-    "test:cms:browser": "node scripts/test-cms-browser.mjs",
-    "test:http:fixture": "node scripts/test-cms-browser.mjs http",
-    "test:cms:fixture": "node scripts/test-cms-browser.mjs all"
+    "test:live": "playwright test --config=playwright.live.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.8",
@@ -31,6 +30,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.91.0",
+    "three": "^0.187.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -39,6 +39,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.187.0",
     "eslint": "^10.13.0",
     "eslint-config-next": "16.4.3",
     "eslint-config-prettier": "^10.1.8",

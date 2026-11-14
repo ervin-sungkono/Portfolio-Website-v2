@@ -1,8 +1,8 @@
-import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPortfolio } from '@/lib/content';
 import { monthLabel } from '@/lib/dates';
-import { ExternalLink } from '../ExternalLink';
+import { Button } from '@/components/common/Button';
 import { Reveal } from '../Reveal';
+import { TimelineRail } from './TimelineRail';
 import type { ExperienceProps } from './type';
 import './style.css';
 
@@ -17,11 +17,12 @@ export async function Experience({ detailed = false }: ExperienceProps) {
       <Reveal className="experience-section-intro">
         <h2 id="experience-heading">Experience That Shapes the Work.</h2>
         <p>From internal business applications to software engineering in R&D.</p>
-        <ExternalLink href={profile.linkedin} className="text-link">
-          View LinkedIn <ArrowUpRightIcon size={17} aria-hidden="true" />
-        </ExternalLink>
+        <Button kind="external" href={profile.linkedin} variant="text">
+          View LinkedIn
+        </Button>
       </Reveal>
       <div className="experience-section-timeline">
+        <TimelineRail />
         {profile.experiences.map((item, index) => (
           <Reveal
             key={item.company}

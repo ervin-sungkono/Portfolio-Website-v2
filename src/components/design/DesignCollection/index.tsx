@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { ExternalLink } from '@/components/common/ExternalLink';
 import { Reveal } from '@/components/common/Reveal';
+import { PointerSurface } from '@/components/common/PointerSurface';
 import { imageSizes } from '@/lib/image-sizes';
 import styles from './style.module.css';
 import type { DesignCollectionProps } from './type';
@@ -21,31 +22,30 @@ export function DesignCollection({ designs, unavailable = false }: DesignCollect
       {designs.length ? (
         <div className={styles.designGrid}>
           {designs.map((design, index) => (
-            <Reveal key={design.id} className={styles.designReveal}>
+            <Reveal key={design.id} className={styles.designReveal} delay={(index % 3) * 0.07}>
               <ExternalLink href={design.url} className={styles.designTile} data-cursor="project">
-                <div className={styles.artworkFrame}>
-                  <div className={styles.artworkMat}>
-                    <Image
-                      src={design.image}
-                      alt=""
-                      fill
-                      sizes={
-                        index >= closingStart ? imageSizes.twoColumns : imageSizes.threeColumns
-                      }
-                      className={styles.artworkImage}
-                      unoptimized={design.image.includes('.gif')}
-                    />
+                <PointerSurface className={styles.artworkSurface}>
+                  <div className={styles.artworkFrame}>
+                    <div className={styles.artworkMat}>
+                      <Image
+                        src={design.image}
+                        alt=""
+                        fill
+                        sizes={
+                          index >= closingStart ? imageSizes.twoColumns : imageSizes.threeColumns
+                        }
+                        className={styles.artworkImage}
+                        unoptimized={design.image.includes('.gif')}
+                      />
+                    </div>
                   </div>
-                </div>
+                </PointerSurface>
                 <div className={styles.designCaption}>
-                  <div>
-                    <p className="editorial-label">
-                      <span aria-hidden="true">{String(index + 1).padStart(2, '0')} / </span>
-                      Dribbble Design
-                    </p>
-                    <h2>{design.title.replace(' - ', ': ')}</h2>
-                  </div>
-                  <ArrowUpRightIcon size={20} aria-hidden="true" />
+                  <p>Design · Dribbble</p>
+                  <h2>{design.title.replace(' - ', ': ')}</h2>
+                  <span>
+                    View design <ArrowUpRightIcon size={16} aria-hidden="true" />
+                  </span>
                 </div>
               </ExternalLink>
             </Reveal>

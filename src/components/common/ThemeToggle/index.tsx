@@ -4,6 +4,7 @@ import { MoonIcon, SunIcon } from '@phosphor-icons/react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useEffect, useSyncExternalStore } from 'react';
+import { Button } from '@/components/common/Button';
 import type { Theme } from './type';
 import './style.css';
 
@@ -47,9 +48,10 @@ export function ThemeToggle() {
   }
 
   return (
-    <button
+    <Button
+      kind="action"
+      variant="icon"
       type="button"
-      className="icon-button"
       aria-label={
         theme ? `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme` : 'Switch color theme'
       }
@@ -57,6 +59,6 @@ export function ThemeToggle() {
     >
       <MoonIcon className="light-logo" size={20} aria-hidden="true" />
       <SunIcon className="dark-logo" size={20} aria-hidden="true" />
-    </button>
+    </Button>
   );
 }

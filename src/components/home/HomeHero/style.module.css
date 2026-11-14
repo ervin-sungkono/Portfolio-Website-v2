@@ -21,6 +21,8 @@
 
 .heroVisual {
   position: relative;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
 
   &::after {
@@ -46,11 +48,13 @@
 
 .heroMedia {
   position: relative;
+  width: 100%;
   aspect-ratio: 1.62;
 
   img {
     height: 100%;
     aspect-ratio: auto;
+    object-fit: contain;
   }
 }
 

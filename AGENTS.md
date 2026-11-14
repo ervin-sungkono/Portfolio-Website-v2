@@ -1,95 +1,19 @@
-# Portfolio agent handoff
+# Project agent guide
 
-Updated **3 November 2026 (Asia/Jakarta)**. Continue from `dev`, where rework PR #2 has merged; inspect live repository state before continuing.
+Read [README](README.md) for setup and [architecture](docs/architecture.md) before changing application boundaries or publishing flows. Use [responsive and motion guidance](docs/responsive-and-motion.md) for UI changes and [verification](docs/verification.md) for command coverage and dated evidence. Keep each topic in its owning document; update guidance when implementation changes and distinguish fresh checks from historical results.
 
-## Repository and branch
+## Project conventions
 
-- Repository: https://github.com/ervin-sungkono/Portfolio-Website-v2.
-- Start public component work from `dev`. The earlier Neon CMS [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3) was closed without merging. The GitHub-backed CMS implementation is on `codex/github-portfolio-cms`; inspect live Git/PR state before continuing.
-- Check Git status, active branch, and remote head before editing. Preserve unrelated or concurrent work. Components use the directory and nested CSS organization described in the architecture and responsive/motion references; don't mistake historical checks for validation of later edits.
-- Existing explicit user instructions take precedence over project defaults. A dated document is not fresh Git, CI, deployment, or provider evidence.
+- Use Node.js 24, npm, and the committed lockfile (`npm ci`). The package engine permits Node 22+, but the CMS browser fixture requires 24.
+- `src/app` owns App Router pages, route metadata, and API handlers. Prefer Server Components; use small Client Components for browser interaction.
+- Components live in PascalCase directories with `index.tsx`, colocated styles, and `type.ts` when needed. Preserve framework route filenames (`page.tsx`, `layout.tsx`, `not-found.tsx`). Shared tokens and primitives live in `src/styles/globals.css`.
+- `web-assets` is the separate public content source. Keep content/provider access behind `src/lib`; never expose server credentials to client code. `src/lib/cms/schemas.ts` is the strict CMS schema authority.
+- Preserve verified public routes, project slugs, links, artwork, attribution, and the full name in `web-assets/content/portfolio.json`. Do not invent content or outcomes.
+- Read the installed Next.js guide in `node_modules/next/dist/docs/` before changing framework APIs; this project uses Next.js 16 conventions.
+- Keep changes focused, preserve unrelated work, and do not commit unless asked.
 
-## Read first and maintain documentation
+## Data and release safety
 
-Read `README.md` and `docs/architecture.md`, then the relevant sections of:
+CMS drafts and staged media live in browser Cache Storage until a confirmed submit publishes one GitHub commit. Conflicts must retain drafts; cache refresh retries must not write another commit. All content in the separate public GitHub repository is public, including unpublished project documents and revisions. Never treat initialization as a reset or overwrite.
 
-| Document                        | Owns                                                                                      |
-| ------------------------------- | ----------------------------------------------------------------------------------------- |
-| `docs/architecture.md`          | Application boundaries, content/provenance, SEO, contact, images, and release operations. |
-| `docs/responsive-and-motion.md` | Visual system, responsive rules, accessibility, and current motion behavior.              |
-| `docs/verification.md`          | Dated observations, check coverage, historical evidence, and remaining work.              |
-
-Keep each topic in its owning document and link to it elsewhere. Update current guidance when behavior changes; retain only useful dated evidence and unresolved limitations. Replace completed proposals and superseded findings instead of adding parallel dated documents. Record the actual checks performed, their date, and their limits; do not turn old results into a fresh pass.
-
-## Setup and checks
-
-Use Node.js 24, npm, and the committed `package-lock.json`; the package requires Node.js 22 or later. Use `npm ci` for setup and maintenance, including hosted environments, then `npm run dev`.
-
-```sh
-npm run typecheck
-npm run typecheck:tests
-npm run lint:css
-npm test
-npm run build
-npm run format:check
-git diff --check
-```
-
-Application changes should pass relevant type, CSS lint, unit/browser, build, formatting, and whitespace checks. Vitest covers logic and API handlers; `npm run test:browser` covers contact behavior, project 404 recovery, cursor behavior, and hero/parallax. `npm run test:live` targets an already-running localhost:3000 without starting another server. `npm run test:cms:fixture` runs isolated GitHub CMS browser workflows and HTTP checks with encrypted test sessions; its fixture build replaces `.next`, so use an isolated checkout if a development server is running, and rebuild normally afterward. These are focused suites, not full accessibility conformance checks. Use Node.js 24 and follow README for the dummy CAPTCHA key. Inspect actual CI runs before claiming a remote pass.
-
-Documentation-only work needs formatting, local link/fragment validation, and whitespace checks. Scope checks to the changed files when unrelated work is present, and report that scope accurately.
-
-## Architecture and maintenance
-
-- Stack: Next.js 16.4.3 App Router, React 19.2, strict TypeScript, native CSS/CSS Modules, Motion 14, Auth.js 5 beta, Zod, and React Hook Form. Read installed Next.js documentation before using its APIs. Avoid unrelated framework/dependency upgrades.
-- Follow KISS, DRY, and YAGNI. Prefer small functions and existing boundaries; add dependencies or abstractions only when the task needs them.
-- `src/app` owns routes/layouts/metadata/API handlers. Prefer Server Components for pages/content and focused client islands for browser interaction.
-- `src/components` uses PascalCase component directories with `index.tsx`, a colocated style file, and `type.ts` when types are needed. Put reusable public links, controls, cards, and motion wrappers in `src/components/common`. `src/styles/globals.css` owns shared tokens/primitives; pages retain CSS Modules.
-- Use PascalCase for standalone React `.tsx`/`.jsx` filenames and component directories. Preserve established `index.tsx` directory entry points and framework-required route filenames such as `page.tsx`, `layout.tsx`, and `not-found.tsx`.
-- `web-assets` owns profile, engineering, project content, and selected Dribbble shot IDs. Design details come from Dribbble. Access public collections through `src/lib/content.ts`; do not duplicate them locally. Shared motion helpers currently live in `src/lib/hooks`.
-- `src/lib/metadata.ts` owns public metadata; `src/lib/contact` owns validation and server-only providers. Preserve routes, slugs, assets, CV/social/source links, team credits, GET filters, and unknown-project 404/noindex behavior.
-- Preserve `portfolioSourceRef` in `web-assets/content/portfolio.json`. Update source links in a separately reviewed change.
-- `next.config.ts` currently sets `images.unoptimized: true` as a temporary workaround. Describe image delivery accordingly. Re-enabling transformations needs fresh validation; historical cache/source-selection results do not apply to current rendering.
-
-## Identity, SEO, and scope
-
-- The full name is **Ervin Cahyadinata Sungkono**; `profile.name` in `web-assets/content/portfolio.json` is authoritative. Use it in visible identity, accessible alternatives, metadata, and structured data.
-- The public origin is **https://ervincs.com** in `src/lib/metadata.ts`. Preview hosts must not enter canonicals, sitemap, robots, or structured data. `SITE_URL` does not control the origin.
-- Preserve distinct route descriptions and matching social metadata. Filtered URLs canonicalize to the unfiltered collection. Structured data must match visible verified facts and be serialized safely.
-- Write specific, natural descriptions without invented metrics, seniority, personal team contributions, or ranking promises. Professional content expansion remains deferred until requested.
-- The single-owner CMS uses GitHub OAuth for sign-in, a server-side GitHub PAT for the owner identity and repository operations, and a server-side Dribbble token for design details. Content lives in a separate public repository with shared schemas; `src/lib/cms` owns auth/storage/publishing/cache boundaries, and UI never calls provider APIs directly. There is no explicit `server-only` npm dependency; Next.js resolves the marker. Do not add a database, separate backend, object-storage provider, multi-user roles, or speculative layers.
-- CMS edits and staged images stay in browser Cache Storage under a single-tab Web Lock until final submission creates one GitHub commit. Bind the draft to its repository and branch, preserve it on conflicts, and keep cache-refresh retries free of Git writes. See [architecture](docs/architecture.md#github-cms).
-- `web-assets/master` contains the migrated CMS layout; `legacy` preserves the prior tree. Keep compatibility `images/` and `icons/` URLs until the application cutover is verified. Migration refs and checks are in `docs/verification.md`; [LLM mapping instructions](docs/web-assets-migration-agent.md) describe future audits. No converter or migration utility is maintained.
-- Preserve the project response boundary in `src/proxy.ts`: Proxy uses the cached public reader via `/api/content/project`, and missing projects return complete 404/noindex/no-store HTML. Replacing it with a runtime `notFound()` or PPR rewrite alone regresses JavaScript-disabled recovery. Internal origin comes from trusted platform configuration, not a request Host header.
-
-## Responsive behavior, motion, and accessibility
-
-- Follow documented rem tokens, fluid sizing, and content-fit thresholds. Check full-name branding, typography, grids, spacing, and controls during text enlargement/reflow; avoid arbitrary device overrides.
-- Preserve native scrolling. The desktop hero uses a stationary project crossfade; selected images use bounded parallax. Do not restore section snapping or intercept wheel events. The second hero image remains an explicit placeholder until supplied.
-- Decorative motion respects reduced motion. Pinning/parallax falls back to ordinary flow for mobile/coarse pointers, short viewports, or content that cannot fit. Server-rendered content stays visible without JavaScript.
-- The cursor is desktop fine-pointer/hover only, decorative, and hidden from assistive technology. Its position uses direct Motion values without springs or delay. Native cursor fallbacks must work; image-tilt springs are separate.
-- Keep continuous pointer/scroll updates out of React state. Clean up listeners, media subscriptions, observers, animation frames, and engines.
-- Preserve skip navigation, landmarks, heading order, keyboard access, visible focus, contrast, and accessible names including visible labels.
-- Mobile navigation is a disclosure: toggle before links, Escape closes and returns focus, leaving the header closes it, and short viewports can scroll all links into view. Do not introduce a modal focus trap.
-- Keep `--control-border` separate from decorative borders. Theme labels describe the destination. Project actions identify their project and avoid redundant links. Forms retain labels, associated errors/live status, first-error focus, and drafts after failure.
-- For UI changes, exercise keyboard navigation and both themes at 320, 390, 820, 1024, and 1440px, enlarged text/reflow, reduced motion, and relevant input/fallback contexts. Add focused browser/axe checks when relevant and report actual coverage.
-- Historical automated results do not prove WCAG conformance. NVDA/VoiceOver, actual browser zoom, forced colors, and real-device checks remain outstanding; root-font enlargement is not browser zoom.
-
-## Contact and release boundaries
-
-- Production credentials are only needed for live integration. Use `.env.example` and the architecture reference. Never print or commit secrets, and keep provider code server-only.
-- Preserve request validation, the 64 KiB streamed-body cap, abuse checks, duplicate-submission prevention, read-only pending fields, draft retention, and graceful LinkedIn fallback.
-- Automated tests must not send real email. Live delivery requires an explicit user request and verified hostname/provider setup; Gmail receipt remains unverified.
-- Current application release scope is development and preview. The owner separately authorized the `web-assets` master/legacy migration recorded in verification. Do not merge application changes, promote production, change DNS/domains, or modify production secrets without authorization.
-- Before deployment, verify the actual Vercel project/team, branch, commit, runtime, and target. Node.js 18 was the historical legacy setting; inspect the current production runtime and ensure it supports this migration before release.
-- Report changes, checks, and material limits. A preview does not prove production indexing, field Core Web Vitals, hosted image availability/cost, or real email receipt.
-
-<!-- BEGIN:nextjs-agent-rules -->
-
-## This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+Automated contact tests must not send real email. Live delivery requires an explicit request and verified provider/hostname setup. Do not merge, promote production, alter DNS/domains, or change production secrets without authorization. Verify the actual Vercel project, branch, commit, runtime, and target before any authorized deployment. Historical results are not evidence of current CI or production behavior.

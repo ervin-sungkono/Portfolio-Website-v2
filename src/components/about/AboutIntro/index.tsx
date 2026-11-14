@@ -1,6 +1,7 @@
 import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPortfolio } from '@/lib/content';
-import { ExternalLink } from '@/components/common/ExternalLink';
+import { Button } from '@/components/common/Button';
+import { AboutArtwork } from './AboutArtwork';
 import styles from './style.module.css';
 
 export async function AboutIntro() {
@@ -18,10 +19,11 @@ export async function AboutIntro() {
           {profile.intro} I enjoy exploring how technology and good interface design can work
           together.
         </p>
-        <ExternalLink href={profile.cv} className="button button-outline">
+        <Button kind="external" href={profile.cv} variant="outline" showArrow={false}>
           View Resume <ArrowUpRightIcon size={19} aria-hidden="true" />
-        </ExternalLink>
+        </Button>
       </div>
+      <AboutArtwork />
     </section>
   );
 }

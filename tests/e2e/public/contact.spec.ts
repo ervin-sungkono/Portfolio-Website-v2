@@ -1,9 +1,12 @@
 import { expect, test } from '@playwright/test';
+import type { Recaptcha } from '../../../src/components/contact/ContactForm/type';
 
 declare global {
   interface Window {
     __completeCaptcha?: () => void;
-    __captchaOptions?: { callback: (token: string) => void };
+    __captchaAction?: string;
+    __captchaResolve?: (token: string) => void;
+    grecaptcha?: Recaptcha;
   }
 }
 
@@ -20,11 +23,14 @@ test.beforeEach(async ({ page }) => {
       contentType: 'application/javascript',
       body: `
         window.grecaptcha = {
-          render: (_element, options) => { window.__captchaOptions = options; return 1; },
-          execute: () => {},
-          reset: () => {}
+          ready: callback => callback(),
+          execute: (_siteKey, options) => new Promise(resolve => {
+            window.__captchaAction = options.action;
+            window.__captchaResolve = resolve;
+          }),
         };
-        window.__completeCaptcha = () => window.__captchaOptions.callback('test-captcha-token');
+        document.body.insertAdjacentHTML('beforeend', '<div class="grecaptcha-badge"></div>');
+        window.__completeCaptcha = () => window.__captchaResolve?.('test-captcha-token');
       `,
     }),
   );
@@ -36,11 +42,14 @@ async function openAndFillForm(page: import('@playwright/test').Page) {
   await page.getByLabel('Email').fill(message.email);
   await page.getByLabel('Subject').fill(message.subject);
   await page.getByLabel('Message').fill(message.message);
-  await page.waitForFunction(() => typeof window.__captchaOptions?.callback === 'function');
+  await page.waitForFunction(() => typeof window.grecaptcha?.execute === 'function');
+  await expect(page.locator('.grecaptcha-badge')).toHaveCSS('visibility', 'hidden');
+  await expect(page.getByText(/This site is protected by reCAPTCHA/)).toBeVisible();
+  await expect(page.locator('.captcha-container')).toHaveCount(0);
 }
 
 async function completeCaptcha(page: import('@playwright/test').Page) {
-  await page.waitForFunction(() => typeof window.__captchaOptions?.callback === 'function');
+  await page.waitForFunction(() => window.__captchaAction === 'contact');
   await page.evaluate(() => window.__completeCaptcha?.());
 }
 
@@ -53,7 +62,7 @@ test('keeps CAPTCHA usable after navigating away and back', async ({ page }) => 
     }),
   );
   await page.goto('/contact');
-  await page.waitForFunction(() => typeof window.__captchaOptions?.callback === 'function');
+  await page.waitForFunction(() => typeof window.grecaptcha?.execute === 'function');
 
   const navigation = page.getByRole('navigation', { name: 'Primary' });
   await navigation.getByRole('link', { name: 'About', exact: true }).click();

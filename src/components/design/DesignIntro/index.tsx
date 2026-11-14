@@ -1,6 +1,5 @@
-import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPortfolio } from '@/lib/content';
-import { ExternalLink } from '@/components/common/ExternalLink';
+import { Button } from '@/components/common/Button';
 import styles from './style.module.css';
 
 export async function DesignIntro() {
@@ -17,9 +16,9 @@ export async function DesignIntro() {
         Visual explorations for websites and mobile applications, from layout and hierarchy to the
         smaller details.
       </p>
-      <ExternalLink href={profile.dribbble} className={`text-link ${styles.profileLink}`}>
-        View Dribbble <ArrowUpRightIcon size={17} aria-hidden="true" />
-      </ExternalLink>
+      <Button kind="external" href={profile.dribbble} variant="text" className={styles.profileLink}>
+        View Dribbble
+      </Button>
     </section>
   );
 }

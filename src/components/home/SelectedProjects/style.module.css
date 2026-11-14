@@ -8,10 +8,24 @@
 }
 
 .bentoGrid {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--layout-gap);
   align-items: stretch;
+
+  &::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: '';
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 25% 25%, rgb(110 188 210 / 28%), transparent 52%),
+      radial-gradient(ellipse at 80% 65%, rgb(244 183 133 / 24%), transparent 52%);
+    filter: blur(28px);
+  }
 
   > * {
     min-width: 0;
@@ -22,7 +36,7 @@
 .secondaryProject,
 .additionalProject {
   min-width: 0;
-  align-self: start;
+  align-self: stretch;
 }
 
 .designTeaser {
@@ -31,9 +45,11 @@
   flex-direction: column;
   align-items: flex-start;
   padding: clamp(var(--space-6), 3vw, var(--space-10));
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--surface-high) 80%, var(--line));
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--surface-high) 86%, transparent);
+  box-shadow: 0 10px 28px rgb(10 31 36 / 12%);
+  backdrop-filter: blur(12px);
   transition:
     color 0.2s,
     border-color 0.2s,
@@ -143,6 +159,21 @@
       font-size: clamp(1.125rem, 0.95rem + 0.5vw, 1.5rem);
       line-height: 1.2;
     }
+  }
+
+  .bentoGrid[data-project-count='0'] .designTeaser {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .bentoGrid[data-project-count='1'] .designTeaser {
+    grid-column: 9 / -1;
+    grid-row: 1;
+  }
+
+  .bentoGrid[data-project-count='2'] .designTeaser {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 }
 

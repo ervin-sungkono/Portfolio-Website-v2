@@ -2,438 +2,243 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 test.use({ reducedMotion: 'no-preference', viewport: { width: 1440, height: 1000 } });
 
-type Box = { x: number; y: number; width: number; height: number };
+async function heroRange(scene: Locator) {
+  return scene.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    const stage = element.querySelector('section')!;
+    const top = Number.parseFloat(getComputedStyle(stage).top) || 0;
+    const start = Math.max(0, bounds.top + window.scrollY - top);
+    const end = Math.max(start, bounds.bottom + window.scrollY - window.innerHeight);
+    const count = element.querySelectorAll('[data-hero-slide]').length;
+    return { start, end, step: (end - start) / (count - 1) };
+  });
+}
 
-function hero(page: Page) {
+async function expectScrollPosition(page: Page, position: number) {
+  await expect
+    .poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - position))
+    .toBeLessThan(3);
+}
+
+for (const width of [1024, 1440]) {
+  test(`wheel gestures scroll exactly one slide in their direction at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto('/');
+    const scene = page.locator('[data-scroll-scene]');
+    const slides = scene.locator('[data-hero-slide]');
+    const first = slides.nth(0);
+    const second = slides.nth(1);
+    const count = await slides.count();
+    await expect(scene).toHaveAttribute('data-pinned', 'true');
+    expect(count).toBeGreaterThanOrEqual(2);
+    await expect(first).not.toHaveAttribute('inert');
+    await expect(second).toHaveAttribute('inert', '');
+
+    const range = await heroRange(scene);
+    const expectAtSlide = async (index: number) => {
+      await expectScrollPosition(page, range.start + range.step * index);
+      await expect(slides.nth(index)).not.toHaveAttribute('inert');
+    };
+    const jump = async (top: number) => {
+      await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), top);
+    };
+    const card = first.locator('a.hero-visual');
+    const bounds = await card.boundingBox();
+    expect(bounds).not.toBeNull();
+    await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2);
+    const visual = scene.locator('[data-parallax="visual"]');
+    const beforeTransform = await visual.evaluate((element) => getComputedStyle(element).transform);
+    await page.mouse.wheel(0, 25);
+    await page.mouse.wheel(0, 25);
+    await expectAtSlide(1);
+    await expect(first).toHaveAttribute('inert', '');
+    await expect
+      .poll(() => visual.evaluate((element) => getComputedStyle(element).transform))
+      .not.toBe(beforeTransform);
+
+    if (count > 2) {
+      await expect(slides.nth(2)).toHaveAttribute('inert', '');
+      await page.waitForTimeout(260);
+      await page.mouse.move(10, 500);
+      await page.mouse.wheel(0, 25);
+      await expectAtSlide(2);
+      await page.waitForTimeout(260);
+      await page.mouse.wheel(0, -25);
+      await expectAtSlide(1);
+    }
+
+    await page.waitForTimeout(260);
+    await jump(range.start + range.step * 0.15);
+    await expect(first).not.toHaveAttribute('inert');
+    await page.mouse.wheel(0, 25);
+    await expectAtSlide(1);
+    await page.waitForTimeout(260);
+    await jump(range.start + range.step * 0.85);
+    await expect(second).not.toHaveAttribute('inert');
+    await page.mouse.wheel(0, -25);
+    await expectAtSlide(0);
+
+    await page.waitForTimeout(260);
+    await jump(range.end);
+    await expect(slides.nth(count - 1)).not.toHaveAttribute('inert');
+    await page.waitForTimeout(260);
+    await page.mouse.wheel(0, 350);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(range.end + 20);
+    await expect(scene).toHaveCSS('overflow-x', 'visible');
+    await expect(card.locator('img')).toHaveCSS('object-fit', 'contain');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    );
+  });
+}
+
+test('a new gesture advances from the previous scroll target', async ({ page }) => {
+  await page.goto('/');
   const scene = page.locator('[data-scroll-scene]');
   const slides = scene.locator('[data-hero-slide]');
-  const firstState = slides.nth(0);
-  const nextState = slides.nth(1);
-  const firstLink = firstState.locator('a.hero-visual');
-  const nextLink = nextState.locator('a.hero-visual');
+  await expect(scene).toHaveAttribute('data-pinned', 'true');
+  test.skip((await slides.count()) < 3, 'This check needs at least three featured projects.');
+  const range = await heroRange(scene);
+  const card = slides.first().getByRole('link');
+  const bounds = await card.boundingBox();
+  expect(bounds).not.toBeNull();
+  await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2);
+  await page.mouse.wheel(0, 40);
+  await page.waitForTimeout(240);
+  await page.mouse.wheel(0, 40);
+  await expectScrollPosition(page, range.start + range.step * 2);
+  await expect(slides.nth(2)).not.toHaveAttribute('inert');
+});
 
-  return {
-    scene,
-    slides,
-    firstState,
-    nextState,
-    firstLink,
-    nextLink,
-    firstCaption: firstLink.locator('.hero-image-caption'),
-    nextCaption: nextLink.locator('.hero-image-caption'),
-    frame: firstLink.locator('.hero-image'),
-    plane: firstLink.locator('[data-parallax="hero-image"]'),
-  };
-}
-
-async function box(locator: Locator): Promise<Box> {
-  const bounds = await locator.boundingBox();
-  if (!bounds) {
-    throw new Error('Expected a visible parallax element with a bounding box.');
-  }
-  return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
-}
-
-async function expectStableBoxes(reference: Record<string, Box>, current: Record<string, Box>) {
-  for (const key of Object.keys(reference)) {
-    for (const dimension of ['x', 'y', 'width', 'height'] as const) {
-      expect(
-        Math.abs(reference[key][dimension] - current[key][dimension]),
-        `${key} ${dimension} should stay fixed while the hero scene is pinned`,
-      ).toBeLessThanOrEqual(2);
-    }
-  }
-}
-
-async function readHeroBoxes(page: Page) {
-  const elements: Array<[string, Locator]> = [
-    ['copy', page.locator('[data-scroll-scene] [data-parallax="copy"]')],
-    ['visualStack', page.locator('[data-scroll-scene] [data-parallax="visual"]')],
-  ];
-  const entries = await Promise.all(
-    elements.map(async ([name, locator]) => [name, await box(locator)] as const),
-  );
-  return Object.fromEntries(entries) as Record<string, Box>;
-}
-
-async function cardMotion(locator: Locator) {
-  return locator.evaluate((element) => {
-    const card = element as HTMLElement;
-    const style = getComputedStyle(card);
-    const matrix = new DOMMatrixReadOnly(style.transform);
-    const bounds = card.getBoundingClientRect();
-    const [originX, originY] = style.transformOrigin.split(' ').map(Number.parseFloat);
-    return {
-      opacity: Number.parseFloat(style.opacity),
-      translateX: matrix.m41,
-      translateY: matrix.m42,
-      rotation: (Math.atan2(matrix.m12, matrix.m11) * 180) / Math.PI,
-      originX,
-      originY,
-      width: card.offsetWidth,
-      height: card.offsetHeight,
-      left: bounds.left,
-      right: bounds.right,
-    };
+test('allows nested scrollable content to consume wheel input', async ({ page }) => {
+  await page.goto('/');
+  const scene = page.locator('[data-scroll-scene]');
+  await expect(scene).toHaveAttribute('data-pinned', 'true');
+  await scene.locator('section').evaluate((stage) => {
+    const scroller = document.createElement('div');
+    scroller.dataset.testScroller = '';
+    scroller.style.cssText =
+      'position:fixed;z-index:10000;top:150px;right:20px;width:140px;height:100px;overflow:auto';
+    const content = document.createElement('div');
+    content.style.height = '400px';
+    scroller.append(content);
+    stage.append(scroller);
   });
-}
+  const scroller = page.locator('[data-test-scroller]');
+  const bounds = await scroller.boundingBox();
+  expect(bounds).not.toBeNull();
+  await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2);
+  const before = await page.evaluate(() => window.scrollY);
+  await page.mouse.wheel(0, 80);
+  await expect.poll(() => scroller.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => window.scrollY)).toBe(before);
+  await expect(scene.locator('[data-hero-slide="0"]')).not.toHaveAttribute('inert');
+});
 
-async function expectNoHorizontalOverflow(page: Page) {
-  const dimensions = await page.evaluate(() => ({
-    document: document.documentElement.scrollWidth,
-    viewport: document.documentElement.clientWidth,
-  }));
-  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
-}
-
-async function scrollInstantly(page: Page, y: number) {
-  await page.evaluate((top) => {
-    document.documentElement.style.scrollBehavior = 'auto';
-    window.scrollTo(0, top);
-  }, y);
-}
-
-async function sceneScrollRange(page: Page) {
-  return hero(page).scene.evaluate((scene) => {
-    const bounds = scene.getBoundingClientRect();
-    return {
-      start: bounds.top + window.scrollY,
-      end: bounds.bottom + window.scrollY - window.innerHeight,
-    };
-  });
-}
-
-async function opacity(locator: Locator) {
-  return locator.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity));
-}
-
-async function expectPlaneCoversFrame(frame: Locator, plane: Locator) {
-  const [frameBox, planeBox] = await Promise.all([box(frame), box(plane)]);
-  expect(planeBox.x).toBeLessThanOrEqual(frameBox.x + 2);
-  expect(planeBox.x + planeBox.width).toBeGreaterThanOrEqual(frameBox.x + frameBox.width - 2);
-  expect(planeBox.y).toBeLessThanOrEqual(frameBox.y + 2);
-  expect(planeBox.y + planeBox.height).toBeGreaterThanOrEqual(frameBox.y + frameBox.height - 2);
-}
-
-async function expectFlowFallback(page: Page) {
-  const scene = hero(page).scene;
+test('featured projects remain operable by keyboard without losing focus', async ({ page }) => {
+  await page.goto('/');
+  const scene = page.locator('[data-scroll-scene]');
+  const slides = scene.locator('[data-hero-slide]');
+  const carousel = page.getByRole('group', { name: 'Featured projects' });
+  await expect(scene).toHaveAttribute('data-pinned', 'true');
+  const range = await heroRange(scene);
+  await expect(page.getByRole('button', { name: 'Next featured project' })).toHaveCount(0);
+  const firstLink = slides.nth(0).getByRole('link');
+  await firstLink.focus();
+  const card = await firstLink.boundingBox();
+  expect(card).not.toBeNull();
+  await page.mouse.move(card!.x + card!.width / 2, card!.y + card!.height / 2);
+  await page.mouse.wheel(0, 25);
+  await expect(firstLink).toBeFocused();
+  await expect(slides.nth(0)).not.toHaveAttribute('inert');
+  await carousel.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(carousel).toBeFocused();
+  await expect(slides.nth(1)).not.toHaveAttribute('inert');
+  await expectScrollPosition(page, range.start + range.step);
+  await page.keyboard.press('ArrowLeft');
+  await expect(carousel).toBeFocused();
+  await expect(slides.nth(0)).not.toHaveAttribute('inert');
+  await expectScrollPosition(page, range.start);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(scene).toHaveAttribute('data-pinned', 'false');
-  await expect(hero(page).firstLink).toHaveAttribute('href', '/project/wetrack-app');
-  await expect(hero(page).firstLink).toBeVisible();
-  await expect(hero(page).firstState).not.toHaveAttribute('inert');
-  await expect(hero(page).nextState).toHaveAttribute('inert', '');
-  await expect(hero(page).nextState).toHaveAttribute('aria-hidden', 'true');
-  await expect.poll(() => opacity(hero(page).firstState)).toBeGreaterThan(0.98);
-  await expect.poll(() => opacity(hero(page).nextState)).toBeLessThan(0.02);
-
-  const selectedPlanes = page.locator('#projects article [data-parallax="image"]');
-  await expect(selectedPlanes).toHaveCount(3);
-  for (const plane of await selectedPlanes.all()) {
-    await expect(plane).toHaveAttribute('data-parallax-active', 'false');
-  }
-
-  const sceneBox = await box(scene);
-  const stageBox = await box(scene.locator(':scope > section'));
-  expect(Math.abs(sceneBox.height - stageBox.height)).toBeLessThanOrEqual(2);
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-}
-
-test('throws the outgoing hero card and floats the next card through reversible scroll', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await page.mouse.move(8, 8);
-
-  const { scene, slides, firstState, nextState, firstLink, nextLink, firstCaption, nextCaption, frame, plane } =
-    hero(page);
-  const slideCount = await slides.count();
-  const lastState = slides.nth(slideCount - 1);
-  expect(slideCount).toBeGreaterThanOrEqual(2);
-  await expect(scene).toHaveAttribute('data-pinned', 'true');
-  await expect(firstLink).toHaveAttribute('href', '/project/wetrack-app');
-  await expect(nextLink).toHaveAttribute('href', '/project/chatgpt-clone');
-  await expect(firstState).not.toHaveAttribute('inert');
-  await expect(nextState).toHaveAttribute('inert', '');
-  await expect(firstCaption.locator('strong')).toHaveText('WeTrack App');
-  await expect(nextCaption.locator('strong')).toHaveText('ChatGPT Clone');
-  await expect
-    .poll(() =>
-      page
-        .locator('[data-scroll-scene] [data-parallax="copy"]')
-        .evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity)),
-    )
-    .toBe(1);
-
-  for (let index = 1; index < slideCount; index += 1) {
-    await expect(slides.nth(index)).toHaveAttribute('inert', '');
-  }
-
-  const range = await sceneScrollRange(page);
-  expect(range.end).toBeGreaterThan(range.start + 100);
-  await scrollInstantly(page, range.start);
-  await expect.poll(() => opacity(firstState)).toBeGreaterThan(0.98);
-  await expect.poll(() => opacity(nextState)).toBeLessThan(0.02);
-  await expect(nextState).toHaveAttribute('aria-hidden', 'true');
-  await expect(firstState).not.toHaveAttribute('aria-hidden', 'true');
-  const startBoxes = await readHeroBoxes(page);
-  const startMotion = await cardMotion(firstState);
-  const enteringMotion = await cardMotion(nextState);
-  expect(startMotion.rotation).toBeCloseTo(0);
-  expect(Math.abs(startMotion.originX - startMotion.width)).toBeLessThanOrEqual(1);
-  expect(Math.abs(startMotion.originY - startMotion.height)).toBeLessThanOrEqual(1);
-  expect(enteringMotion.translateY).toBeGreaterThan(0);
-  await expectPlaneCoversFrame(frame, plane);
-  await expectNoHorizontalOverflow(page);
-
-  const firstTransitionMidpoint = 0.2 + (0.6 / (slideCount - 1)) * 0.52;
-  const midpoint = range.start + (range.end - range.start) * firstTransitionMidpoint;
-  await scrollInstantly(page, midpoint);
-  await expect(nextState).not.toHaveAttribute('inert');
-  await expect(firstState).toHaveAttribute('inert', '');
-  await expect(firstState).toHaveAttribute('aria-hidden', 'true');
-  await expect(nextState).not.toHaveAttribute('aria-hidden', 'true');
-  await expect.poll(() => opacity(firstState)).toBeLessThan(0.5);
-  await expect.poll(() => opacity(nextState)).toBeGreaterThan(0.5);
-  const outgoingMotion = await cardMotion(firstState);
-  const incomingMotion = await cardMotion(nextState);
-  expect(outgoingMotion.translateX).toBeGreaterThan(outgoingMotion.width);
-  expect(outgoingMotion.rotation).toBeCloseTo(6.24, 1);
-  expect(incomingMotion.translateY).toBeGreaterThan(0);
-  expect(incomingMotion.translateY).toBeLessThan(16);
-  expect(incomingMotion.rotation).toBeCloseTo(0);
-  const midpointBoxes = await readHeroBoxes(page);
-  await expectStableBoxes(startBoxes, midpointBoxes);
-  await expectPlaneCoversFrame(frame, plane);
-  await expectNoHorizontalOverflow(page);
-
-  await scrollInstantly(page, range.end);
-  await expect.poll(() => opacity(firstState)).toBeLessThan(0.02);
-  await expect.poll(() => opacity(lastState)).toBeGreaterThan(0.98);
-  await expect(firstState).toHaveAttribute('aria-hidden', 'true');
-  await expect(lastState).not.toHaveAttribute('aria-hidden', 'true');
-  await expect(firstState).toHaveAttribute('inert', '');
-  await expect(lastState).not.toHaveAttribute('inert');
-  const endBoxes = await readHeroBoxes(page);
-  await expectStableBoxes(startBoxes, endBoxes);
-  const endMotion = await cardMotion(firstState);
-  const sceneBounds = await box(scene);
-  expect(endMotion.translateX).toBeGreaterThan(endMotion.width * 2);
-  expect(endMotion.rotation).toBeCloseTo(12, 1);
-  expect(endMotion.left).toBeGreaterThan(sceneBounds.x + sceneBounds.width - 1);
-  await expectPlaneCoversFrame(frame, plane);
-  await expectNoHorizontalOverflow(page);
-
-  await scrollInstantly(page, range.start);
-  const startScrollY = await page.evaluate(() => window.scrollY);
-  const wheelDistance = Math.round((range.end - range.start) * 0.62);
-  await page.mouse.wheel(0, wheelDistance);
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(startScrollY + 20);
-  await expect(firstState).toHaveAttribute('inert', '');
-  await expect(nextState).not.toHaveAttribute('inert');
-  const downMotion = await cardMotion(firstState);
-
-  await page.mouse.wheel(0, -wheelDistance);
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeLessThan(startScrollY + wheelDistance - 20);
-  await expect(firstState).not.toHaveAttribute('inert');
-  await expect(nextState).toHaveAttribute('inert', '');
-  await expect.poll(() => cardMotion(firstState).then(({ translateX }) => translateX)).toBeLessThan(
-    downMotion.translateX - 100,
-  );
-  await expectNoHorizontalOverflow(page);
+  await carousel.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(slides.nth(1)).not.toHaveAttribute('inert');
+  await expect(scene.getByRole('status')).toHaveText('Project 2 of 3');
 });
 
-test('settles to the nearest card after wheel idle and lets the page leave the hero', async ({ page }) => {
+test('selected project imagery retains its bounded scroll parallax', async ({ page }) => {
   await page.goto('/');
-  await page.mouse.move(8, 8);
-
-  const { scene, slides } = hero(page);
-  await expect(scene).toHaveAttribute('data-pinned', 'true');
-  const slideCount = await slides.count();
-  const range = await sceneScrollRange(page);
-  const travel = range.end - range.start;
-  const targetIndex = slideCount > 2 ? 1 : 0;
-  const targetProgress = 0.2 + (0.6 * targetIndex) / (slideCount - 1);
-  const expectedPosition = range.start + targetProgress * travel;
-
-  await scrollInstantly(page, range.start + (targetProgress + 0.03) * travel);
-  await page.mouse.wheel(0, 1);
-  await expect
-    .poll(async () => Math.abs((await page.evaluate(() => window.scrollY)) - expectedPosition))
-    .toBeLessThan(3);
-
-  const escapeStart = range.end - Math.max(10, travel * 0.02);
-  await scrollInstantly(page, escapeStart);
-  await page.mouse.wheel(0, 100);
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(range.end + 20);
-  await page.waitForTimeout(300);
-  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(range.end);
-});
-
-test('limits stronger image travel to selected projects and keeps their frames covered', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await expect(hero(page).scene).toHaveAttribute('data-pinned', 'true');
-
-  const selectedPlanes = page.locator('#projects article [data-parallax="image"]');
-  await expect(selectedPlanes).toHaveCount(3);
-  const travels: string[] = [];
-  for (const plane of await selectedPlanes.all()) {
-    await expect(plane).toHaveAttribute('data-parallax-active', 'true');
-    travels.push((await plane.getAttribute('data-parallax-travel')) ?? '');
-  }
-  expect(travels).toEqual(['1.5', '1', '1']);
-
-  const plane = selectedPlanes.first();
+  const planes = page.locator('#projects article [data-parallax="image"]');
+  await expect(planes).toHaveCount(3);
+  await expect(planes.first()).toHaveAttribute('data-parallax-active', 'true');
+  const plane = planes.first();
   const frame = plane.locator('xpath=..');
   const position = await frame.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
-    return {
-      top: bounds.top + window.scrollY,
-      height: bounds.height,
-      viewportHeight: window.innerHeight,
-    };
+    return { top: bounds.top + window.scrollY, height: bounds.height, viewport: innerHeight };
   });
-  const firstEndpoint = Math.max(0, position.top - position.viewportHeight);
-  const lastEndpoint = position.top + position.height;
-
-  await scrollInstantly(page, firstEndpoint);
-  await expectPlaneCoversFrame(frame, plane);
-  await scrollInstantly(page, lastEndpoint);
-  await expectPlaneCoversFrame(frame, plane);
-
-  const imageOffset = () => plane.evaluate((element) => {
-    const frameBounds = element.parentElement!.getBoundingClientRect();
-    return element.getBoundingClientRect().top - frameBounds.top;
-  });
-  const middleOffset = await plane.evaluate(
-    (element) => -(element.getBoundingClientRect().height - element.parentElement!.getBoundingClientRect().height) / 2,
-  );
-  await scrollInstantly(page, (firstEndpoint + lastEndpoint) / 2);
-  // Native scroll animations can paint after scrollY has already changed.
-  await expect.poll(imageOffset).toBeCloseTo(middleOffset, 0);
-  const beforeScroll = await page.evaluate(() => window.scrollY);
-  const beforeOffset = await imageOffset();
-
+  const start = Math.max(0, position.top - position.viewport);
+  const end = position.top + position.height;
+  const offset = () =>
+    plane.evaluate(
+      (element) =>
+        element.getBoundingClientRect().top - element.parentElement!.getBoundingClientRect().top,
+    );
+  await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), (start + end) / 2);
+  const before = await offset();
   await page.mouse.wheel(0, 140);
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(beforeScroll + 20);
-  await expect.poll(imageOffset).toBeLessThan(beforeOffset - 1);
-  const downOffset = await imageOffset();
-
-  await page.mouse.wheel(0, -100);
-  await expect.poll(imageOffset).toBeGreaterThan(downOffset + 1);
-
-  await page.goto('/project');
-  const archivePlane = page.locator('[data-parallax="image"]').first();
-  await expect(archivePlane).toHaveAttribute('data-parallax-active', 'true');
-  await expect(archivePlane).toHaveAttribute('data-parallax-travel', '1');
+  await expect.poll(offset).toBeLessThan(before - 1);
+  const sizes = await plane.evaluate((element) => ({
+    image: element.getBoundingClientRect().height,
+    frame: element.parentElement!.getBoundingClientRect().height,
+  }));
+  expect(sizes.image).toBeGreaterThanOrEqual(sizes.frame);
 });
 
-test('resets hero selection and parallax when reduced motion is enabled live', async ({ page }) => {
+test('hero falls back to normal flow with reduced motion or enlarged text', async ({ page }) => {
   await page.goto('/');
-  const { scene, slides, firstState, firstLink } = hero(page);
-  const lastState = slides.nth((await slides.count()) - 1);
+  const scene = page.locator('[data-scroll-scene]');
   await expect(scene).toHaveAttribute('data-pinned', 'true');
-
-  const range = await sceneScrollRange(page);
-  await scrollInstantly(page, range.end);
-  await expect(lastState).not.toHaveAttribute('inert');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-
-  await expect(scene).toHaveAttribute('data-pinned', 'false');
-  await expect(firstLink).toHaveAttribute('href', '/project/wetrack-app');
-  await expect(firstState).not.toHaveAttribute('inert');
-  await expect(lastState).toHaveAttribute('inert', '');
-  await expect(lastState).toHaveAttribute('aria-hidden', 'true');
-  await expect.poll(() => opacity(firstState)).toBeGreaterThan(0.98);
-  await expect.poll(() => opacity(lastState)).toBeLessThan(0.02);
-
-  const selectedPlane = page.locator('#projects article [data-parallax="image"]').first();
-  await expect(selectedPlane).toHaveAttribute('data-parallax-active', 'false');
-});
-
-test('keeps a keyboard-focused hero project active until focus moves', async ({ page }) => {
-  await page.goto('/');
-  const { scene, slides, firstState, firstLink } = hero(page);
-  const lastState = slides.nth((await slides.count()) - 1);
-  const lastLink = lastState.locator('a.hero-visual');
-  await expect(scene).toHaveAttribute('data-pinned', 'true');
-
-  for (let attempt = 0; attempt < 24; attempt += 1) {
-    if (await firstLink.evaluate((element) => element === document.activeElement)) {
-      break;
-    }
-    await page.keyboard.press('Tab');
-  }
-  await expect(firstLink).toBeFocused();
-
-  const range = await sceneScrollRange(page);
-  await scrollInstantly(page, range.start + (range.end - range.start) * 0.8);
-  await expect(firstState).not.toHaveAttribute('inert');
-  await expect(lastState).toHaveAttribute('inert', '');
-  await expect(firstLink).toBeFocused();
-  await expect.poll(() => opacity(firstState)).toBeGreaterThan(0.98);
-  await expect.poll(() => opacity(lastState)).toBeLessThan(0.02);
-
-  await page.keyboard.press('Tab');
-  await expect(firstState).toHaveAttribute('inert', '');
-  await expect(lastState).not.toHaveAttribute('inert');
-
-  await page.keyboard.press('Shift+Tab');
-  await expect(lastLink).toBeFocused();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(scene).toHaveAttribute('data-pinned', 'false');
-  await expect(lastLink).toBeFocused();
-  await expect.poll(() => opacity(lastState)).toBe(1);
-  await page.keyboard.press('Tab');
-  await expect(firstState).not.toHaveAttribute('inert');
-  await expect(lastState).toHaveAttribute('inert', '');
+  await expect(page.locator('#projects article [data-parallax="image"]').first()).toHaveAttribute(
+    'data-parallax-active',
+    'false',
+  );
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.addStyleTag({ content: '.hero-copy h1 { font-size: 10rem; }' });
+  await expect(scene).toHaveAttribute('data-pinned', 'false');
 });
 
-test.describe('parallax eligibility fallbacks', () => {
-  test.describe('with a coarse pointer', () => {
-    test.use({ hasTouch: true, isMobile: true });
-
-    test('keeps normal flow even at desktop dimensions', async ({ page }) => {
-      await page.goto('/');
-      await expectFlowFallback(page);
-    });
-  });
-
-  test('releases an oversized hero when text is enlarged', async ({ page }) => {
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test('retains the first project link without nonfunctional slide controls', async ({ page }) => {
     await page.goto('/');
-    await expect(hero(page).scene).toHaveAttribute('data-pinned', 'true');
-    await page.addStyleTag({
-      content: '.hero-copy { font-size: 2rem; } .hero-copy h1 { font-size: 10rem; }',
-    });
-    await expect(hero(page).scene).toHaveAttribute('data-pinned', 'false');
-    await expect.poll(() => opacity(hero(page).firstState)).toBe(1);
-    await expect(hero(page).nextState).toHaveAttribute('inert', '');
+    const scene = page.locator('[data-scroll-scene]');
+    await expect(scene).toHaveAttribute('data-pinned', 'false');
+    await expect(scene.locator('[data-hero-slide="0"] a')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Next featured project' })).toHaveCount(0);
+    const stack = scene.locator('.scroll-hero-visual-stack');
+    await stack.evaluate((element) => { element.scrollLeft = element.clientWidth; });
+    await expect.poll(() => stack.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await expect(scene.locator('[data-hero-slide="1"] a')).toBeVisible();
   });
+});
 
-  test('uses normal flow below the desktop width threshold', async ({ page }) => {
-    await page.setViewportSize({ width: 820, height: 1000 });
+test.describe('touch fallback', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+  test('keeps every featured project in a native horizontal scroll area', async ({ page }) => {
     await page.goto('/');
-    await expectFlowFallback(page);
-  });
-
-  test('uses normal flow below the minimum viewport height', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 700 });
-    await page.goto('/');
-    await expectFlowFallback(page);
-  });
-
-  test.describe('with JavaScript disabled', () => {
-    test.use({ javaScriptEnabled: false });
-
-    test('keeps the first hero link and selected work visible in server HTML', async ({ page }) => {
-      await page.goto('/');
-      await expectFlowFallback(page);
-      await expect(
-        hero(page).frame.getByAltText('WeTrack Kanban board with tasks organised into sprints'),
-      ).toBeVisible();
-    });
+    const scene = page.locator('[data-scroll-scene]');
+    const stack = scene.locator('.scroll-hero-visual-stack');
+    await expect(scene).toHaveAttribute('data-pinned', 'false');
+    await expect(stack).toHaveCSS('overflow-x', 'auto');
+    await stack.evaluate((element) => { element.scrollLeft = element.clientWidth; });
+    await expect.poll(() => stack.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await expect(scene.locator('[data-hero-slide="1"] a')).toBeVisible();
   });
 });

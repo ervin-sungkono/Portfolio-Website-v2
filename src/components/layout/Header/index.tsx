@@ -4,8 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { ListIcon, XIcon } from '@phosphor-icons/react';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
+import { Button } from '@/components/common/Button';
 import lightLogo from '@public/images/favicon-light.png';
 import darkLogo from '@public/images/favicon-dark.png';
 import type { NavigationItem } from './type';
@@ -34,7 +34,7 @@ export function Header({ name }: { name: string }) {
     const measure = () => {
       document.documentElement.style.setProperty(
         '--measured-header-height',
-        `${element.getBoundingClientRect().height}px`,
+        `${element.getBoundingClientRect().height + Math.max(0, parseFloat(getComputedStyle(element).top) || 0)}px`,
       );
     };
     const observer = new ResizeObserver(measure);
@@ -86,49 +86,53 @@ export function Header({ name }: { name: string }) {
         </Link>
         <div className="site-header-actions">
           <ThemeToggle />
-          <button
+          <Button
+            kind="action"
+            variant="icon"
             ref={menuButton}
             type="button"
-            className="icon-button site-header-menu"
+            className="site-header-menu"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-controls="primary-navigation"
             aria-expanded={open}
             onClick={() => setOpen(!open)}
           >
-            {open ? (
-              <XIcon size={24} aria-hidden="true" />
-            ) : (
-              <ListIcon size={24} aria-hidden="true" />
-            )}
-          </button>
+            <span className="site-header-menu-icon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </Button>
         </div>
         <nav
           id="primary-navigation"
           aria-label="Primary"
           className={`site-header-nav ${open ? 'is-open' : ''}`}
         >
-          {navigation.map(({ label, href }) => (
+          <div className="site-header-nav-content">
+            {navigation.map(({ label, href }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                aria-current={
+                  navigationPath === href || (href !== '/' && navigationPath.startsWith(href + '/'))
+                    ? 'page'
+                    : undefined
+                }
+              >
+                {label}
+              </Link>
+            ))}
             <Link
-              key={href}
-              href={href}
+              href="/contact"
+              className="site-header-contact"
               onClick={() => setOpen(false)}
-              aria-current={
-                navigationPath === href || (href !== '/' && navigationPath.startsWith(href + '/'))
-                  ? 'page'
-                  : undefined
-              }
+              aria-current={pathname === '/contact' ? 'page' : undefined}
             >
-              {label}
+              Contact
             </Link>
-          ))}
-          <Link
-            href="/contact"
-            className="site-header-contact"
-            onClick={() => setOpen(false)}
-            aria-current={pathname === '/contact' ? 'page' : undefined}
-          >
-            Contact
-          </Link>
+          </div>
         </nav>
       </div>
     </header>

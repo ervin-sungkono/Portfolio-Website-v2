@@ -87,15 +87,13 @@
     overflow: hidden;
   }
 
-  .captcha-container {
-    display: flex;
-    justify-content: center;
-    min-height: 0;
-  }
-
   .loading-spinner {
     animation: spin 1s linear infinite;
   }
+}
+
+body:has(.contact-form) .grecaptcha-badge {
+  visibility: hidden;
 }
 
 :root {

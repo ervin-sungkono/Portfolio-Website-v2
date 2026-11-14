@@ -13,30 +13,14 @@
   }
 }
 
-.heroCopy,
-.avatarFrame {
+.heroCopy {
   min-width: 0;
 }
 
 .heroCopy h1 {
-  max-width: 13ch;
-}
-
-.avatarFrame {
-  min-height: 18rem;
-  display: grid;
-  place-items: center;
-  padding: var(--space-6);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--accent-soft);
-
-  img {
-    width: min(100%, 24rem);
-    height: auto;
-    aspect-ratio: 1;
-    object-fit: contain;
-  }
+  max-width: 16ch;
+  font-size: clamp(2.375rem, 1.75rem + 2.5vw, 3.75rem);
+  text-wrap: balance;
 }
 
 @media (width < 64rem) {
@@ -52,14 +36,6 @@
   }
 
   .heroCopy h1 {
-    max-width: 12ch;
-  }
-
-  .avatarFrame {
-    min-height: 0;
-
-    img {
-      width: min(100%, 20rem);
-    }
+    max-width: 16ch;
   }
 }

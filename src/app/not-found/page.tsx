@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Button } from '@/components/common/Button';
 import styles from './style.module.css';
 
 export const metadata = { title: 'Page Not Found', robots: { index: false, follow: false } };
@@ -14,12 +14,12 @@ export default function NotFound() {
         <h1 id="not-found-heading">This Page Isn’t Here.</h1>
         <p className={styles.description}>Explore the projects or return to the homepage.</p>
         <div className={styles.actions}>
-          <Link href="/" className="button">
+          <Button kind="link" href="/">
             Back to Home
-          </Link>
-          <Link href="/project" className="text-link">
+          </Button>
+          <Button kind="link" variant="text" href="/project">
             Explore Projects
-          </Link>
+          </Button>
         </div>
       </div>
     </section>

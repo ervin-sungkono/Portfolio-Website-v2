@@ -37,6 +37,15 @@
 }
 
 .gallery[data-enhanced] {
+  .mediaFrame {
+    aspect-ratio: 8 / 5;
+    max-height: 70svh;
+  }
+
+  .mediaImage {
+    height: 100%;
+  }
+
   .viewport {
     overflow: auto hidden;
     overscroll-behavior-inline: contain;

@@ -2,8 +2,9 @@
 
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRightIcon, CircleNotchIcon } from '@phosphor-icons/react';
+import { CircleNotchIcon } from '@phosphor-icons/react';
 import { Contact, type ContactErrors } from '@/lib/contact/validation';
+import { Button } from '@/components/common/Button';
 import { ExternalLink } from '@/components/common/ExternalLink';
 import type { ContactFormProps } from './type';
 import './style.css';
@@ -12,16 +13,9 @@ export function ContactForm({ siteKey }: ContactFormProps) {
   const [errors, setErrors] = useState<ContactErrors>({});
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
-  const [captchaReady, setCaptchaReady] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const submissionInFlight = useRef(false);
-  const captchaElement = useRef<HTMLDivElement>(null);
-  const widget = useRef<number | null>(null);
   const dirty = useRef(false);
-  const pending = useRef<{
-    resolve: (token: string) => void;
-    reject: (error: Error) => void;
-  } | null>(null);
 
   useEffect(() => {
     function warnBeforeLeaving(event: BeforeUnloadEvent) {
@@ -33,75 +27,43 @@ export function ContactForm({ siteKey }: ContactFormProps) {
     return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
   }, []);
 
-  useEffect(() => {
-    if (!siteKey) {
-      return;
-    }
-    window.portfolioCaptchaReady = () => setCaptchaReady(true);
-    return () => {
-      delete window.portfolioCaptchaReady;
-    };
-  }, [siteKey]);
-
-  useEffect(() => {
-    if (
-      !captchaReady ||
-      !siteKey ||
-      !captchaElement.current ||
-      !window.grecaptcha ||
-      widget.current !== null
-    ) {
-      return;
-    }
-    widget.current = window.grecaptcha.render(captchaElement.current, {
-      sitekey: siteKey,
-      size: 'invisible',
-      badge: 'inline',
-      theme: document.documentElement.dataset.theme || 'light',
-      callback: (token: string) => {
-        pending.current?.resolve(token);
-        pending.current = null;
-      },
-      'error-callback': () => {
-        pending.current?.reject(new Error('Verification is unavailable. Please try again.'));
-        pending.current = null;
-      },
-      'expired-callback': () => {
-        pending.current?.reject(new Error('Verification expired. Please try again.'));
-        pending.current = null;
-      },
-    });
-    return () => {
-      pending.current?.reject(new Error('Verification cancelled.'));
-      pending.current = null;
-    };
-  }, [captchaReady, siteKey]);
-
   async function captchaToken() {
     if (!siteKey) {
       return '';
     }
-    if (!window.grecaptcha || widget.current === null) {
+    if (!window.grecaptcha) {
       throw new Error('Verification is still loading. Please try again in a moment.');
     }
-    const id = widget.current;
+    const recaptcha = window.grecaptcha;
     return new Promise<string>((resolve, reject) => {
       const timeout = setTimeout(() => {
-        pending.current = null;
         reject(new Error('Verification timed out. Please try again.'));
       }, 25000);
-      pending.current = {
-        resolve: (token) => {
+      recaptcha.ready(() => {
+        try {
+          recaptcha.execute(siteKey, { action: 'contact' }).then(
+            (token) => {
+              clearTimeout(timeout);
+              resolve(token);
+            },
+            (error: unknown) => {
+              clearTimeout(timeout);
+              reject(
+                error instanceof Error
+                  ? error
+                  : new Error('Verification is unavailable. Please try again.'),
+              );
+            },
+          );
+        } catch (error) {
           clearTimeout(timeout);
-          resolve(token);
-        },
-        reject: (error) => {
-          clearTimeout(timeout);
-          reject(error);
-        },
-      };
-      window.grecaptcha!.reset(id);
-      window.grecaptcha!.execute(id);
+          reject(
+            error instanceof Error
+              ? error
+              : new Error('Verification is unavailable. Please try again.'),
+          );
+        }
+      });
     });
   }
 
@@ -222,37 +184,27 @@ export function ContactForm({ siteKey }: ContactFormProps) {
         <input id="contact-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
       {siteKey && (
-        <>
-          <Script
-            src="https://www.google.com/recaptcha/api.js?onload=portfolioCaptchaReady&render=explicit"
-            strategy="afterInteractive"
-            onReady={() => {
-              if (typeof window.grecaptcha?.render === 'function') {
-                setCaptchaReady(true);
-              }
-            }}
-            onError={() =>
-              setStatus('Verification could not load. Please refresh the page or use LinkedIn.')
-            }
-          />
-          <div ref={captchaElement} className="captcha-container" />
-        </>
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`}
+          strategy="afterInteractive"
+          onError={() =>
+            setStatus('Verification could not load. Please refresh the page or use LinkedIn.')
+          }
+        />
       )}
-      <button type="submit" disabled={busy} className="button form-submit">
+      <Button kind="action" type="submit" disabled={busy} className="form-submit">
         {busy ? 'Sending…' : 'Send Message'}{' '}
-        {busy ? (
-          <CircleNotchIcon className="loading-spinner" size={19} aria-hidden="true" />
-        ) : (
-          <ArrowUpRightIcon size={19} aria-hidden="true" />
-        )}
-      </button>
+        {busy && <CircleNotchIcon className="loading-spinner" size={19} aria-hidden="true" />}
+      </Button>
       <p className="form-note">
         Your details are used to reply to this message.{' '}
         {siteKey && (
           <>
-            Protected by reCAPTCHA. Google’s{' '}
+            This site is protected by reCAPTCHA and the Google{' '}
             <ExternalLink href="https://policies.google.com/privacy">Privacy Policy</ExternalLink>{' '}
-            and <ExternalLink href="https://policies.google.com/terms">Terms</ExternalLink> apply.
+            and{' '}
+            <ExternalLink href="https://policies.google.com/terms">Terms of Service</ExternalLink>{' '}
+            apply.
           </>
         )}
       </p>

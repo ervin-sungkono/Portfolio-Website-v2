@@ -1,107 +1,35 @@
-# Visual system, responsive layout, and motion
+# Responsive layout, accessibility, and motion
 
-Updated for the current component and CMS behavior on **3 November 2026 (Asia/Jakarta)**. This is the current UI reference, consolidating the visual-design notes and implemented parallax plan. Application boundaries are in [architecture](architecture.md); dated checks and unresolved validation are in [verification](verification.md).
+This document records behavior implemented in the UI. For component ownership see [architecture](architecture.md#code-boundaries); for automated coverage and known limits see [verification](verification.md#repeatable-checks).
 
-## Visual system
+## Visual system and layout
 
-The Engineering Editorial presentation uses Manrope, strong heading hierarchy, cobalt accents, neutral light/dark surfaces, fine dividers, editorial indexes, and repeated image framing. Professional facts, artwork, team credits, routes, and links remain the content foundation.
+`src/styles/globals.css` owns shared color, typography, spacing, controls, focus, and layout tokens. It defines the light/dark theme and shared page/container primitives. Route and component details remain in their colocated CSS or CSS Modules. Keep the existing design system and use content-driven responsive sizing rather than isolated device-specific overrides.
 
-`src/styles/globals.css` owns shared tokens. The root font size is not fixed. Ordinary spacing uses a 0.25rem rhythm, text uses relative units, line heights are unitless, and text measure uses `ch`. Metadata is 0.75rem, small/control text 0.875rem, body/input text 1rem, titles 1.25rem, and small headings 1.5rem. A separate `--control-border` token distinguishes controls from softer decorative borders in both themes.
-
-Fluid values interpolate from a 20rem to 80rem viewport and stop at bounded endpoints:
-
-| Token           | Narrow endpoint | Wide endpoint |
-| --------------- | --------------- | ------------- |
-| Display heading | 2.75rem         | 5.5rem        |
-| Section heading | 1.75rem         | 3rem          |
-| Page gutter     | 1rem            | 3rem          |
-| Section spacing | 3.5rem          | 6rem          |
-| Layout gap      | 1.5rem          | 3rem          |
-
-For example, the display heading is `clamp(2.75rem, 1.8333rem + 4.5833vw, 5.5rem)`: it grows 44px over the 960px interval at a default 16px root. The homepage hero uses a local 44–68px bounded scale to fit its two-column composition. Text never relies on viewport units alone.
-
-Modular screenshots use proportional cover cropping without inset padding or letterboxing. Detail screenshots keep their natural aspect ratio so visitors can inspect the complete interface. Moving image planes include overscan; their outer links, captions, and focus indicators remain stationary on selected homepage surfaces.
-
-## Page composition and layout
-
-| Surface         | Current composition                                                                                            |
-| --------------- | -------------------------------------------------------------------------------------------------------------- |
-| Home            | Sticky project-preview hero, selected project grid, experience timeline, curated artwork, and contact close.   |
-| Projects        | Three featured entries plus the remaining archive; GET filters search the whole collection without duplicates. |
-| Project details | Natural-ratio screenshot, overview, documented implementation/tradeoffs, attribution, and related projects.    |
-| About           | Profile introduction, experience timeline, and grouped existing skills.                                        |
-| Design          | Equal-width 4:3 cover frames with natural caption heights and balanced closing rows.                           |
-| Contact         | Editorial introduction and the labelled form with validation and status feedback.                              |
-| Not found       | Viewport-height recovery section with links to home and projects.                                              |
-
-The container caps at **75rem**. Layout starts stacked and uses content-fit thresholds:
-
-- At **48rem**, galleries have room for two columns. Tablet featured projects use a full-width lead above the supporting pair.
-- At **64rem**, galleries use three columns and the hero, full navigation, and contact layout can use wider compositions. Tablet portrait keeps the hero stacked.
-- The homepage's asymmetric selected-work composition starts at **70rem** so compact panels retain usable width.
-- In the desktop Design grid, a remainder of two fills a wider pair; a remainder of one redistributes the last four entries into two pair rows. DOM order remains intact, without dense packing or fixed caption heights.
-
-Headings, full-name branding, and project names wrap; flex/grid children can shrink. Phone evidence indexes stack above copy, skills collapse when labels need room, and hero actions use a full-width primary action followed by a CV/GitHub row. These are content constraints rather than device detection.
-
-The header shares its measured height through a cleaned-up ResizeObserver, with a nominal token as fallback. Hero pinning, anchor offsets, and mobile-menu height use that measurement. The square favicon artwork avoids a second tiny name inside the logo. Short-screen menus scroll within dynamic viewport limits and retain clearance for focused links.
+The public container is capped at 75rem. Global layout breakpoints include 48rem and 64rem; components can add thresholds for actual content fit. Project and design collections use responsive bento cards with frosted surfaces and one destination per card. The project search uses a native GET form that floats below the header, hides while scrolling down, and reappears on upward scroll or keyboard focus; it remains usable without client scripting. Check the full name, headings, cards, controls, and navigation under narrow widths and enlarged text.
 
 ## Accessibility and input
 
-Preserve skip navigation, landmarks, heading order, keyboard access, visible focus, meaningful image alternatives, and accessible names containing visible labels. Primary controls, icon buttons, filters, and standalone text links have a minimum 2.75rem height (44px at the default root size).
+Preserve skip navigation, landmarks, heading order, keyboard access, visible focus, sufficient contrast, and accessible names that include visible labels. Project cards use the shared outer focus outline so their images cannot cover it. Mobile navigation is a disclosure: its toggle precedes links, Escape closes it and returns focus, leaving the header closes it, and short screens can scroll the links into view. It is not a modal and must not trap focus.
 
-Mobile navigation is a disclosure. Its toggle precedes its links in DOM and visual order; Escape closes it and returns focus to the toggle; focus leaving the header closes it. It does not use a modal focus trap. All links must remain reachable on short screens and with enlarged text.
+The cursor enhancement is limited to fine pointers with hover and is decorative/hidden from assistive technology; native cursor behavior remains the fallback. Theme controls describe the destination theme. Forms retain labels, associated errors/live status, first-invalid-field focus, duplicate-submit protection, and draft values after failure. The CMS uses a separate responsive dashboard with tables for projects and taxonomy, image grids, an inline site-profile wizard, and staged editing dialogs. Its shared select uses a labeled keyboard-operable combobox and listbox. See [GitHub CMS](architecture.md#github-cms) for storage and submission semantics.
 
-Theme labels describe the destination action and theme choice persists. Project actions include the project name and avoid redundant title/arrow links. Contact fields retain associated labels, `aria-describedby` errors, first-error focus, polite status, and drafts on failure; contact delivery behavior lives in [architecture](architecture.md#contact-integration). CMS editing behavior is described below and in [architecture](architecture.md#github-cms).
+At desktop widths of 64rem or more and heights of 44rem or more, the CMS fills the viewport. Tables and the inline site-profile step have their own scroll areas, while the profile navigation and actions remain outside the step body. Draft actions are in the header. Narrower or shorter viewports retain page scrolling so content remains reachable.
 
-For UI changes, exercise both themes and keyboard navigation at **320, 390, 820, 1024, and 1440px**, plus text enlargement/reflow, short viewports, coarse pointers, reduced motion, and no JavaScript. Root-font enlargement is distinct from actual browser zoom. Automated results do not establish full accessibility conformance.
+## Motion
 
-## CMS editor
+Decorative transitions and scroll-linked effects respect `prefers-reduced-motion`. Keep content visible in server-rendered markup without JavaScript. Continuous pointer and scroll values should avoid per-frame React state. Clean up event listeners, media queries, observers, timers, animation frames, and motion engines.
 
-The owner workspace uses the existing rem tokens and themes, native labelled controls, wrapping navigation buttons, and content-fit grids. Projects, site profile, categories, technologies, and images are structured forms with shared Zod validation. Repository import reuses the project and image controls; a private-source warning precedes saving private-repository metadata or staging its images. Designs use labelled show/hide checkboxes, with unavailable selected IDs still removable.
+On mobile, the navigation toggle morphs from three bars into a close icon. Its panel scales in before links appear in sequence; keyboard focus exposes a link immediately, and reduced motion removes the transitions.
 
-Per-section saves keep project, site-profile, category, and technology changes in browser Cache Storage; design toggles save to that same draft automatically. Image staging stores files and paths in the browser draft, supports multiple files, and lets the owner remove a staged image before submission. The draft restores after a reload in the same browser profile, subject to browser quota, eviction, and clearing. Editing requires a secure context and Web Locks support; only one `/admin` or `/admin/import` tab per origin may edit at a time. A browser before-unload prompt warns while a draft write is pending or needs retry. **Submit all changes** asks for confirmation, stages the remaining image blobs, and sends the full draft in one commit. A SHA conflict keeps the draft and presents the current repository version beside it; the owner must choose **Use reviewed versions as baseline** before submitting the revised draft. A cache-only retry after a successful commit does not submit content again.
+The home hero fades and moves project slides vertically, with a subtle scroll-linked parallax on the visual. In the desktop fine-pointer/no-preference context, each mouse-wheel gesture scrolls smoothly to the adjacent slide in that direction; ordinary page scrolling resumes beyond the first and last slides. The focusable carousel supports arrow, Home, and End keys and announces its position. Touch/coarse-pointer, short-viewport, reduced-motion, and no-JavaScript contexts use a native horizontal scroll area so every project remains reachable; reduced motion avoids smooth scrolling.
 
-Invalid fields expose associated messages and receive first-error focus. The workspace adds no decorative motion, modal focus trap, or wheel handling. Check the dated [verification](verification.md) before inferring responsive/accessibility coverage.
+The homepage eyebrow uses a one-time typewriter reveal without changing its text or accessible name. The experience timeline draws an accent line as it enters view on eligible desktop screens. Project and design entries use short staggered reveals; design artwork also uses the existing bounded pointer tilt, leaving captions and links stationary. All of these retain visible server-rendered content without JavaScript and respect reduced motion.
 
-## Motion boundaries
+The About introduction pairs its smaller headline with a decorative chip and stylus sculpture. Three.js is loaded only when the artwork is near the viewport and motion is allowed. The scene and its orbital rings move gently and support horizontal pointer dragging with damped momentum; vertical touch scrolling remains available. The decorative artwork is not a keyboard control. It pauses when off-screen or the document is hidden, caps rendering at 30 frames per second and pixel ratio at 1.25, batches the repeated chip pins, and disposes GPU resources on unmount. The static image captured from the initial scene remains visible without JavaScript, under reduced motion, or if WebGL cannot start. The native grab cursor is restored over the interactive artwork.
 
-Native scrolling controls the document. There is no section snapping, wheel interception, artificial scroll smoothing, or nearest-section settling. Motion remains an enhancement over visible server HTML. Motion components live with their shared, layout, or home responsibilities; see [code boundaries](architecture.md#code-boundaries).
+Project imagery uses bounded parallax only in its supported contexts. The desktop cursor position uses direct Motion values without springs or artificial delay; image tilt may use separate spring motion. Form controls use the custom cursor on eligible desktop pointers, while editable content, disabled controls, and ordinary-flow contexts retain native cursor behavior. Keep wheel interception limited to one slide per gesture and preserve natural scrolling past the first and last slides.
 
-| Component            | Behavior and boundary                                                                                                                                 |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Reveal`             | One entry animation: 10px travel over 0.35 seconds. Focus completes an active reveal; reduced motion skips it. Content is visible without JavaScript. |
-| `PointerSurface`     | Bounded image tilt up to 4 degrees, using springs for a desktop mouse with fine-pointer/hover capability. Pointer exit/cancel returns to neutral.     |
-| `MotionEnhancements` | Scroll progress and conditional public-page cursor loading at 64rem or wider, with fine pointer/hover and no reduced-motion preference.               |
-| `ScrollHero`         | Desktop content-fit sticky scene with a reversible project crossfade.                                                                                 |
-| `ParallaxImage`      | Bounded image-only travel inside a clipped frame, with matching overscan.                                                                             |
-| `DesktopCursor`      | Direct pointer tracking and decorative framing of hovered interactive controls.                                                                       |
+## Review contexts
 
-Keep continuous pointer/scroll values out of React state. Discrete state may select a project, focus hold, or motion eligibility. Clean up media subscriptions, observers, listeners, animation frames, and engine instances.
-
-## Hero crossfade and image parallax
-
-`src/lib/hooks/use-scroll-motion.ts` enables scroll motion only with **at least 64rem width, 48rem height, fine pointer, hover, and no reduced-motion preference**. `src/components/home/ScrollHero` additionally measures whether its content fits below the header. With multiple slides, the eligible scene reserves one viewport for reading plus half a small viewport (`50svh`) of scroll travel per transition, then releases into normal flow. The component accepts a collection of slides; zero slides show the empty-state message and one slide remains visible in normal flow.
-
-The homepage currently supplies its first two featured projects from the CMS: **WeTrack and ChatGPT Clone** in the published content. The second preview remains an explicit placeholder awaiting the owner's image. Image, project name, caption, and native destination fade together between **20% and 80%** of scene progress; for two slides the active project switches at the midpoint. More slides divide that interval into successive transitions. Copy, frame geometry, and actions stay stationary. There is no hero image translation, scroll scale, whole-link hover lift, or whole-link tilt. Reverse scrolling reverses the fade.
-
-Only one preview is interactive and exposed to assistive technology: the others are inert, `aria-hidden`, and excluded from pointer interaction. Keyboard focus holds its project fully visible until focus leaves, including if motion eligibility changes. Otherwise, phone/tablet, coarse-pointer, short/oversized, reduced-motion, and no-JavaScript contexts use the first preview in ordinary flow without reserved scroll travel.
-
-| Image surface                                                    | Travel                             |
-| ---------------------------------------------------------------- | ---------------------------------- |
-| Homepage lead project                                            | ±1.5rem.                           |
-| Two supporting homepage projects                                 | ±1rem, retained after crop review. |
-| One homepage AudioWaves artwork preview                          | ±1.5rem.                           |
-| Archive, filtered, and related-project cards                     | Shared default ±1rem.              |
-| Other homepage artwork, full Design grid, and detail screenshots | Static.                            |
-
-Each moving plane extends its travel distance above and below the frame: a frame of height `H` with ±`d` travel needs a plane of `H + 2d`. Overscan also crops content, so review both endpoints for technical UI, lettering, and focal subjects before increasing travel. The selected homepage project cards omit whole-link tilt. Readable copy, navigation, filters, forms, and feedback do not receive scroll transforms. The experience introduction's native sticky behavior remains independent of these effects.
-
-## Desktop cursor
-
-On eligible desktop fine-pointer/hover screens, the idle cursor has an **8px plus** inside a **32px four-corner reticle**. Hovering an enabled interactive target changes the center into a **12px ring with a dot** and frames the target **8px outside each edge**. That gap is decorative and does not enlarge the hit area. Leaving restores the pointer-centered reticle.
-
-The center follows raw pointer Motion values without interpolation, position springs, or delayed movement. Shape changes take 140ms; target-frame morphs take 160ms. A requestAnimationFrame loop follows live target geometry while hovered or completing a transition, with scroll/resize refreshes and cleanup. Continuous coordinates do not enter React state.
-
-The native cursor is hidden only while the replacement is active. Admin routes always retain the native cursor. Text-entry fields, contenteditable regions, disabled controls, iframes, pointer exit/cancel, window blur, document hiding, reduced motion, and cleanup restore it. Small/coarse-pointer and no-JavaScript contexts retain native interaction. The overlay cannot capture clicks and is hidden from assistive technology. The `html` background token keeps difference blending visible against the isolated body's painted background in both themes.
-
-Historical browser coverage and the limits of fixture-based image reviews are recorded once in [verification](verification.md). Bounded engine settings are safeguards rather than measured battery, accessibility, or field-performance results.
+For UI changes, check keyboard navigation, both themes, 320/390/820/1024/1440 CSS pixel widths, text enlargement/reflow, reduced motion, and relevant pointer/input fallbacks. Automated browser and axe checks are focused regressions; they do not establish WCAG conformance. Screen readers, actual browser zoom, forced colors, and real devices need manual checks when release confidence requires them.
