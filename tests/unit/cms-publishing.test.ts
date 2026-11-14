@@ -51,14 +51,21 @@ test('invalidation covers new/deleted project routes, catalog, homepage, and sit
     paths: ['/', '/project', '/project/new-project', '/sitemap.xml'],
   });
   assert.deepEqual(contentInvalidation('site'), { tags: ['site'], paths: ['/'] });
+  assert.deepEqual(contentInvalidation('post', 'new-post'), {
+    tags: ['posts', 'post:new-post'],
+    paths: ['/blog', '/blog/new-post', '/blog/[slug]', '/sitemap.xml'],
+  });
   assert.deepEqual(contentInvalidation('designs'), {
     tags: ['portfolio', 'designs'],
     paths: ['/', '/design'],
   });
   assert.ok(contentInvalidation('taxonomy').paths.includes('/project/[slug]'));
   assert.ok(contentInvalidation('all').tags.includes('portfolio'));
+  assert.ok(contentInvalidation('all').tags.includes('posts'));
   assert.ok(contentInvalidation('all').paths.includes('/about'));
+  assert.ok(contentInvalidation('all').paths.includes('/blog/[slug]'));
   assert.throws(() => contentInvalidation('project', '../../api/auth'));
+  assert.throws(() => contentInvalidation('post', '../../api/auth'));
 });
 
 test('CMS mutations reject foreign/missing origins and non-JSON requests', async () => {

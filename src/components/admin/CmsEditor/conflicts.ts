@@ -108,6 +108,20 @@ export async function loadConflictReview(body: Record<string, unknown>, draft: C
         canRebase: false,
       };
     }
+    const postMatch = /^content\/posts\/([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(path);
+    if (postMatch) {
+      const slug = postMatch[1];
+      const latest = snapshot.posts?.find((post) => post.slug === slug);
+      const changed = draft.posts?.upsert.find((post) => post.slug === slug);
+      const removed = draft.posts?.delete.some((post) => post.slug === slug);
+      return {
+        path,
+        currentSha: latest?.sha ?? null,
+        latest: latest?.data ?? '(post no longer exists)',
+        draft: changed?.data ?? (removed ? '(remove this post)' : '(no draft change)'),
+        canRebase: Boolean(changed || removed),
+      };
+    }
     const match = /^content\/projects\/([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(path);
     if (match) {
       const slug = match[1];
@@ -168,6 +182,19 @@ export async function loadConflictReview(body: Record<string, unknown>, draft: C
 export function rebaseReviewedVersions(draft: CmsDraft, conflicts: ConflictReview[]): CmsDraft {
   const next = structuredClone(draft);
   for (const conflict of conflicts) {
+    const postMatch = /^content\/posts\/([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(conflict.path);
+    if (postMatch) {
+      const changed = next.posts?.upsert.find((post) => post.slug === postMatch[1]);
+      if (changed) {
+        changed.expectedSha = conflict.currentSha;
+      }
+      const removed = next.posts?.delete.find((post) => post.slug === postMatch[1]);
+      if (removed && conflict.currentSha) {
+        removed.expectedSha = conflict.currentSha;
+      } else if (removed && next.posts) {
+        next.posts.delete = next.posts.delete.filter((post) => post !== removed);
+      }
+    }
     const match = /^content\/projects\/([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(conflict.path);
     if (match) {
       const project = next.projects.upsert.find((item) => item.slug === match[1]);

@@ -125,6 +125,10 @@ export function CmsDraftProvider({ children }: { children: React.ReactNode }) {
             !value.projects ||
             !Array.isArray(value.projects.upsert) ||
             !Array.isArray(value.projects.delete) ||
+            (value.posts !== undefined &&
+              (!value.posts ||
+                !Array.isArray(value.posts.upsert) ||
+                !Array.isArray(value.posts.delete))) ||
             !Array.isArray(value.media)
           ) {
             throw new Error('The saved browser draft could not be read.');

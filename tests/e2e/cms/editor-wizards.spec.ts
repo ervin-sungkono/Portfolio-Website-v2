@@ -52,6 +52,7 @@ test('project and taxonomy tables scroll within the dashboard on desktop', async
 
   for (const section of [
     { id: 'projects', label: 'Projects', wrapper: '.cms-editor-project-overview-table-wrap' },
+    { id: 'posts', label: 'Blog Posts', wrapper: '.cms-editor-overview-table-wrap' },
     { id: 'categories', label: 'Categories', wrapper: '.cms-editor-overview-table-wrap' },
     { id: 'technologies', label: 'Technologies', wrapper: '.cms-editor-overview-table-wrap' },
   ]) {

@@ -1,9 +1,15 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { Categories, ProjectDocument, SiteDocument, Technologies } from '@/lib/cms/schemas';
+import type {
+  Categories,
+  PostDocument,
+  ProjectDocument,
+  SiteDocument,
+  Technologies,
+} from '@/lib/cms/schemas';
 import type { CmsDraft } from '../CmsDraftProvider/type';
-import { synchronizeDocument, synchronizeProject } from './draft';
+import { synchronizeDocument, synchronizePost, synchronizeProject } from './draft';
 import type { CmsSnapshot } from './type';
 
 type UpdateDraft = (change: (current: CmsDraft) => CmsDraft) => Promise<boolean>;
@@ -18,6 +24,10 @@ type CmsDraftAutosaveOptions = {
   newProjectSlug: string;
   projectIsDirty: boolean;
   projectValues: ProjectDocument;
+  selectedPostSlug: string;
+  newPostSlug: string;
+  postIsDirty: boolean;
+  postValues: PostDocument;
   siteIsDirty: boolean;
   siteValues: SiteDocument;
   categoriesAreDirty: boolean;
@@ -36,6 +46,10 @@ export function useCmsDraftAutosave({
   newProjectSlug,
   projectIsDirty,
   projectValues,
+  selectedPostSlug,
+  newPostSlug,
+  postIsDirty,
+  postValues,
   siteIsDirty,
   siteValues,
   categoriesAreDirty,
@@ -44,6 +58,7 @@ export function useCmsDraftAutosave({
   technologyValues,
 }: CmsDraftAutosaveOptions) {
   const projectTouched = useRef({ slug: selectedProjectSlug, dirty: false });
+  const postTouched = useRef({ slug: selectedPostSlug, newSlug: newPostSlug, dirty: false });
   const siteTouched = useRef(false);
   const categoriesTouched = useRef(false);
   const technologiesTouched = useRef(false);
@@ -91,6 +106,53 @@ export function useCmsDraftAutosave({
     selectedProjectSlug,
     newProjectSlug,
     projectValues,
+    updateDraft,
+  ]);
+
+  useEffect(() => {
+    if (postTouched.current.slug !== selectedPostSlug) {
+      postTouched.current = { slug: selectedPostSlug, newSlug: newPostSlug, dirty: false };
+    }
+    if (postTouched.current.newSlug !== newPostSlug) {
+      postTouched.current.newSlug = newPostSlug;
+      postTouched.current.dirty = true;
+    }
+    if (postIsDirty) {
+      postTouched.current.dirty = true;
+    }
+    if (
+      !snapshot ||
+      !draftReady ||
+      busyRef.current ||
+      (!postIsDirty && !postTouched.current.dirty && (selectedPostSlug || !newPostSlug.trim()))
+    ) {
+      return;
+    }
+    if (!postIsDirty) {
+      postTouched.current.dirty = false;
+    }
+    if (selectedPostSlug) {
+      const baseline = remoteSnapshotRef.current?.posts?.find(
+        (post) => post.slug === selectedPostSlug,
+      );
+      void updateDraft((value) => synchronizePost(value, selectedPostSlug, baseline, postValues));
+    } else {
+      void updateDraft((value) => {
+        const newPost = { slug: newPostSlug, data: postValues };
+        return JSON.stringify(value.newPost) === JSON.stringify(newPost)
+          ? value
+          : { ...value, newPost };
+      });
+    }
+  }, [
+    snapshot,
+    draftReady,
+    busyRef,
+    remoteSnapshotRef,
+    postIsDirty,
+    selectedPostSlug,
+    newPostSlug,
+    postValues,
     updateDraft,
   ]);
 

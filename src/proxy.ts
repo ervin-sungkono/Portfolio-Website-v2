@@ -29,14 +29,16 @@ function internalOrigin() {
 }
 
 export async function proxy(request: NextRequest) {
-  const slug = request.nextUrl.pathname.slice('/project/'.length);
+  const isBlogPost = request.nextUrl.pathname.startsWith('/blog/');
+  const prefix = isBlogPost ? '/blog/' : '/project/';
+  const slug = request.nextUrl.pathname.slice(prefix.length);
   let origin: string;
   try {
     origin = internalOrigin();
   } catch {
     return new NextResponse('Published content is temporarily unavailable. Please try again.', {
       status: 503,
-      headers: { 'Cache-Control': 'no-store' },
+      headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
     });
   }
   const headers = new Headers({ cookie: request.headers.get('cookie') ?? '' });
@@ -45,7 +47,7 @@ export async function proxy(request: NextRequest) {
   }
   let exists = false;
   if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 100) {
-    const url = new URL('/api/content/project', origin);
+    const url = new URL(isBlogPost ? '/api/content/blog' : '/api/content/project', origin);
     url.searchParams.set('slug', slug);
     try {
       const response = await fetch(url, {
@@ -63,7 +65,7 @@ export async function proxy(request: NextRequest) {
     } catch {
       return new NextResponse('Published content is temporarily unavailable. Please try again.', {
         status: 503,
-        headers: { 'Cache-Control': 'no-store' },
+        headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
       });
     }
   }
@@ -91,13 +93,12 @@ export async function proxy(request: NextRequest) {
     });
   } catch {
     return new NextResponse(
-      'This project was not found. Visit /project to explore published work.',
-      {
-        status: 404,
-        headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
-      },
+      isBlogPost
+        ? 'This article was not found. Visit /blog to read published articles.'
+        : 'This project was not found. Visit /project to explore published work.',
+      { status: 404, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } },
     );
   }
 }
 
-export const config = { matcher: '/project/:slug' };
+export const config = { matcher: ['/project/:slug', '/blog/:slug'] };

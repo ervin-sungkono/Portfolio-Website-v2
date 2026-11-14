@@ -1,13 +1,15 @@
 import 'server-only';
 
 import { cacheLife, cacheTag } from 'next/cache';
-import type { Project } from '../content.ts';
+import type { BlogPost, Project } from '../content.ts';
 import { CmsError } from './errors.ts';
 import { getGitHubPat, githubBytes } from './github.ts';
 import { resolveRepository } from './repository.ts';
 import {
   categoriesSchema,
   portfolioSchema,
+  postIndexSchema,
+  postSchema,
   projectIndexSchema,
   projectSchema,
   siteSchema,
@@ -41,7 +43,7 @@ async function currentCommit(owner: string, name: string, branch: string) {
 
 async function readPublicContent(owner: string, name: string, branch: string) {
   'use cache';
-  cacheTag('projects', 'site', 'taxonomy', 'portfolio');
+  cacheTag('projects', 'posts', 'site', 'taxonomy', 'portfolio');
   cacheLife({ stale: 300, revalidate: Infinity, expire: Infinity });
 
   // Resolve the branch once per build or invalidation, then read one immutable revision.
@@ -75,6 +77,21 @@ async function readPublicContent(owner: string, name: string, branch: string) {
     index.projects.map(async (slug) => ({
       slug,
       data: await readDocument(`content/projects/${slug}.json`, projectSchema),
+    })),
+  );
+  let postIndex: { schemaVersion: 1; posts: string[] };
+  try {
+    postIndex = await readDocument('content/post-index.json', postIndexSchema);
+  } catch (error) {
+    if (!(error instanceof CmsError) || error.code !== 'not_found') {
+      throw error;
+    }
+    postIndex = { schemaVersion: 1, posts: [] };
+  }
+  const postDocuments = await Promise.all(
+    postIndex.posts.map(async (slug) => ({
+      slug,
+      data: await readDocument(`content/posts/${slug}.json`, postSchema),
     })),
   );
   const projects: Project[] = documents
@@ -113,7 +130,20 @@ async function readPublicContent(owner: string, name: string, branch: string) {
         study: portfolio.projectStudies[slug],
       };
     });
-  return { projects, site, portfolio };
+  const posts: BlogPost[] = postDocuments
+    .filter(({ data }) => data.published)
+    .sort(
+      (a, b) =>
+        b.data.publishedAt.localeCompare(a.data.publishedAt) || a.slug.localeCompare(b.slug),
+    )
+    .map(({ slug, data }) => ({
+      slug,
+      title: data.title,
+      summary: data.summary,
+      body: data.body,
+      publishedAt: data.publishedAt,
+    }));
+  return { projects, posts, site, portfolio };
 }
 
 async function publicRepository() {

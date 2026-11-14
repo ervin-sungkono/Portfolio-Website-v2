@@ -66,6 +66,24 @@ const fixtureProject = {
   links: { source: 'https://github.com/fixture-owner/example-project' },
   media: { cover: 'media/projects/fixture-project/cover.png', gallery: [] },
 };
+const fixturePost = {
+  schemaVersion: 1,
+  title: 'Fixture blog post',
+  summary: 'A published post from the CMS runtime fixture.',
+  body: '## Fixture article\n\nA short paragraph with **Markdown**.',
+  published: true,
+  publishedAt: '2026-10-01',
+};
+const fixtureDraftPost = {
+  ...fixturePost,
+  title: 'Fixture draft post',
+  published: false,
+  publishedAt: '2026-12-31',
+};
+const fixtureTiePost = {
+  ...fixturePost,
+  title: 'Fixture tie post',
+};
 
 function sha1(bytes) {
   return createHash('sha1').update(bytes).digest('hex');
@@ -103,6 +121,26 @@ store('content/technologies.json', jsonBytes(technologies));
 store('content/portfolio.json', jsonBytes(portfolio));
 store('content/project-index.json', jsonBytes({ schemaVersion: 1, projects: ['fixture-project'] }));
 store('content/projects/fixture-project.json', jsonBytes(fixtureProject));
+if (process.env.CMS_FIXTURE_WITH_BLOG === '1') {
+  store(
+    'content/post-index.json',
+    jsonBytes({
+      schemaVersion: 1,
+      posts: ['fixture-draft-post', 'fixture-post', 'tie-a-post', 'tie-z-post'],
+    }),
+  );
+  store('content/posts/fixture-draft-post.json', jsonBytes(fixtureDraftPost));
+  store('content/posts/fixture-post.json', jsonBytes(fixturePost));
+  store('content/posts/tie-a-post.json', jsonBytes(fixtureTiePost));
+  store(
+    'content/posts/tie-z-post.json',
+    jsonBytes({ ...fixtureTiePost, title: 'A later tie post' }),
+  );
+  store(
+    'content/posts/unindexed-post.json',
+    jsonBytes({ ...fixtureDraftPost, title: 'Unindexed legacy draft' }),
+  );
+}
 store(fixtureProject.media.cover, png);
 store('media/projects/browser-cms-project/cover.png', png);
 store(

@@ -54,6 +54,18 @@ export const projectSchema = z.strictObject({
   }),
 });
 
+export const postSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  title: text(120),
+  summary: text(240),
+  body: z
+    .string()
+    .max(30_000)
+    .refine((value) => Boolean(value.trim()), 'Write a post body.'),
+  published: z.boolean(),
+  publishedAt: z.iso.date(),
+});
+
 export const siteSchema = z.strictObject({
   schemaVersion: z.literal(1),
   siteTitle: text(120),
@@ -149,6 +161,10 @@ export const projectIndexSchema = z.strictObject({
   schemaVersion: z.literal(1),
   projects: z.array(idSchema).max(500).refine(unique, 'Project slugs must be unique.'),
 });
+export const postIndexSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  posts: z.array(idSchema).max(500).refine(unique, 'Post slugs must be unique.'),
+});
 
 const expectedSha = z
   .string()
@@ -222,6 +238,41 @@ const projectDraftChangesSchema = z
     }
   });
 
+const postDraftSchema = z.strictObject({
+  slug: idSchema,
+  expectedSha,
+  data: postSchema,
+});
+const deletedPostDraftSchema = z.strictObject({ slug: idSchema, expectedSha: commitSha });
+const postDraftChangesSchema = z
+  .strictObject({
+    upsert: z.array(postDraftSchema).max(500),
+    delete: z.array(deletedPostDraftSchema).max(500),
+  })
+  .superRefine((posts, context) => {
+    const seen = new Set<string>();
+    for (const [index, post] of posts.upsert.entries()) {
+      if (seen.has(post.slug)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['upsert', index, 'slug'],
+          message: 'A post can only be submitted once.',
+        });
+      }
+      seen.add(post.slug);
+    }
+    for (const [index, post] of posts.delete.entries()) {
+      if (seen.has(post.slug)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['delete', index, 'slug'],
+          message: 'A post cannot be both saved and deleted.',
+        });
+      }
+      seen.add(post.slug);
+    }
+  });
+
 const stagedMediaBlobSchema = z.discriminatedUnion('scope', [
   z.strictObject({
     scope: z.literal('project'),
@@ -245,6 +296,7 @@ export const finalizeCmsDraftSchema = z.strictObject({
   kind: z.literal('finalize'),
   repositoryKey: z.string().min(1).max(300),
   projects: projectDraftChangesSchema,
+  posts: postDraftChangesSchema.optional(),
   site: versionedSiteSchema.optional(),
   categories: versionedCategoriesSchema.optional(),
   technologies: versionedTechnologiesSchema.optional(),
@@ -272,6 +324,7 @@ export const finalizeCmsDraftSchema = z.strictObject({
 });
 
 export type ProjectDocument = z.infer<typeof projectSchema>;
+export type PostDocument = z.infer<typeof postSchema>;
 export type SiteDocument = z.infer<typeof siteSchema>;
 export type PortfolioDocument = z.infer<typeof portfolioSchema>;
 export type ProjectStudy = z.infer<typeof projectStudySchema>;

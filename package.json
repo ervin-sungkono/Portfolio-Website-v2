@@ -22,6 +22,7 @@
     "@fontsource-variable/manrope": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@phosphor-icons/react": "^2.1.10",
+    "@uiw/react-md-editor": "^4.2.3",
     "motion": "14.0.0",
     "next": "16.4.3",
     "next-auth": "^5.0.0-beta.32",
@@ -30,6 +31,8 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.91.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "three": "^0.187.0",
     "zod": "^4.6.7"
   },

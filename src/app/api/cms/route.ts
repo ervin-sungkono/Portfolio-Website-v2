@@ -20,12 +20,12 @@ const operationSchema = z.union([
   z
     .strictObject({
       kind: z.literal('revalidate'),
-      target: z.enum(['project', 'site', 'taxonomy', 'designs', 'all']),
+      target: z.enum(['project', 'post', 'site', 'taxonomy', 'designs', 'all']),
       slug: slug.optional(),
     })
     .refine(
-      (data) => data.target !== 'project' || Boolean(data.slug),
-      'Select the project to refresh.',
+      (data) => !['project', 'post'].includes(data.target) || Boolean(data.slug),
+      'Select the content to refresh.',
     ),
 ]);
 
@@ -59,6 +59,12 @@ export async function POST(request: Request) {
           target: 'project' as const,
           slug,
         })),
+        ...(operation.posts
+          ? [...operation.posts.upsert, ...operation.posts.delete].map(({ slug }) => ({
+              target: 'post' as const,
+              slug,
+            }))
+          : []),
         ...(operation.site ? [{ target: 'site' as const }] : []),
         ...(operation.categories || operation.technologies
           ? [{ target: 'taxonomy' as const }]

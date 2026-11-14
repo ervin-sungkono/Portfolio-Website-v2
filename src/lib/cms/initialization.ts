@@ -190,11 +190,17 @@ async function inspectStorage(
         'technologies.json': 'file',
         'portfolio.json': 'file',
         'project-index.json': 'file',
+        'post-index.json': 'file',
         projects: 'dir',
+        posts: 'dir',
       },
       'content',
     );
-    if (content.has('portfolio.json') || content.has('project-index.json')) {
+    if (
+      content.has('portfolio.json') ||
+      content.has('project-index.json') ||
+      content.has('post-index.json')
+    ) {
       onlySeedPaths = false;
     }
     for (const path of ['site.json', 'categories.json', 'technologies.json']) {
@@ -208,6 +214,15 @@ async function inspectStorage(
       for (const [name, type] of projects) {
         if (type !== 'file' || !/^[a-z0-9]+(?:-[a-z0-9]+)*\.json$/.test(name)) {
           throw unsupported('The project directory contains an unsupported file.');
+        }
+      }
+    }
+    if (content.has('posts')) {
+      onlySeedPaths = false;
+      const posts = await directoryMap(repository, 'content/posts', token, ref);
+      for (const [name, type] of posts) {
+        if (type !== 'file' || !/^[a-z0-9]+(?:-[a-z0-9]+)*\.json$/.test(name)) {
+          throw unsupported('The post directory contains an unsupported file.');
         }
       }
     }

@@ -89,6 +89,7 @@ describe('summarizePublishDraft', () => {
     ];
 
     expect(summarizePublishDraft(baseline, draft)).toEqual({
+      posts: { added: [], updated: [], deleted: [] },
       projects: {
         added: ['New Project (new-project)'],
         updated: ['Alpha (alpha) — Summary'],

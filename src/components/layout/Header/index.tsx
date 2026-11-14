@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Button } from '@/components/common/Button';
 import lightLogo from '@public/images/favicon-light.png';
@@ -15,6 +15,7 @@ const navigation: NavigationItem[] = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Projects', href: '/project' },
+  { label: 'Blog', href: '/blog' },
   { label: 'Design', href: '/design' },
 ];
 
@@ -110,10 +111,11 @@ export function Header({ name }: { name: string }) {
           className={`site-header-nav ${open ? 'is-open' : ''}`}
         >
           <div className="site-header-nav-content">
-            {navigation.map(({ label, href }) => (
+            {navigation.map(({ label, href }, index) => (
               <Link
                 key={href}
                 href={href}
+                style={{ '--nav-index': index } as CSSProperties}
                 onClick={() => setOpen(false)}
                 aria-current={
                   navigationPath === href || (href !== '/' && navigationPath.startsWith(href + '/'))
@@ -127,6 +129,7 @@ export function Header({ name }: { name: string }) {
             <Link
               href="/contact"
               className="site-header-contact"
+              style={{ '--nav-index': navigation.length } as CSSProperties}
               onClick={() => setOpen(false)}
               aria-current={pathname === '/contact' ? 'page' : undefined}
             >
