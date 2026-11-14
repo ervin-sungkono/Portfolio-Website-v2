@@ -4,8 +4,8 @@ import {
   projectSchema,
   siteSchema,
   technologiesSchema,
+  type CmsSnapshot,
 } from '@/lib/cms/schemas';
-import type { CmsSnapshot } from './type';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

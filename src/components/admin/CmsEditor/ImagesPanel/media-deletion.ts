@@ -1,7 +1,6 @@
-import type { ProjectDocument, Technologies } from '@/lib/cms/schemas';
+import type { CmsSnapshot, ProjectDocument, Technologies } from '@/lib/cms/schemas';
 import type { CmsDraft } from '../../CmsDraftProvider/type';
 import { applyDraft, stageProject } from '../draft';
-import type { CmsSnapshot } from '../type';
 
 function withoutImage(project: ProjectDocument, path: string): ProjectDocument {
   const gallery = project.media.gallery.filter((item) => item !== path);

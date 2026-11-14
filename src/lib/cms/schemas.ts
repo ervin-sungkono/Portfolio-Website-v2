@@ -331,3 +331,12 @@ export type ProjectStudy = z.infer<typeof projectStudySchema>;
 export type Categories = z.infer<typeof categoriesSchema>;
 export type Technologies = z.infer<typeof technologiesSchema>;
 export type FinalizeCmsDraft = z.infer<typeof finalizeCmsDraftSchema>;
+
+export type CmsSnapshot = {
+  repository: { owner: string; name: string; defaultBranch: string };
+  site: { data: SiteDocument; sha: string };
+  categories: { data: Categories; sha: string };
+  technologies: { data: Technologies; sha: string };
+  projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
+  posts: Array<{ slug: string; data: PostDocument; sha: string }>;
+};

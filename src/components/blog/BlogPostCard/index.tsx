@@ -1,5 +1,5 @@
 import { Button } from '@/components/common/Button';
-import { formatPublishedDate } from '../formatPublishedDate';
+import { formatPublishedDate } from '@/lib/dates';
 import type { BlogPostCardProps } from './type';
 import './style.css';
 

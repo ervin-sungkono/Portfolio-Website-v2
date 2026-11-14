@@ -1,6 +1,24 @@
-import type { PostDocument, ProjectDocument } from '@/lib/cms/schemas';
+import type { CmsSnapshot, PostDocument, ProjectDocument } from '@/lib/cms/schemas';
 import type { CmsDraft } from '../CmsDraftProvider/type';
-import type { CmsSnapshot } from './type';
+
+export function emptyProject(repositoryId: number | null = null): ProjectDocument {
+  return {
+    schemaVersion: 2,
+    githubRepositoryId: repositoryId,
+    title: '',
+    summary: '',
+    description: '',
+    published: false,
+    featured: false,
+    sortOrder: 0,
+    year: new Date().getFullYear(),
+    categories: [],
+    technologies: [],
+    tags: [],
+    links: { demo: undefined, source: undefined },
+    media: { cover: '', gallery: [] },
+  };
+}
 
 export function repositoryKey(snapshot: CmsSnapshot) {
   const { owner, name, defaultBranch } = snapshot.repository;
@@ -26,7 +44,7 @@ export function applyDraft(snapshot: CmsSnapshot, draft: CmsDraft): CmsSnapshot 
     ...snapshot,
     projects,
     posts: [
-      ...(snapshot.posts ?? []).filter(
+      ...snapshot.posts.filter(
         (post) =>
           !draft.posts?.delete.some((item) => item.slug === post.slug) &&
           !draft.posts?.upsert.some((item) => item.slug === post.slug),
@@ -47,24 +65,36 @@ export function applyDraft(snapshot: CmsSnapshot, draft: CmsDraft): CmsSnapshot 
   };
 }
 
+type DraftCollection<T> = {
+  upsert: Array<{ slug: string; expectedSha: string | null; data: T }>;
+  delete: Array<{ slug: string; expectedSha: string }>;
+};
+
+function stageCollection<T>(
+  collection: DraftCollection<T>,
+  slug: string,
+  expectedSha: string | null,
+  data: T,
+): DraftCollection<T> {
+  const current = collection.upsert.find((item) => item.slug === slug);
+  const next = { slug, expectedSha: current ? current.expectedSha : expectedSha, data };
+  if (current && JSON.stringify(current) === JSON.stringify(next)) {
+    return collection;
+  }
+  return {
+    upsert: [...collection.upsert.filter((item) => item.slug !== slug), next],
+    delete: collection.delete.filter((item) => item.slug !== slug),
+  };
+}
+
 export function stageProject(
   draft: CmsDraft,
   slug: string,
   expectedSha: string | null,
   data: ProjectDocument,
 ): CmsDraft {
-  const current = draft.projects.upsert.find((project) => project.slug === slug);
-  const next = { slug, expectedSha: current ? current.expectedSha : expectedSha, data };
-  if (current && JSON.stringify(current) === JSON.stringify(next)) {
-    return draft;
-  }
-  return {
-    ...draft,
-    projects: {
-      upsert: [...draft.projects.upsert.filter((project) => project.slug !== slug), next],
-      delete: draft.projects.delete.filter((project) => project.slug !== slug),
-    },
-  };
+  const projects = stageCollection(draft.projects, slug, expectedSha, data);
+  return projects === draft.projects ? draft : { ...draft, projects };
 }
 
 export function hasDraftChanges(draft: CmsDraft) {
@@ -90,19 +120,8 @@ export function stagePost(
   expectedSha: string | null,
   data: PostDocument,
 ): CmsDraft {
-  const posts = draft.posts ?? { upsert: [], delete: [] };
-  const current = posts.upsert.find((post) => post.slug === slug);
-  const next = { slug, expectedSha: current ? current.expectedSha : expectedSha, data };
-  if (current && JSON.stringify(current) === JSON.stringify(next)) {
-    return draft;
-  }
-  return {
-    ...draft,
-    posts: {
-      upsert: [...posts.upsert.filter((post) => post.slug !== slug), next],
-      delete: posts.delete.filter((post) => post.slug !== slug),
-    },
-  };
+  const posts = stageCollection(draft.posts ?? { upsert: [], delete: [] }, slug, expectedSha, data);
+  return posts === draft.posts ? draft : { ...draft, posts };
 }
 
 export function synchronizePost(

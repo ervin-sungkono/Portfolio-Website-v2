@@ -15,7 +15,7 @@ This document owns code/content boundaries, metadata, CMS operation, contact int
 | `src/lib/contact`        | Validation, bounded request parsing, server-only delivery                                |
 | `src/lib/cms`            | CMS schemas, auth policy, GitHub repository operations, publication and cache boundaries |
 
-The app uses Next.js 16.4 App Router, React 19, strict TypeScript, CSS/CSS Modules, Motion, Auth.js, Zod, React Hook Form, and Nodemailer. Shared UI belongs in `src/components/common`; route sections and admin UI stay scoped to their respective component directories. `Contact` groups shared message validation, formatting, and bounded body parsing; provider access remains in the server-only contact service. The CMS repository module owns project and post index serialization and comparison. Use the installed Next.js docs before changing framework APIs.
+The app uses Next.js 16.4 App Router, React 19, strict TypeScript, CSS/CSS Modules, Motion, Auth.js, Zod, React Hook Form, and Nodemailer. Shared UI belongs in `src/components/common`; route sections and admin UI stay scoped to their respective component directories. `Contact` groups shared message validation, formatting, and bounded body parsing; provider access remains in the server-only contact service. The CMS repository module owns project and post index serialization and comparison. `src/lib/cms/schemas.ts` owns strict documents and the shared `CmsSnapshot` contract; response parsing normalizes missing post collections before editor code receives them. Shared date formatting lives in `src/lib/dates.ts`. Use the installed Next.js docs before changing framework APIs.
 
 ## Request and publishing flows
 
@@ -58,7 +58,7 @@ After sign-in, **Initialize repository** is for a new or compatible repository o
 
 CMS forms and the GitHub import wizard save drafts and staged image bytes to this browser profile's Cache Storage. Drafts are not uploaded until **Submit draft**. **Delete draft** asks for confirmation before clearing unsubmitted changes. A secure context and Web Locks support are required; one `/admin` or `/admin/import` tab per origin may edit. Storage quota, eviction, or clearing site data can remove an unsubmitted draft. A conflict returns the current server value and retains the local draft for review. Confirmed submission validates the full draft and writes changed content, index updates, deletions, and staged media in one Git commit/branch update. All committed content is publicly readable, including `published: false` documents and history. Private-repository metadata or staged images become public when submitted.
 
-Editor and importer synchronize form values against the loaded repository baseline, removing a staged document when its values are restored. A saved empty draft can be rebound to a different repository or branch; drafts containing changes or a pending public refresh are retained for explicit recovery.
+Editor and importer use the project defaults and pure staging helpers in `CmsEditor/draft.ts`. Project and post staging share original-SHA preservation, replacement, and no-op detection; their synchronization rules remain explicit. Form values are compared against the loaded repository baseline, removing a staged document when its values are restored. A saved empty draft can be rebound to a different repository or branch; drafts containing changes or a pending public refresh are retained for explicit recovery.
 
 ### Blog posts
 

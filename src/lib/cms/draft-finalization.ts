@@ -20,7 +20,6 @@ import {
   resolveRepository,
   listExistingMedia,
   validateReferences,
-  type CmsSnapshot,
   type RepositoryContext,
   PostIndex,
   ProjectIndex,
@@ -34,6 +33,7 @@ import {
   siteSchema,
   technologiesSchema,
   type Categories,
+  type CmsSnapshot,
   type FinalizeCmsDraft,
   type PostDocument,
   type ProjectDocument,
@@ -141,7 +141,7 @@ function checkExpectedShas(
   const conflicts: DraftConflict[] = [];
   const projects = new Map(snapshot.projects.map(({ slug, sha }) => [slug, sha]));
   const posts = new Map(snapshot.posts.map(({ slug, sha }) => [slug, sha]));
-  for (const item of draft.projects.upsert) {
+  for (const item of [...draft.projects.upsert, ...draft.projects.delete]) {
     const currentSha = projects.get(item.slug) ?? null;
     if (currentSha !== item.expectedSha) {
       conflicts.push({
@@ -151,23 +151,8 @@ function checkExpectedShas(
       });
     }
   }
-  for (const item of draft.projects.delete) {
-    const currentSha = projects.get(item.slug) ?? null;
-    if (currentSha !== item.expectedSha) {
-      conflicts.push({
-        path: projectPath(item.slug),
-        expectedSha: item.expectedSha,
-        currentSha,
-      });
-    }
-  }
-  for (const item of postChanges(draft).upsert) {
-    const currentSha = posts.get(item.slug) ?? null;
-    if (currentSha !== item.expectedSha) {
-      conflicts.push({ path: postPath(item.slug), expectedSha: item.expectedSha, currentSha });
-    }
-  }
-  for (const item of postChanges(draft).delete) {
+  const postDraft = postChanges(draft);
+  for (const item of [...postDraft.upsert, ...postDraft.delete]) {
     const currentSha = posts.get(item.slug) ?? null;
     if (currentSha !== item.expectedSha) {
       conflicts.push({ path: postPath(item.slug), expectedSha: item.expectedSha, currentSha });

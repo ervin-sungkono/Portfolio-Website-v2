@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { PostDocument } from '@/lib/cms/schemas';
-import type { CmsSnapshot } from '../type';
+import type { CmsSnapshot, PostDocument } from '@/lib/cms/schemas';
 
 export type PostsPanelProps = {
   form: UseFormReturn<PostDocument>;

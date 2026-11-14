@@ -1,6 +1,5 @@
 import type { CmsDraft } from '../CmsDraftProvider/type';
-import type { ProjectDocument } from '@/lib/cms/schemas';
-import type { CmsSnapshot } from './type';
+import type { CmsSnapshot, ProjectDocument } from '@/lib/cms/schemas';
 
 export type ChangeList = {
   added: string[];
@@ -126,7 +125,7 @@ export function summarizePublishDraft(baseline: CmsSnapshot, draft: CmsDraft): C
         .map(([, label]) => label)
     : [];
 
-  const baselinePosts = new Map((baseline.posts ?? []).map((post) => [post.slug, post]));
+  const baselinePosts = new Map(baseline.posts.map((post) => [post.slug, post]));
   const posts: ChangeList = { added: [], updated: [], deleted: [] };
   const postFields = {
     title: 'Title',

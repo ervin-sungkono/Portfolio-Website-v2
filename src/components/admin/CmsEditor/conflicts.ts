@@ -111,7 +111,7 @@ export async function loadConflictReview(body: Record<string, unknown>, draft: C
     const postMatch = /^content\/posts\/([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(path);
     if (postMatch) {
       const slug = postMatch[1];
-      const latest = snapshot.posts?.find((post) => post.slug === slug);
+      const latest = snapshot.posts.find((post) => post.slug === slug);
       const changed = draft.posts?.upsert.find((post) => post.slug === slug);
       const removed = draft.posts?.delete.some((post) => post.slug === slug);
       return {

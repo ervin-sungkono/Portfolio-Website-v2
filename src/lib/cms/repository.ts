@@ -23,10 +23,9 @@ import {
   siteSchema,
   technologiesSchema,
   type Categories,
+  type CmsSnapshot,
   type PortfolioDocument,
-  type PostDocument,
   type ProjectDocument,
-  type SiteDocument,
   type Technologies,
 } from './schemas.ts';
 
@@ -36,20 +35,7 @@ const commitShaPattern = /^[a-f0-9]{40}$/i;
 
 export type ExistingCmsMedia = { path: string; sha: string };
 
-export type RepositoryContext = {
-  owner: string;
-  name: string;
-  defaultBranch: string;
-};
-
-export type CmsSnapshot = {
-  repository: RepositoryContext;
-  site: { data: SiteDocument; sha: string };
-  categories: { data: Categories; sha: string };
-  technologies: { data: Technologies; sha: string };
-  projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
-  posts: Array<{ slug: string; data: PostDocument; sha: string }>;
-};
+export type RepositoryContext = CmsSnapshot['repository'];
 
 type ContentFile = { text: string; sha: string; size: number };
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type {
   Categories,
+  CmsSnapshot,
   PostDocument,
   ProjectDocument,
   SiteDocument,
@@ -10,7 +11,6 @@ import type {
 } from '@/lib/cms/schemas';
 import type { CmsDraft } from '../CmsDraftProvider/type';
 import { synchronizeDocument, synchronizePost, synchronizeProject } from './draft';
-import type { CmsSnapshot } from './type';
 
 type UpdateDraft = (change: (current: CmsDraft) => CmsDraft) => Promise<boolean>;
 
@@ -132,7 +132,7 @@ export function useCmsDraftAutosave({
       postTouched.current.dirty = false;
     }
     if (selectedPostSlug) {
-      const baseline = remoteSnapshotRef.current?.posts?.find(
+      const baseline = remoteSnapshotRef.current?.posts.find(
         (post) => post.slug === selectedPostSlug,
       );
       void updateDraft((value) => synchronizePost(value, selectedPostSlug, baseline, postValues));
