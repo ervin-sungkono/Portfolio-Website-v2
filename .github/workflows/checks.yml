@@ -43,7 +43,6 @@ jobs:
     env:
       PORT: '3104'
       CMS_FIXTURE_PORT: '3104'
-      CMS_FIXTURE_PORTFOLIO_OVERRIDE: ${{ runner.temp }}/cms-portfolio-override.json
       NODE_DISABLE_COMPILE_CACHE: '1'
       AUTH_SECRET: cms-browser-fixture-secret-with-at-least-thirty-two-characters
       AUTH_TRUST_HOST: 'true'
@@ -71,3 +70,4 @@ jobs:
       - run: npx playwright test --config=playwright.cms.config.ts
         env:
           NODE_OPTIONS: --import=./tests/support/fixtures/cms-runtime.mjs
+          CMS_FIXTURE_PORTFOLIO_OVERRIDE: ${{ runner.temp }}/cms-portfolio-override.json
