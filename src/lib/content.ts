@@ -22,6 +22,13 @@ export type Project = {
   study?: ProjectStudy;
 };
 export type Design = DribbbleShot;
+export type BlogPost = {
+  slug: string;
+  title: string;
+  summary: string;
+  body: string;
+  publishedAt: string;
+};
 
 export async function getProjects(): Promise<readonly Project[]> {
   return (await getPublicContent()).projects;
@@ -100,4 +107,18 @@ export function relatedProjects(projects: readonly Project[], project: Project, 
 
 export async function getSiteContent() {
   return (await getPublicContent()).site;
+}
+
+export async function getBlogPosts(): Promise<readonly BlogPost[]> {
+  'use cache';
+  cacheTag('posts');
+  cacheLife({ stale: 300, revalidate: Infinity, expire: Infinity });
+  return (await getPublicContent()).posts;
+}
+
+export async function findBlogPost(slug: string) {
+  'use cache';
+  cacheTag('posts', `post:${slug}`);
+  cacheLife({ stale: 300, revalidate: Infinity, expire: Infinity });
+  return (await getBlogPosts()).find((post) => post.slug === slug);
 }

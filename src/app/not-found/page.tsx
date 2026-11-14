@@ -12,10 +12,15 @@ export default function NotFound() {
         </p>
         <p className="eyebrow">404 / Page Not Found</p>
         <h1 id="not-found-heading">This Page Isn’t Here.</h1>
-        <p className={styles.description}>Explore the projects or return to the homepage.</p>
+        <p className={styles.description}>
+          Explore published articles and projects, or return home.
+        </p>
         <div className={styles.actions}>
           <Button kind="link" href="/">
             Back to Home
+          </Button>
+          <Button kind="link" variant="text" href="/blog">
+            Explore Articles
           </Button>
           <Button kind="link" variant="text" href="/project">
             Explore Projects

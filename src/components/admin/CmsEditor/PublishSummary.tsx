@@ -24,6 +24,7 @@ function ChangeSection({ title, changes }: { title: string; changes: ChangeList 
 export function PublishSummary({ summary }: { summary: CmsPublishSummary }) {
   const hasChanges =
     Object.values(summary.projects).some((items) => items.length) ||
+    Object.values(summary.posts).some((items) => items.length) ||
     Object.values(summary.categories).some((items) => items.length) ||
     Object.values(summary.technologies).some((items) => items.length) ||
     summary.siteFields.length > 0 ||
@@ -37,6 +38,7 @@ export function PublishSummary({ summary }: { summary: CmsPublishSummary }) {
       {hasChanges ? (
         <>
           <ChangeSection title="Projects" changes={summary.projects} />
+          <ChangeSection title="Blog posts" changes={summary.posts} />
           <ChangeSection title="Categories" changes={summary.categories} />
           <ChangeSection title="Technologies" changes={summary.technologies} />
           {summary.siteFields.length > 0 && (

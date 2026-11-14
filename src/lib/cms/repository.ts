@@ -15,6 +15,8 @@ import {
 import {
   categoriesSchema,
   portfolioSchema,
+  postIndexSchema,
+  postSchema,
   projectIndexSchema,
   projectSchema,
   cmsMediaPathSchema,
@@ -22,6 +24,7 @@ import {
   technologiesSchema,
   type Categories,
   type PortfolioDocument,
+  type PostDocument,
   type ProjectDocument,
   type SiteDocument,
   type Technologies,
@@ -45,6 +48,7 @@ export type CmsSnapshot = {
   categories: { data: Categories; sha: string };
   technologies: { data: Technologies; sha: string };
   projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
+  posts: Array<{ slug: string; data: PostDocument; sha: string }>;
 };
 
 type ContentFile = { text: string; sha: string; size: number };
@@ -427,7 +431,10 @@ export async function getSnapshot(
     requiredDocument(repository, 'content/categories.json', categoriesSchema, token, revision),
     requiredDocument(repository, 'content/technologies.json', technologiesSchema, token, revision),
   ]);
-  const projectFiles = await listContentDirectory(repository, 'content/projects', token, revision);
+  const [projectFiles, postFiles] = await Promise.all([
+    listContentDirectory(repository, 'content/projects', token, revision),
+    listContentDirectory(repository, 'content/posts', token, revision),
+  ]);
   const projects = await Promise.all(
     (projectFiles ?? []).map(async (entry) => {
       const match = /^([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(entry.name);
@@ -445,12 +452,33 @@ export async function getSnapshot(
     }),
   );
   projects.sort((a, b) => a.slug.localeCompare(b.slug));
+  const posts = await Promise.all(
+    (postFiles ?? []).map(async (entry) => {
+      const match = /^([a-z0-9]+(?:-[a-z0-9]+)*)\.json$/.exec(entry.name);
+      if (
+        entry.type !== 'file' ||
+        !match ||
+        match[1].length > 100 ||
+        entry.path !== `content/posts/${entry.name}`
+      ) {
+        throw unsupported('The post directory contains a file with an unsupported name or type.');
+      }
+      const slug = match[1];
+      const path = entry.path;
+      const file = await readContentFile(repository, path, token, revision);
+      if (!file) {
+        throw new CmsError('not_found', `Post ${slug} changed while the CMS was loading.`, 404);
+      }
+      return { slug, data: jsonDocument(file, postSchema, path), sha: file.sha };
+    }),
+  );
+  posts.sort((a, b) => a.slug.localeCompare(b.slug));
   if (validate) {
     await validateReferences(repository, projects, categories.data, technologies.data, undefined, {
       ref: revision,
     });
   }
-  return { repository, site, categories, technologies, projects };
+  return { repository, site, categories, technologies, projects, posts };
 }
 
 export function isValidProjectSlug(value: string): boolean {
@@ -481,6 +509,36 @@ export class ProjectIndex {
       return (
         previous.success &&
         JSON.stringify(previous.data.projects) === JSON.stringify(sortedProjects)
+      );
+    } catch {
+      return false;
+    }
+  }
+}
+
+export class PostIndex {
+  static serialize(posts: readonly string[]): string {
+    const sortedPosts = [...posts].sort();
+    const parsed = postIndexSchema.safeParse({ schemaVersion: 1, posts: sortedPosts });
+    if (!parsed.success) {
+      throw new CmsError(
+        'unsupported_repository',
+        'The content repository has too many posts to build its public post index.',
+        409,
+      );
+    }
+    return `${JSON.stringify(parsed.data, null, 2)}\n`;
+  }
+
+  static isCurrent(serialized: string | null, posts: readonly string[]): boolean {
+    if (serialized === null) {
+      return false;
+    }
+    try {
+      const previous = postIndexSchema.safeParse(JSON.parse(serialized));
+      const sortedPosts = [...posts].sort();
+      return (
+        previous.success && JSON.stringify(previous.data.posts) === JSON.stringify(sortedPosts)
       );
     } catch {
       return false;

@@ -16,6 +16,8 @@ The cursor enhancement is limited to fine pointers with hover and is decorative/
 
 At desktop widths of 64rem or more and heights of 44rem or more, the CMS fills the viewport. Tables and the inline site-profile step have their own scroll areas, while the profile navigation and actions remain outside the step body. Draft actions are in the header. Narrower or shorter viewports retain page scrolling so content remains reachable.
 
+Blog posts use the same dashboard table and editing dialog patterns. The Markdown editor provides formatting buttons and edit, preview, and split views; Tab leaves the text field rather than inserting indentation. Preview and public articles share GFM styling. Articles use a bounded reading width, with table and code overflow confined to focusable scroll regions; these regions have visible keyboard focus. The editor follows the current light or dark theme and stacks its split view on narrow screens.
+
 ## Motion
 
 Decorative transitions and scroll-linked effects respect `prefers-reduced-motion`. Keep content visible in server-rendered markup without JavaScript. Continuous pointer and scroll values should avoid per-frame React state. Clean up event listeners, media queries, observers, timers, animation frames, and motion engines.

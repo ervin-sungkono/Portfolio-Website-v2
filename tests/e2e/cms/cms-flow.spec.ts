@@ -898,6 +898,15 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
       inline: false,
     },
     {
+      button: 'Blog Posts',
+      heading: 'Blog Posts',
+      id: 'posts',
+      trigger: 'Add post',
+      control: 'Blog post URL slug',
+      advances: 0,
+      inline: false,
+    },
+    {
       button: 'Site Profile',
       heading: 'Site Profile',
       id: 'site',
@@ -955,7 +964,11 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
           ? panel.locator('.cms-site-profile-inline-wizard')
           : await editor.openDialog(
               section.trigger ?? '',
-              section.id === 'images' ? 'Stage images in browser draft' : (section.trigger ?? ''),
+              section.id === 'images'
+                ? 'Stage images in browser draft'
+                : section.id === 'posts'
+                  ? 'Add blog post'
+                  : (section.trigger ?? ''),
             );
         if (section.id === 'images') {
           await editor.chooseOption(dialog.getByLabel('Image destination'), 'Technology icon');
@@ -1048,6 +1061,8 @@ test('owner editor panels reflow across viewport, theme, enlarged text, and keyb
   const projectsTab = page.getByRole('button', { name: 'Projects', exact: true });
   const siteTab = page.getByRole('button', { name: 'Site Profile', exact: true });
   await projectsTab.focus();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Blog Posts', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(siteTab).toBeFocused();
   const focusStyle = await siteTab.evaluate((element) => {

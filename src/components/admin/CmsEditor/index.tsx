@@ -8,11 +8,13 @@ import { Button } from '@/components/common/Button';
 import {
   categoriesSchema,
   projectSchema,
+  postSchema,
   siteSchema,
   technologiesSchema,
   finalizeCmsDraftSchema,
   type Categories,
   type ProjectDocument,
+  type PostDocument,
   type SiteDocument,
   type Technologies,
 } from '@/lib/cms/schemas';
@@ -24,6 +26,7 @@ import { CmsMessage } from './CmsMessage';
 import { DesignsPanel } from './DesignsPanel';
 import { ImagesPanel } from './ImagesPanel';
 import { ProjectPanel } from './ProjectPanel';
+import { PostsPanel } from './PostsPanel';
 import { PublishSummary } from './PublishSummary';
 import { SiteProfilePanel } from './SiteProfilePanel';
 import { TechnologiesPanel } from './TechnologiesPanel';
@@ -38,6 +41,7 @@ import {
   stageProject,
   synchronizeDocument,
   synchronizeProject,
+  synchronizePost,
 } from './draft';
 import { loadConflictReview, rebaseReviewedVersions, type ConflictReview } from './conflicts';
 import { summarizePublishDraft } from './publish-summary';
@@ -46,6 +50,7 @@ import './style.css';
 
 const sectionLabels: Record<CmsSection, string> = {
   projects: 'Projects',
+  posts: 'Blog Posts',
   site: 'Site Profile',
   categories: 'Categories',
   technologies: 'Technologies',
@@ -76,6 +81,17 @@ function emptySite(): SiteDocument {
   return { schemaVersion: 1, siteTitle: '', headline: '', introduction: '', socialLinks: [] };
 }
 
+function emptyPost(): PostDocument {
+  return {
+    schemaVersion: 1,
+    title: '',
+    summary: '',
+    body: '',
+    published: false,
+    publishedAt: new Date().toISOString().slice(0, 10),
+  };
+}
+
 export function CmsEditor() {
   const draftStore = useCmsDraft();
   const { draft, ready: draftReady, get: getDraft, update: updateDraft } = draftStore;
@@ -88,6 +104,11 @@ export function CmsEditor() {
   const siteForm = useForm<SiteDocument>({
     resolver: zodResolver(siteSchema),
     defaultValues: emptySite(),
+    shouldFocusError: true,
+  });
+  const postForm = useForm<PostDocument>({
+    resolver: zodResolver(postSchema),
+    defaultValues: emptyPost(),
     shouldFocusError: true,
   });
   const categoriesForm = useForm<Categories>({
@@ -109,6 +130,8 @@ export function CmsEditor() {
   const [activeSection, setActiveSection] = useState<CmsSection>('projects');
   const [selectedProjectSlug, setSelectedProjectSlug] = useState('');
   const [newProjectSlug, setNewProjectSlug] = useState('');
+  const [selectedPostSlug, setSelectedPostSlug] = useState('');
+  const [newPostSlug, setNewPostSlug] = useState('');
   const [busySection, setBusySection] = useState<BusySection>(null);
   const [messages, setMessages] = useState<Partial<Record<CmsSection, EditorMessage>>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -116,6 +139,7 @@ export function CmsEditor() {
   const [conflicts, setConflicts] = useState<ConflictReview[]>([]);
   const [discardVersions, setDiscardVersions] = useState<Record<CmsSection, number>>({
     projects: 0,
+    posts: 0,
     site: 0,
     categories: 0,
     technologies: 0,
@@ -135,6 +159,9 @@ export function CmsEditor() {
   >(async () => false);
 
   const projectIsDirty = projectForm.formState.isDirty;
+  const postIsDirty = postForm.formState.isDirty;
+  const postValues = useWatch({ control: postForm.control }) as PostDocument;
+  const hasPostDraft = postIsDirty || (!selectedPostSlug && Boolean(newPostSlug.trim()));
   const siteIsDirty = siteForm.formState.isDirty;
   const categoriesAreDirty = categoriesForm.formState.isDirty;
   const technologiesAreDirty = technologiesForm.formState.isDirty;
@@ -145,12 +172,14 @@ export function CmsEditor() {
   const hasProjectDraft =
     projectIsDirty || (!selectedProjectSlug && Boolean(newProjectSlug.trim()));
   const hasUnsavedChanges =
+    hasPostDraft ||
     hasProjectDraft ||
     siteIsDirty ||
     categoriesAreDirty ||
     technologiesAreDirty ||
     hasDraftChanges(draft);
   const resetProjectForm = projectForm.reset;
+  const resetPostForm = postForm.reset;
   const resetSiteForm = siteForm.reset;
   const resetCategoriesForm = categoriesForm.reset;
   const resetTechnologiesForm = technologiesForm.reset;
@@ -165,6 +194,10 @@ export function CmsEditor() {
     newProjectSlug,
     projectIsDirty,
     projectValues,
+    selectedPostSlug,
+    newPostSlug,
+    postIsDirty,
+    postValues,
     siteIsDirty,
     siteValues,
     categoriesAreDirty,
@@ -276,6 +309,14 @@ export function CmsEditor() {
           setNewProjectSlug(newDraft?.slug || '');
           resetProjectForm(newDraft?.data || selected?.data || emptyProject());
         }
+        if (firstLoad || options.discardSection === 'posts' || !hasPostDraft) {
+          const newDraft = firstLoad ? getDraft().newPost : undefined;
+          const selected =
+            next.posts?.find((post) => post.slug === selectedPostSlug) || next.posts?.[0];
+          setSelectedPostSlug(newDraft ? '' : selected?.slug || '');
+          setNewPostSlug(newDraft?.slug || '');
+          resetPostForm(newDraft?.data || selected?.data || emptyPost());
+        }
 
         loadedSnapshotRef.current = true;
         return true;
@@ -294,11 +335,14 @@ export function CmsEditor() {
     [
       categoriesAreDirty,
       hasProjectDraft,
+      hasPostDraft,
       resetCategoriesForm,
       resetProjectForm,
+      resetPostForm,
       resetSiteForm,
       resetTechnologiesForm,
       selectedProjectSlug,
+      selectedPostSlug,
       siteIsDirty,
       snapshot,
       technologiesAreDirty,
@@ -377,6 +421,116 @@ export function CmsEditor() {
     setSelectedProjectSlug(slug);
     setNewProjectSlug('');
     setSectionMessage('projects', { tone: 'success', text: 'Project saved to the browser draft.' });
+  }
+
+  async function savePost(data: PostDocument) {
+    const slug = selectedPostSlug || newPostSlug.trim();
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 100) {
+      setSectionMessage('posts', { tone: 'error', text: 'Enter a valid blog post URL slug.' });
+      return;
+    }
+    if (!selectedPostSlug && snapshot?.posts?.some((post) => post.slug === slug)) {
+      setSectionMessage('posts', {
+        tone: 'error',
+        text: 'A blog post with this URL slug already exists.',
+      });
+      return;
+    }
+    const baseline = remoteSnapshotRef.current?.posts?.find((post) => post.slug === slug);
+    if (
+      !(await updateDraft((value) => ({
+        ...synchronizePost(value, slug, baseline, data),
+        newPost: undefined,
+      })))
+    ) {
+      return;
+    }
+    setSnapshot((value) => value && applyDraft(remoteSnapshotRef.current ?? value, getDraft()));
+    postForm.reset(data);
+    setSelectedPostSlug(slug);
+    setNewPostSlug('');
+    setSectionMessage('posts', { tone: 'success', text: 'Blog post saved to the browser draft.' });
+  }
+
+  async function deletePost(slug: string): Promise<boolean> {
+    const current = snapshot?.posts?.find((post) => post.slug === slug);
+    if (
+      !current ||
+      !(await confirm({
+        title: 'Remove this blog post?',
+        description: `Deletion of ${current.data.title} will be staged until you submit the draft.`,
+        confirmLabel: 'Remove post',
+        danger: true,
+      }))
+    ) {
+      return false;
+    }
+    if (
+      !(await updateDraft((value) => {
+        const posts = value.posts ?? { upsert: [], delete: [] };
+        const staged = posts.upsert.find((post) => post.slug === slug);
+        const expectedSha = staged ? staged.expectedSha : current.sha || null;
+        return {
+          ...value,
+          newPost: value.newPost?.slug === slug ? undefined : value.newPost,
+          posts: {
+            upsert: posts.upsert.filter((post) => post.slug !== slug),
+            delete: [
+              ...posts.delete.filter((post) => post.slug !== slug),
+              ...(expectedSha ? [{ slug, expectedSha }] : []),
+            ],
+          },
+        };
+      }))
+    ) {
+      return false;
+    }
+    setSnapshot((value) => value && applyDraft(remoteSnapshotRef.current ?? value, getDraft()));
+    if (selectedPostSlug === slug) {
+      setSelectedPostSlug('');
+      setNewPostSlug('');
+      postForm.reset(emptyPost());
+    }
+    setSectionMessage('posts', {
+      tone: 'success',
+      text: 'Blog post removal saved to the browser draft.',
+    });
+    return true;
+  }
+
+  async function selectPost(slug: string): Promise<boolean> {
+    if (slug === selectedPostSlug) {
+      return true;
+    }
+    if (selectedPostSlug || postIsDirty || newPostSlug.trim()) {
+      const data = postForm.getValues();
+      const baseline = remoteSnapshotRef.current?.posts?.find(
+        (post) => post.slug === selectedPostSlug,
+      );
+      const saved = await updateDraft((value) =>
+        selectedPostSlug
+          ? synchronizePost(value, selectedPostSlug, baseline, data)
+          : { ...value, newPost: { slug: newPostSlug, data } },
+      );
+      if (!saved) {
+        setSectionMessage('posts', {
+          tone: 'error',
+          text: 'Save the browser draft before switching posts.',
+        });
+        return false;
+      }
+    }
+    const view = snapshot && applyDraft(remoteSnapshotRef.current ?? snapshot, getDraft());
+    const selected = view?.posts?.find((post) => post.slug === slug);
+    if (slug && !selected) {
+      return false;
+    }
+    const newPost = !slug ? getDraft().newPost : undefined;
+    setSelectedPostSlug(slug);
+    setNewPostSlug(newPost?.slug || '');
+    postForm.reset(newPost?.data || selected?.data || emptyPost());
+    clearSectionMessage('posts');
+    return true;
   }
 
   async function saveSite(data: SiteDocument) {
@@ -574,6 +728,16 @@ export function CmsEditor() {
       throw new Error('Load the repository before submitting.');
     }
     let next = getDraft();
+    if (selectedPostSlug) {
+      next = synchronizePost(
+        next,
+        selectedPostSlug,
+        baseline.posts?.find((post) => post.slug === selectedPostSlug),
+        postForm.getValues(),
+      );
+    } else if (postForm.formState.isDirty || newPostSlug.trim()) {
+      next = { ...next, newPost: { slug: newPostSlug, data: postForm.getValues() } };
+    }
     if (selectedProjectSlug) {
       next = synchronizeProject(
         next,
@@ -593,6 +757,27 @@ export function CmsEditor() {
       technologiesForm.getValues(),
     );
     let promotedSlug: string | undefined;
+    let promotedPostSlug: string | undefined;
+    if (next.newPost) {
+      const slug = next.newPost.slug.trim();
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 100) {
+        setActiveSection('posts');
+        throw new Error('Enter a valid blog post URL slug before submitting.');
+      }
+      if (snapshot.posts?.some((post) => post.slug === slug)) {
+        throw new Error('A blog post with this URL slug already exists.');
+      }
+      next = {
+        ...synchronizePost(
+          next,
+          slug,
+          baseline.posts?.find((post) => post.slug === slug),
+          next.newPost.data,
+        ),
+        newPost: undefined,
+      };
+      promotedPostSlug = slug;
+    }
     if (next.newProject) {
       const slug = next.newProject.slug.trim();
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
@@ -610,12 +795,20 @@ export function CmsEditor() {
       if (!(await updateDraft(() => next))) {
         throw new Error('The draft could not be saved in this browser. Free storage and retry.');
       }
+      setSnapshot(applyDraft(baseline, next));
+      if (promotedPostSlug) {
+        const restored = baseline.posts?.find((post) => post.slug === promotedPostSlug);
+        setSelectedPostSlug(promotedPostSlug);
+        setNewPostSlug('');
+        postForm.reset(restored?.data || emptyPost());
+      }
       throw new Error('There are no changes to submit.');
     }
     const candidate = {
       kind: 'finalize',
       repositoryKey: next.repository,
       projects: next.projects,
+      ...(next.posts && { posts: next.posts }),
       ...(next.site && { site: next.site }),
       ...(next.categories && { categories: next.categories }),
       ...(next.technologies && { technologies: next.technologies }),
@@ -644,6 +837,18 @@ export function CmsEditor() {
           requestAnimationFrame(() => void projectForm.trigger(undefined, { shouldFocus: true }));
           label = `project “${invalid.data.title || invalid.slug}”`;
         }
+      } else if (section === 'posts') {
+        const invalid =
+          typeof issue.path[2] === 'number' ? next.posts?.upsert[issue.path[2]] : undefined;
+        if (invalid) {
+          const isNew = getDraft().newPost?.slug.trim() === invalid.slug;
+          setSelectedPostSlug(isNew ? '' : invalid.slug);
+          setNewPostSlug(isNew ? invalid.slug : '');
+          postForm.reset(invalid.data);
+        }
+        setActiveSection('posts');
+        requestAnimationFrame(() => void postForm.trigger(undefined, { shouldFocus: true }));
+        label = 'blog post';
       } else if (section === 'site') {
         setActiveSection('site');
         requestAnimationFrame(() => void siteForm.trigger(undefined, { shouldFocus: true }));
@@ -679,9 +884,17 @@ export function CmsEditor() {
     if (!(await updateDraft(() => next))) {
       throw new Error('The draft could not be saved in this browser. Free storage and retry.');
     }
-    if (promotedSlug) {
+    if (promotedSlug || promotedPostSlug) {
       setSnapshot((current) => current && applyDraft(baseline, next));
-      if (!selectedProjectSlug && newProjectSlug.trim() === promotedSlug) {
+      if (promotedPostSlug) {
+        setSelectedPostSlug(promotedPostSlug);
+        setNewPostSlug('');
+        const post = next.posts?.upsert.find((item) => item.slug === promotedPostSlug);
+        if (post) {
+          postForm.reset(post.data);
+        }
+      }
+      if (promotedSlug && !selectedProjectSlug && newProjectSlug.trim() === promotedSlug) {
         setSelectedProjectSlug(promotedSlug);
         setNewProjectSlug('');
         const promoted = next.projects.upsert.find((project) => project.slug === promotedSlug);
@@ -778,6 +991,7 @@ export function CmsEditor() {
           kind: 'finalize',
           repositoryKey: prepared.repository,
           projects: prepared.projects,
+          ...(prepared.posts && { posts: prepared.posts }),
           ...(prepared.site && { site: prepared.site }),
           ...(prepared.categories && { categories: prepared.categories }),
           ...(prepared.technologies && { technologies: prepared.technologies }),
@@ -812,6 +1026,8 @@ export function CmsEditor() {
         typeof body.commitUrl === 'string' ? safeCommitUrl(body.commitUrl) : undefined;
       const pendingRefresh = body.cache !== 'refreshed';
       projectForm.reset(projectForm.getValues());
+      postForm.reset(postForm.getValues());
+      setNewPostSlug('');
       siteForm.reset(siteForm.getValues());
       categoriesForm.reset(categoriesForm.getValues());
       technologiesForm.reset(technologiesForm.getValues());
@@ -903,6 +1119,9 @@ export function CmsEditor() {
         return;
       }
       projectForm.reset(emptyProject());
+      postForm.reset(emptyPost());
+      setSelectedPostSlug('');
+      setNewPostSlug('');
       siteForm.reset(emptySite());
       categoriesForm.reset({});
       technologiesForm.reset({});
@@ -1237,6 +1456,26 @@ export function CmsEditor() {
                 onSave={saveProject}
                 onDelete={deleteProject}
                 onClearMessage={() => clearSectionMessage('projects')}
+              />
+              <PostsPanel
+                key={`posts:${discardVersions.posts}`}
+                form={postForm}
+                snapshot={snapshot}
+                active={activeSection === 'posts'}
+                selectedSlug={selectedPostSlug}
+                newSlug={newPostSlug}
+                pending={pending}
+                onSelectedSlugChange={selectPost}
+                onNewSlugChange={setNewPostSlug}
+                onSave={savePost}
+                onDelete={deletePost}
+                onClearMessage={() => clearSectionMessage('posts')}
+                feedback={
+                  <CmsMessage
+                    message={messages.posts}
+                    onDismiss={() => clearSectionMessage('posts')}
+                  />
+                }
               />
               <SiteProfilePanel
                 key={`site:${discardVersions.site}`}

@@ -1,0 +1,11 @@
+.cms-post-slug {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--muted);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.cms-post-content {
+  min-width: 0;
+}

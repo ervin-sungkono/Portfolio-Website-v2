@@ -1,4 +1,10 @@
-import { categoriesSchema, projectSchema, siteSchema, technologiesSchema } from '@/lib/cms/schemas';
+import {
+  categoriesSchema,
+  postSchema,
+  projectSchema,
+  siteSchema,
+  technologiesSchema,
+} from '@/lib/cms/schemas';
 import type { CmsSnapshot } from './type';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -39,7 +45,8 @@ export function parseSnapshot(value: Record<string, unknown>): CmsSnapshot {
     typeof categories.sha !== 'string' ||
     !isRecord(technologies) ||
     typeof technologies.sha !== 'string' ||
-    !Array.isArray(projects)
+    !Array.isArray(projects) ||
+    (value.posts !== undefined && !Array.isArray(value.posts))
   ) {
     throw new Error('The CMS returned an incomplete content snapshot.');
   }
@@ -63,6 +70,18 @@ export function parseSnapshot(value: Record<string, unknown>): CmsSnapshot {
         throw new Error('The CMS returned an invalid project entry.');
       }
       return { slug: entry.slug, data: projectSchema.parse(entry.data), sha: entry.sha };
+    }),
+    posts: (Array.isArray(value.posts) ? value.posts : []).map((entry: unknown) => {
+      if (
+        !isRecord(entry) ||
+        typeof entry.slug !== 'string' ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.slug) ||
+        entry.slug.length > 100 ||
+        typeof entry.sha !== 'string'
+      ) {
+        throw new Error('The CMS returned an invalid post entry.');
+      }
+      return { slug: entry.slug, data: postSchema.parse(entry.data), sha: entry.sha };
     }),
   };
 }

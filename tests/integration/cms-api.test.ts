@@ -8,7 +8,12 @@ vi.mock('next-auth', () => ({
   },
 }));
 vi.mock('next-auth/providers/github', () => ({ default: vi.fn() }));
-vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({
+  cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
+  revalidateTag: vi.fn(),
+  revalidatePath: vi.fn(),
+}));
 import {
   cmsAuthSecret,
   cmsBaseUrl,
@@ -17,7 +22,8 @@ import {
   cmsSessionCookie,
   fixturePng,
 } from '../support/cms-fixture';
-import { readPortfolio } from '../../src/lib/cms/repository.ts';
+import { getGitBranchState } from '../../src/lib/cms/git-data.ts';
+import { getSnapshot, readContentFile, readPortfolio } from '../../src/lib/cms/repository.ts';
 
 let cms: typeof import('@/app/api/cms/route');
 let media: typeof import('@/app/api/cms/media/route');
@@ -53,6 +59,7 @@ beforeAll(async () => {
   vi.stubEnv('AUTH_SECRET', cmsAuthSecret);
   vi.stubEnv('AUTH_GITHUB_ID', 'fixture-github-client-id');
   vi.stubEnv('AUTH_GITHUB_SECRET', 'fixture-github-client-secret');
+  vi.stubEnv('CMS_FIXTURE_WITH_BLOG', '1');
   await import('../support/fixtures/cms-runtime.mjs');
   cookieName = (await import('@/lib/cms/auth')).sessionCookieName;
   cms = await import('@/app/api/cms/route');
@@ -145,6 +152,139 @@ describe('private CMS HTTP handlers', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ cache: 'refreshed' });
     expect(revalidateTag).toHaveBeenCalledWith('portfolio', 'max');
+  });
+
+  test('finalizes posts and their index atomically, with revision-pinned reads and SHA conflicts', async () => {
+    const snapshotResponse = await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }));
+    expect(snapshotResponse.status).toBe(200);
+    const snapshot = await snapshotResponse.json();
+    const branch = await getGitBranchState(snapshot.repository, cmsPat);
+    const draftPost = snapshot.posts.find(
+      (post: { slug: string }) => post.slug === 'fixture-draft-post',
+    );
+    const unindexedPost = snapshot.posts.find(
+      (post: { slug: string }) => post.slug === 'unindexed-post',
+    );
+    expect(draftPost).toBeDefined();
+    expect(unindexedPost).toBeDefined();
+    const before = fixtureGitStats();
+    const newPost = {
+      schemaVersion: 1,
+      title: 'Atomic blog post',
+      summary: 'A post created in the same Git tree as its index.',
+      body: '  ## Untrimmed Markdown\n\nA published article.  ',
+      published: true,
+      publishedAt: '2026-11-14',
+    };
+    const unindexedOverwrite = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(snapshot.repository),
+          projects: { upsert: [], delete: [] },
+          posts: {
+            upsert: [{ slug: 'unindexed-post', expectedSha: null, data: newPost }],
+            delete: [],
+          },
+          media: [],
+        },
+      }),
+    );
+    expect(unindexedOverwrite.status).toBe(409);
+    expect(fixtureGitStats()).toEqual(before);
+
+    const finalized = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(snapshot.repository),
+          projects: { upsert: [], delete: [] },
+          posts: {
+            upsert: [{ slug: 'atomic-blog-post', expectedSha: null, data: newPost }],
+            delete: [{ slug: 'fixture-draft-post', expectedSha: draftPost.sha }],
+          },
+          media: [],
+        },
+      }),
+    );
+    expect(finalized.status, await finalized.clone().text()).toBe(200);
+    const result = await finalized.json();
+    expect(result.changedPaths).toEqual(
+      expect.arrayContaining([
+        'content/posts/atomic-blog-post.json',
+        'content/posts/fixture-draft-post.json',
+        'content/post-index.json',
+      ]),
+    );
+    expect(fixtureGitStats()).toEqual({
+      blobCreations: before.blobCreations + 2,
+      treeCreations: before.treeCreations + 1,
+      commitsCreated: before.commitsCreated + 1,
+      refUpdates: before.refUpdates + 1,
+    });
+    expect(revalidateTag).toHaveBeenCalledWith('posts', 'max');
+    expect(revalidateTag).toHaveBeenCalledWith('post:atomic-blog-post', 'max');
+
+    const current = await getSnapshot(cmsPat);
+    expect(current.posts.map(({ slug }) => slug)).toEqual([
+      'atomic-blog-post',
+      'fixture-post',
+      'tie-a-post',
+      'tie-z-post',
+      'unindexed-post',
+    ]);
+    expect(current.posts.find(({ slug }) => slug === 'atomic-blog-post')?.data.body).toBe(
+      newPost.body,
+    );
+    const index = await readContentFile(current.repository, 'content/post-index.json', cmsPat);
+    expect(JSON.parse(index?.text ?? 'null').posts).toEqual([
+      'atomic-blog-post',
+      'fixture-post',
+      'tie-a-post',
+      'tie-z-post',
+      'unindexed-post',
+    ]);
+    const { getPublicContent } = await import('../../src/lib/cms/public.ts');
+    const publicContent = await getPublicContent();
+    expect(publicContent?.posts.map(({ slug }) => slug)).toEqual([
+      'atomic-blog-post',
+      'fixture-post',
+      'tie-a-post',
+      'tie-z-post',
+    ]);
+    expect(publicContent?.posts[0].body).toBe(newPost.body);
+    const historical = await getSnapshot(cmsPat, branch.commitSha, false);
+    expect(historical.posts.map(({ slug }) => slug)).toEqual([
+      'fixture-draft-post',
+      'fixture-post',
+      'tie-a-post',
+      'tie-z-post',
+      'unindexed-post',
+    ]);
+
+    const after = fixtureGitStats();
+    const stalePost = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(current.repository),
+          projects: { upsert: [], delete: [] },
+          posts: {
+            upsert: [{ slug: 'fixture-draft-post', expectedSha: draftPost.sha, data: newPost }],
+            delete: [],
+          },
+          media: [],
+        },
+      }),
+    );
+    expect(stalePost.status).toBe(409);
+    expect(fixtureGitStats()).toEqual(after);
   });
 
   test('media staging does not move the ref and final submit writes one atomic commit', async () => {

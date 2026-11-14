@@ -10,6 +10,7 @@ export type ChangeList = {
 
 export type CmsPublishSummary = {
   projects: ChangeList;
+  posts: ChangeList;
   categories: ChangeList;
   technologies: ChangeList;
   siteFields: string[];
@@ -125,7 +126,35 @@ export function summarizePublishDraft(baseline: CmsSnapshot, draft: CmsDraft): C
         .map(([, label]) => label)
     : [];
 
+  const baselinePosts = new Map((baseline.posts ?? []).map((post) => [post.slug, post]));
+  const posts: ChangeList = { added: [], updated: [], deleted: [] };
+  const postFields = {
+    title: 'Title',
+    summary: 'Summary',
+    body: 'Markdown body',
+    published: 'Visibility',
+    publishedAt: 'Publication date',
+  } as const;
+  for (const post of draft.posts?.upsert ?? []) {
+    const before = baselinePosts.get(post.slug);
+    const label = `${post.data.title} (${post.slug})`;
+    if (!before) {
+      posts.added.push(label);
+    } else {
+      const fields = (Object.keys(postFields) as Array<keyof typeof postFields>)
+        .filter((key) => before.data[key] !== post.data[key])
+        .map((key) => postFields[key]);
+      if (fields.length) {
+        posts.updated.push(`${label} — ${fields.join(', ')}`);
+      }
+    }
+  }
+  for (const post of draft.posts?.delete ?? []) {
+    posts.deleted.push(`${baselinePosts.get(post.slug)?.data.title || post.slug} (${post.slug})`);
+  }
+
   return {
+    posts,
     projects: {
       added: projects.added.sort((left, right) => left.localeCompare(right)),
       updated: projects.updated.sort((left, right) => left.localeCompare(right)),

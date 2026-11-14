@@ -1,4 +1,10 @@
-import type { Categories, ProjectDocument, SiteDocument, Technologies } from '@/lib/cms/schemas';
+import type {
+  Categories,
+  PostDocument,
+  ProjectDocument,
+  SiteDocument,
+  Technologies,
+} from '@/lib/cms/schemas';
 
 export type DraftDocument<T> = { expectedSha: string; data: T };
 export type DraftProject = { slug: string; expectedSha: string | null; data: ProjectDocument };
@@ -14,6 +20,10 @@ export type DraftMediaDeletion = { path: string; expectedSha: string };
 export type CmsDraft = {
   repository: string;
   projects: { upsert: DraftProject[]; delete: { slug: string; expectedSha: string }[] };
+  posts?: {
+    upsert: Array<{ slug: string; expectedSha: string | null; data: PostDocument }>;
+    delete: Array<{ slug: string; expectedSha: string }>;
+  };
   site?: DraftDocument<SiteDocument>;
   categories?: DraftDocument<Categories>;
   technologies?: DraftDocument<Technologies>;
@@ -21,6 +31,7 @@ export type CmsDraft = {
   media: DraftMedia[];
   deleteMedia?: DraftMediaDeletion[];
   newProject?: { slug: string; data: ProjectDocument };
+  newPost?: { slug: string; data: PostDocument };
   pendingRefresh?: { commitUrl?: string };
 };
 

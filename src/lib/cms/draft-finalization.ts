@@ -22,9 +22,11 @@ import {
   validateReferences,
   type CmsSnapshot,
   type RepositoryContext,
+  PostIndex,
   ProjectIndex,
 } from './repository.ts';
 import {
+  postSchema,
   categoriesSchema,
   finalizeCmsDraftSchema,
   portfolioSchema,
@@ -33,6 +35,7 @@ import {
   technologiesSchema,
   type Categories,
   type FinalizeCmsDraft,
+  type PostDocument,
   type ProjectDocument,
   type SiteDocument,
   type Technologies,
@@ -56,6 +59,14 @@ function projectPath(slug: string): string {
   return `content/projects/${slug}.json`;
 }
 
+function postPath(slug: string): string {
+  return `content/posts/${slug}.json`;
+}
+
+function postChanges(draft: FinalizeCmsDraft) {
+  return draft.posts ?? { upsert: [], delete: [] };
+}
+
 function changedProjectMap(snapshot: CmsSnapshot, draft: FinalizeCmsDraft) {
   const projects = new Map(snapshot.projects.map(({ slug, data }) => [slug, data]));
   for (const item of draft.projects.delete) {
@@ -65,6 +76,18 @@ function changedProjectMap(snapshot: CmsSnapshot, draft: FinalizeCmsDraft) {
     projects.set(item.slug, item.data);
   }
   return projects;
+}
+
+function changedPostMap(snapshot: CmsSnapshot, draft: FinalizeCmsDraft) {
+  const posts = new Map(snapshot.posts.map(({ slug, data }) => [slug, data]));
+  const changes = postChanges(draft);
+  for (const item of changes.delete) {
+    posts.delete(item.slug);
+  }
+  for (const item of changes.upsert) {
+    posts.set(item.slug, item.data);
+  }
+  return posts;
 }
 
 function validateHeroProjectReferences(
@@ -92,9 +115,12 @@ function validateDraftShape(input: unknown): FinalizeCmsDraft {
 }
 
 function assertHasChanges(draft: FinalizeCmsDraft) {
+  const posts = postChanges(draft);
   if (
     !draft.projects.upsert.length &&
     !draft.projects.delete.length &&
+    !posts.upsert.length &&
+    !posts.delete.length &&
     !draft.site &&
     !draft.categories &&
     !draft.technologies &&
@@ -114,6 +140,7 @@ function checkExpectedShas(
 ) {
   const conflicts: DraftConflict[] = [];
   const projects = new Map(snapshot.projects.map(({ slug, sha }) => [slug, sha]));
+  const posts = new Map(snapshot.posts.map(({ slug, sha }) => [slug, sha]));
   for (const item of draft.projects.upsert) {
     const currentSha = projects.get(item.slug) ?? null;
     if (currentSha !== item.expectedSha) {
@@ -132,6 +159,18 @@ function checkExpectedShas(
         expectedSha: item.expectedSha,
         currentSha,
       });
+    }
+  }
+  for (const item of postChanges(draft).upsert) {
+    const currentSha = posts.get(item.slug) ?? null;
+    if (currentSha !== item.expectedSha) {
+      conflicts.push({ path: postPath(item.slug), expectedSha: item.expectedSha, currentSha });
+    }
+  }
+  for (const item of postChanges(draft).delete) {
+    const currentSha = posts.get(item.slug) ?? null;
+    if (currentSha !== item.expectedSha) {
+      conflicts.push({ path: postPath(item.slug), expectedSha: item.expectedSha, currentSha });
     }
   }
   for (const [key, path] of [
@@ -184,10 +223,26 @@ async function addProjectIndexIfNeeded(
   }
 }
 
+async function addPostIndexIfNeeded(
+  repository: RepositoryContext,
+  token: string,
+  ref: string,
+  posts: Map<string, PostDocument>,
+  files: Map<string, PendingFile>,
+) {
+  const path = 'content/post-index.json';
+  const existing = await readContentFile(repository, path, token, ref);
+  const slugs = [...posts.keys()];
+  if (!PostIndex.isCurrent(existing?.text ?? null, slugs)) {
+    addFile(files, path, Buffer.from(PostIndex.serialize(slugs), 'utf8'));
+  }
+}
+
 function setUpdatedDocuments(
   snapshot: CmsSnapshot,
   draft: FinalizeCmsDraft,
   nextProjects: Map<string, ProjectDocument>,
+  nextPosts: Map<string, PostDocument>,
   files: Map<string, PendingFile>,
   deletedPaths: Set<string>,
 ) {
@@ -200,6 +255,17 @@ function setUpdatedDocuments(
   }
   for (const item of draft.projects.delete) {
     deletedPaths.add(projectPath(item.slug));
+  }
+  const changes = postChanges(draft);
+  for (const item of changes.upsert) {
+    const current = snapshot.posts.find(({ slug }) => slug === item.slug);
+    const data = postSchema.parse(nextPosts.get(item.slug));
+    if (!current || !isDeepStrictEqual(current.data, data)) {
+      addFile(files, postPath(item.slug), serialize(data));
+    }
+  }
+  for (const item of changes.delete) {
+    deletedPaths.add(postPath(item.slug));
   }
   if (draft.site && !isDeepStrictEqual(snapshot.site.data, draft.site.data)) {
     addFile(files, 'content/site.json', serialize(siteSchema.parse(draft.site.data)));
@@ -266,6 +332,7 @@ export async function finalizeCmsDraft(
   );
 
   const nextProjects = changedProjectMap(snapshot, draft);
+  const nextPosts = changedPostMap(snapshot, draft);
   const nextCategories: Categories = draft.categories?.data ?? snapshot.categories.data;
   const nextTechnologies: Technologies = draft.technologies?.data ?? snapshot.technologies.data;
   const nextSite = draft.site?.data ?? snapshot.site.data;
@@ -363,7 +430,7 @@ export async function finalizeCmsDraft(
 
   const files = new Map<string, PendingFile>();
   const deletedPaths = new Set<string>();
-  setUpdatedDocuments(snapshot, draft, nextProjects, files, deletedPaths);
+  setUpdatedDocuments(snapshot, draft, nextProjects, nextPosts, files, deletedPaths);
   for (const item of deleteMedia) {
     deletedPaths.add(item.path);
   }
@@ -377,6 +444,10 @@ export async function finalizeCmsDraft(
   }
   if (draft.projects.upsert.length || draft.projects.delete.length) {
     await addProjectIndexIfNeeded(repository, token, branch.commitSha, nextProjects, files);
+  }
+  const postDraft = postChanges(draft);
+  if (postDraft.upsert.length || postDraft.delete.length) {
+    await addPostIndexIfNeeded(repository, token, branch.commitSha, nextPosts, files);
   }
 
   const treeChanges: Array<{ path: string; sha: string | null }> = [];

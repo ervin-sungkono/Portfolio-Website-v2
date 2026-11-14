@@ -538,6 +538,7 @@ test('public snapshot resolves numeric owner, honors the non-main default branch
   const snapshot = await getSnapshot();
 
   assert.equal(snapshot.repository.defaultBranch, 'trunk');
+  assert.deepEqual(snapshot.posts, [], 'repositories without a post index remain empty');
   assert.equal(snapshot.repository.owner, 'owner');
   assert.equal(snapshot.site.sha, '1'.repeat(40));
   assert.deepEqual(
@@ -582,11 +583,30 @@ test('existing content repositories retain asset directories without bootstrap w
   const state = createState();
   addSeedContent(state);
   addProject(state, 'example-project');
+  const postIndexFile = fileRecord(JSON.stringify({ schemaVersion: 1, posts: ['existing-post'] }));
+  const postFile = fileRecord(
+    JSON.stringify({
+      schemaVersion: 1,
+      title: 'Existing post',
+      summary: 'A post retained during initialization.',
+      body: '  Existing Markdown.  ',
+      published: false,
+      publishedAt: '2026-11-01',
+    }),
+  );
+  state.files.set('content/post-index.json', postIndexFile);
+  state.files.set('content/posts/existing-post.json', postFile);
   state.files.set('images/existing.png', fileRecord(png));
   state.files.set('icons/existing.svg', fileRecord('<svg xmlns="http://www.w3.org/2000/svg"/>'));
   installGithub(state);
   const snapshot = await initializeRepository('owner-token');
   assert.equal(snapshot.projects.length, 1);
+  assert.deepEqual(
+    snapshot.posts.map(({ slug }) => slug),
+    ['existing-post'],
+  );
+  assert.equal(state.files.get('content/post-index.json')?.sha, postIndexFile.sha);
+  assert.equal(state.files.get('content/posts/existing-post.json')?.sha, postFile.sha);
   assert.equal(
     state.calls.some(({ init }) => init.method === 'PUT'),
     false,

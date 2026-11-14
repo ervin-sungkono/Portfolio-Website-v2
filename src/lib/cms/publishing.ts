@@ -1,4 +1,4 @@
-export type CacheTarget = 'project' | 'site' | 'taxonomy' | 'designs' | 'all';
+export type CacheTarget = 'project' | 'post' | 'site' | 'taxonomy' | 'designs' | 'all';
 
 export function contentInvalidation(target: CacheTarget, slug?: string) {
   if (target === 'project') {
@@ -10,6 +10,15 @@ export function contentInvalidation(target: CacheTarget, slug?: string) {
       paths: ['/', '/project', `/project/${slug}`, '/sitemap.xml'],
     };
   }
+  if (target === 'post') {
+    if (!slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      throw new Error('A valid post slug is required for revalidation.');
+    }
+    return {
+      tags: ['posts', `post:${slug}`],
+      paths: ['/blog', `/blog/${slug}`, '/blog/[slug]', '/sitemap.xml'],
+    };
+  }
   if (target === 'site') {
     return { tags: ['site'], paths: ['/'] };
   }
@@ -19,11 +28,21 @@ export function contentInvalidation(target: CacheTarget, slug?: string) {
   return {
     tags:
       target === 'all'
-        ? ['site', 'taxonomy', 'projects', 'portfolio', 'designs', 'content-source']
+        ? ['site', 'taxonomy', 'projects', 'posts', 'portfolio', 'designs', 'content-source']
         : ['taxonomy', 'projects'],
     paths:
       target === 'all'
-        ? ['/', '/about', '/contact', '/design', '/project', '/sitemap.xml', '/project/[slug]']
+        ? [
+            '/',
+            '/about',
+            '/contact',
+            '/design',
+            '/project',
+            '/sitemap.xml',
+            '/project/[slug]',
+            '/blog',
+            '/blog/[slug]',
+          ]
         : ['/', '/project', '/sitemap.xml', '/project/[slug]'],
   };
 }

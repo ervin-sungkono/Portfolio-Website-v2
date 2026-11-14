@@ -21,7 +21,7 @@ const snapshot = {
 
 describe('CMS editor responses', () => {
   test('accepts a complete snapshot and rejects incomplete or invalid entries', () => {
-    expect(parseSnapshot(snapshot)).toEqual(snapshot);
+    expect(parseSnapshot(snapshot)).toEqual({ ...snapshot, posts: [] });
     expect(() => parseSnapshot({ ...snapshot, repository: null })).toThrow(/incomplete/);
     expect(() =>
       parseSnapshot({ ...snapshot, projects: [{ slug: '../bad', sha: 'sha', data: {} }] }),
