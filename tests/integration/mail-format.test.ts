@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import nodemailer from 'nodemailer';
-import { emailText } from '../../src/lib/contact/validation.ts';
+import { Contact } from '../../src/lib/contact/validation.ts';
 
 test('Nodemailer constructs the plain-text contact message without a network transport', async () => {
   const data = {
@@ -17,7 +17,7 @@ test('Nodemailer constructs the plain-text contact message without a network tra
     to: sender,
     replyTo: data.email,
     subject: `Portfolio: ${data.subject}`,
-    text: emailText(data),
+    text: Contact.formatEmail(data),
   });
   const message = JSON.parse(result.message);
 
@@ -25,6 +25,6 @@ test('Nodemailer constructs the plain-text contact message without a network tra
   assert.deepEqual(result.envelope, { from: sender, to: [sender] });
   assert.equal(message.replyTo[0].address, data.email);
   assert.equal(message.subject, `Portfolio: ${data.subject}`);
-  assert.equal(message.text, emailText(data));
+  assert.equal(message.text, Contact.formatEmail(data));
   assert.equal(message.html, undefined);
 });

@@ -1,14 +1,28 @@
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 // The HTTP contract must never use real provider credentials or send email.
-vi.mock('@/lib/contact/service', () => ({
-  mailConfigured: () => false,
-  captchaSecret: () => '',
-  sendContactEmail: vi.fn(),
-  verifyCaptcha: vi.fn(),
+const contactService = vi.hoisted(() => ({
+  mailConfigured: vi.fn(() => false),
+  captchaSecret: vi.fn(() => ''),
+  sendContactEmail: vi.fn(async () => undefined),
+  verifyCaptcha: vi.fn(async () => false),
 }));
 
+vi.mock('@/lib/contact/service', () => contactService);
+
 import { POST } from '@/app/api/contact/route';
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  contactService.mailConfigured.mockReturnValue(false);
+  contactService.captchaSecret.mockReturnValue('');
+  contactService.verifyCaptcha.mockResolvedValue(false);
+  vi.stubEnv('NEXT_PUBLIC_RECAPTCHA_KEY', '');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const message = {
   name: 'Visitor',
@@ -29,6 +43,40 @@ function post(data: unknown, headers: HeadersInit = {}) {
 }
 
 describe('contact HTTP boundary', () => {
+  test('passes the request hostname to v3 verification before delivering a message', async () => {
+    contactService.mailConfigured.mockReturnValue(true);
+    contactService.captchaSecret.mockReturnValue('test-secret');
+    contactService.verifyCaptcha.mockResolvedValue(true);
+    vi.stubEnv('NEXT_PUBLIC_RECAPTCHA_KEY', 'test-site-key');
+
+    const response = await post({ ...message, recaptcha_token: 'test-token' });
+
+    expect(response.status).toBe(200);
+    expect(contactService.verifyCaptcha).toHaveBeenCalledWith('test-token', 'portfolio.example');
+    expect(contactService.sendContactEmail).toHaveBeenCalledWith({
+      name: message.name,
+      email: message.email,
+      subject: message.subject,
+      message: message.message,
+    });
+  });
+
+  test('does not deliver when v3 verification rejects a message', async () => {
+    contactService.mailConfigured.mockReturnValue(true);
+    contactService.captchaSecret.mockReturnValue('test-secret');
+    vi.stubEnv('NEXT_PUBLIC_RECAPTCHA_KEY', 'test-site-key');
+
+    const response = await post({ ...message, recaptcha_token: 'test-token' });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      success: false,
+      message: 'Verification failed. Please submit the form again.',
+    });
+    expect(contactService.verifyCaptcha).toHaveBeenCalledWith('test-token', 'portfolio.example');
+    expect(contactService.sendContactEmail).not.toHaveBeenCalled();
+  });
+
   test('accepts a permitted Unicode payload larger than 16 KiB', async () => {
     const data = {
       ...message,

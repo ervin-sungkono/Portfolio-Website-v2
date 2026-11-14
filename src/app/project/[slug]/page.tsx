@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getProjects, findProject, relatedProjects } from '@/lib/content';
 import { ProjectHeader } from '@/components/project/ProjectHeader';
-import { ProjectMedia } from '@/components/project/ProjectMedia';
+import { ProjectGallery } from '@/components/project/ProjectGallery';
 import { ProjectStory } from '@/components/project/ProjectStory';
 import { RelatedProjects } from '@/components/project/RelatedProjects';
 import { pageMetadata } from '@/lib/metadata';
@@ -42,7 +42,7 @@ export default async function ProjectPage({ params }: Props) {
   return (
     <div className={`container ${styles.projectPage}`}>
       <ProjectHeader project={project} study={study} />
-      <ProjectMedia project={project} />
+      <ProjectGallery project={project} />
       <ProjectStory project={project} study={study} />
       <RelatedProjects related={related} />
     </div>

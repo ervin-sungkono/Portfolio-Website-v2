@@ -1,12 +1,19 @@
 .site-header {
   position: sticky;
-  top: 0;
+  top: var(--space-3);
   z-index: 20;
-  background: var(--background);
-  border-bottom: 1px solid var(--line);
+  width: min(75rem, calc(100% - 2 * var(--page-gutter)));
+  margin-inline: auto;
+  border: 1px solid color-mix(in srgb, var(--surface-high) 75%, var(--line));
+  border-radius: 2rem;
+  background: color-mix(in srgb, var(--surface-high) 86%, transparent);
+  box-shadow: 0 8px 28px rgb(15 31 38 / 14%);
+  backdrop-filter: blur(18px);
 
   .site-header-inner {
     min-height: var(--header-height);
+    width: 100%;
+    padding-inline: var(--space-4);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -44,9 +51,9 @@
   }
 
   .site-header-nav {
-    display: flex;
+    display: block;
     position: absolute;
-    top: 100%;
+    top: calc(100% + var(--space-2));
     left: 0;
     right: 0;
     max-height: calc(100dvh - var(--measured-header-height, var(--header-height)));
@@ -54,33 +61,37 @@
     overscroll-behavior: contain;
     background: var(--background);
     padding: var(--space-4) var(--page-gutter) var(--space-6);
-    border-bottom: 1px solid transparent;
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-1);
-    clip-path: inset(0 0 100%);
+    border: 1px solid transparent;
+    border-radius: 1.25rem;
+    box-shadow: 0 12px 28px rgb(15 31 38 / 14%);
     opacity: 0;
     pointer-events: none;
-    transform: translateY(-0.35rem);
+    transform: scale(0.96) translateY(-0.35rem);
+    transform-origin: top right;
     visibility: hidden;
     transition:
-      clip-path 0.2s ease,
       opacity 0.16s ease,
-      transform 0.2s ease,
+      transform 0.24s cubic-bezier(0.2, 0.7, 0.3, 1),
       border-color 0.2s ease,
-      visibility 0s linear 0.2s;
+      visibility 0s linear 0.24s;
 
     &.is-open {
-      clip-path: inset(0);
       opacity: 1;
       pointer-events: auto;
-      transform: translateY(0);
+      transform: scale(1) translateY(0);
       visibility: visible;
-      border-bottom-color: var(--line);
+      border-color: var(--line);
       transition-delay: 0s;
     }
 
-    a {
+    .site-header-nav-content {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-1);
+    }
+
+    .site-header-nav-content > a {
       color: var(--muted);
       font-size: var(--text-sm);
       font-weight: 650;
@@ -89,28 +100,115 @@
       display: flex;
       align-items: center;
       border-radius: var(--radius);
+      opacity: 0;
+      transform: translateX(0.75rem);
       transition:
         color 0.18s,
-        background 0.18s;
+        background 0.18s,
+        opacity 0.16s ease,
+        transform 0.2s ease;
+      transition-delay: 0s, 0s, 0s, 0s;
 
       &:hover,
       &[aria-current] {
         color: var(--accent);
       }
+
+      &:focus-visible {
+        opacity: 1;
+        transform: translateX(0);
+        transition-delay: 0s, 0s, 0s, 0s;
+      }
     }
 
-    .site-header-contact,
-    .site-header-contact[aria-current] {
+    &.is-open .site-header-nav-content > a {
+      opacity: 1;
+      transform: translateX(0);
+      transition-delay: 0s, 0s, 0.25s, 0.25s;
+    }
+
+    &.is-open .site-header-nav-content > a:nth-child(2) {
+      transition-delay: 0s, 0s, 0.31s, 0.31s;
+    }
+
+    &.is-open .site-header-nav-content > a:nth-child(3) {
+      transition-delay: 0s, 0s, 0.37s, 0.37s;
+    }
+
+    &.is-open .site-header-nav-content > a:nth-child(4) {
+      transition-delay: 0s, 0s, 0.43s, 0.43s;
+    }
+
+    &.is-open .site-header-nav-content > a:nth-child(5) {
+      transition-delay: 0s, 0s, 0.49s, 0.49s;
+    }
+
+    &.is-open .site-header-nav-content > a:focus-visible {
+      opacity: 1;
+      transform: translateX(0);
+      transition-delay: 0s, 0s, 0s, 0s;
+    }
+
+    .site-header-nav-content .site-header-contact,
+    .site-header-nav-content .site-header-contact[aria-current] {
       color: var(--button-text);
       background: var(--button);
       justify-content: center;
       margin-top: var(--space-2);
     }
 
-    .site-header-contact:hover {
+    .site-header-nav-content .site-header-contact:hover {
       background: var(--accent);
       color: var(--accent-text);
     }
+  }
+
+  .site-header-menu-icon {
+    position: relative;
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+
+    > span {
+      position: absolute;
+      left: 0.25rem;
+      width: 1rem;
+      height: 2px;
+      border-radius: 2px;
+      background: currentcolor;
+      transform-origin: center;
+      transition:
+        top 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.14s ease;
+    }
+
+    > span:nth-child(1) {
+      top: 0.32rem;
+    }
+
+    > span:nth-child(2) {
+      top: 0.68rem;
+    }
+
+    > span:nth-child(3) {
+      top: 1.04rem;
+    }
+  }
+
+  .site-header-menu[aria-expanded='true'] .site-header-menu-icon > span:nth-child(1) {
+    top: 0.68rem;
+    transform: rotate(45deg);
+  }
+
+  .site-header-menu[aria-expanded='true'] .site-header-menu-icon > span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0.2);
+  }
+
+  .site-header-menu[aria-expanded='true'] .site-header-menu-icon > span:nth-child(3) {
+    top: 0.68rem;
+    transform: rotate(-45deg);
   }
 
   .site-header-actions {
@@ -164,18 +262,31 @@
       max-height: none;
       overflow: visible;
       border: 0;
-      clip-path: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
       opacity: 1;
       pointer-events: auto;
       transform: none;
       visibility: visible;
       transition: none;
 
-      a {
-        padding: var(--space-3) 0;
+      .site-header-nav-content {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-4);
+        visibility: visible;
+        transition: none;
       }
 
-      .site-header-contact {
+      .site-header-nav-content > a {
+        padding: var(--space-3) 0;
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+
+      .site-header-nav-content .site-header-contact {
         margin: 0;
         padding-inline: var(--space-5);
       }
@@ -189,15 +300,21 @@
 
 @media (prefers-reduced-motion: reduce) {
   .site-header {
-    .site-header-nav {
+    .site-header-nav,
+    .site-header-nav-content > a,
+    .site-header-menu-icon > span {
       transition: none;
     }
 
     .site-header-nav.is-open {
-      clip-path: inset(0);
       opacity: 1;
       transform: none;
       visibility: visible;
+    }
+
+    .site-header-nav.is-open .site-header-nav-content > a {
+      opacity: 1;
+      transform: none;
     }
   }
 }

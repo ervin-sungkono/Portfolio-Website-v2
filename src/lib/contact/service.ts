@@ -1,6 +1,13 @@
 import 'server-only';
 import nodemailer from 'nodemailer';
-import { captchaTokenMaxLength, emailText, type ContactMessage } from './validation';
+import { Contact, type ContactMessage } from './validation';
+
+const captchaAction = 'contact';
+const captchaMinimumScore = 0.5;
+
+function normalizeHostname(hostname: string) {
+  return hostname.toLowerCase().replace(/\.$/, '');
+}
 
 export function mailConfigured() {
   return Boolean(process.env.EMAIL && process.env.EMAIL_PASS);
@@ -23,18 +30,19 @@ export async function sendContactEmail(data: ContactMessage) {
     to: sender,
     replyTo: data.email,
     subject: `Portfolio: ${data.subject}`,
-    text: emailText(data),
+    text: Contact.formatEmail(data),
   });
   if (!result.accepted.length) {
     throw new Error('Mail was not accepted by the provider');
   }
 }
 
-export async function verifyCaptcha(token: string) {
-  if (!token || token.length > captchaTokenMaxLength) {
+export async function verifyCaptcha(token: string, expectedHostname: string) {
+  const secret = captchaSecret();
+  if (!token || token.length > Contact.captchaTokenMaxLength || !secret || !expectedHostname) {
     return false;
   }
-  const body = new URLSearchParams({ secret: captchaSecret()!, response: token });
+  const body = new URLSearchParams({ secret, response: token });
   const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
     method: 'POST',
     body,
@@ -43,6 +51,20 @@ export async function verifyCaptcha(token: string) {
   if (!response.ok) {
     throw new Error('Captcha service unavailable');
   }
-  const result = (await response.json()) as { success?: boolean };
-  return result.success === true;
+  const result = (await response.json()) as {
+    success?: unknown;
+    action?: unknown;
+    hostname?: unknown;
+    score?: unknown;
+  };
+  return (
+    result.success === true &&
+    result.action === captchaAction &&
+    typeof result.hostname === 'string' &&
+    normalizeHostname(result.hostname) === normalizeHostname(expectedHostname) &&
+    typeof result.score === 'number' &&
+    Number.isFinite(result.score) &&
+    result.score >= captchaMinimumScore &&
+    result.score <= 1
+  );
 }

@@ -1,19 +1,38 @@
 .scroll-hero {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 
-  &[data-pinned='true'] {
-    overflow-x: clip;
+  .scroll-hero-visual {
+    min-width: 0;
   }
 
   .scroll-hero-visual-stack {
-    display: grid;
+    display: flex;
     min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
   }
 
   .scroll-hero-slide {
-    grid-area: 1 / 1;
+    flex: 0 0 100%;
     min-width: 0;
-    transform-origin: right bottom;
+    max-width: 100%;
+    scroll-snap-align: start;
+  }
+
+  &[data-pinned='true'] {
+    .scroll-hero-visual-stack {
+      display: grid;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+
+    .scroll-hero-slide {
+      grid-area: 1 / 1;
+    }
   }
 
   [data-parallax='hero-image'] {

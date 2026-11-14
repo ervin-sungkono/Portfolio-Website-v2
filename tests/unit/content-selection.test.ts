@@ -24,6 +24,7 @@ function project(slug: string, overrides: Partial<Project> = {}): Project {
     image: 'https://example.com/image.png',
     topics: [],
     category: 'Web',
+    year: 2026,
     source: null,
     demo: null,
     ...overrides,

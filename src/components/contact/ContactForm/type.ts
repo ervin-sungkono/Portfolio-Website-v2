@@ -1,7 +1,6 @@
-export type Captcha = {
-  render: (element: HTMLElement, options: Record<string, unknown>) => number;
-  execute: (id: number) => void;
-  reset: (id: number) => void;
+export type Recaptcha = {
+  ready: (callback: () => void) => void;
+  execute: (siteKey: string, options: { action: string }) => Promise<string>;
 };
 
 export type ContactFormProps = {
@@ -10,7 +9,6 @@ export type ContactFormProps = {
 
 declare global {
   interface Window {
-    grecaptcha?: Captcha;
-    portfolioCaptchaReady?: () => void;
+    grecaptcha?: Recaptcha;
   }
 }

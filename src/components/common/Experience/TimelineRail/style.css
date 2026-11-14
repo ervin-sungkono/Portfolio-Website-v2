@@ -1,0 +1,22 @@
+.experience-section-timeline-rail {
+  position: absolute;
+  top: 0.45rem;
+  bottom: 0.5rem;
+  left: 0.33rem;
+  width: 1px;
+  pointer-events: none;
+}
+
+.experience-section-timeline-progress {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: top;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experience-section-timeline-rail {
+    display: none;
+  }
+}

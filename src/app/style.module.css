@@ -9,6 +9,25 @@
   }
 }
 
+.engineering {
+  border-top: 1px solid var(--line);
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
+
+  > div {
+    max-width: 65ch;
+  }
+
+  h2 {
+    margin: 0 0 var(--space-4);
+    font-size: clamp(1.875rem, 1.5rem + 1.1vw, 2.75rem);
+  }
+
+  p:not(:global(.eyebrow)) {
+    color: var(--muted);
+    line-height: 1.7;
+  }
+}
+
 @media (width >= 64rem) {
   .home > [data-scroll-scene] > section {
     grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);

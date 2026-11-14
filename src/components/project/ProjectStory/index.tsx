@@ -1,5 +1,4 @@
-import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
-import { ExternalLink } from '@/components/common/ExternalLink';
+import { Button } from '@/components/common/Button';
 import styles from './style.module.css';
 import type { ProjectStoryProps } from './type';
 
@@ -32,7 +31,9 @@ export function ProjectStory({ project, study }: ProjectStoryProps) {
         <section className={styles.chapter} aria-labelledby="overview">
           <p className="editorial-label">Overview</p>
           <h2 id="overview">About the Project</h2>
-          <p>{project.details || study?.context || project.description}</p>
+          <p className={styles.description}>
+            {project.details || study?.context || project.description}
+          </p>
           {study && (
             <>
               <h3>The Problem</h3>
@@ -46,12 +47,14 @@ export function ProjectStory({ project, study }: ProjectStoryProps) {
             </>
           )}
           {project.source && (
-            <ExternalLink
+            <Button
+              kind="external"
               href={project.source}
-              className={`text-link ${styles.implementationLink}`}
+              variant="text"
+              className={styles.implementationLink}
             >
-              Explore the Implementation <ArrowUpRightIcon size={17} aria-hidden="true" />
-            </ExternalLink>
+              Explore the Implementation
+            </Button>
           )}
         </section>
 
@@ -80,9 +83,14 @@ export function ProjectStory({ project, study }: ProjectStoryProps) {
                   <h3>Next Validation Step</h3>
                   <p>{study.nextStep}</p>
                 </div>
-                <ExternalLink href={study.reference.href} className="text-link section-link">
-                  {study.reference.label} <ArrowUpRightIcon size={17} aria-hidden="true" />
-                </ExternalLink>
+                <Button
+                  kind="external"
+                  href={study.reference.href}
+                  variant="text"
+                  className="section-link"
+                >
+                  {study.reference.label}
+                </Button>
               </div>
             </section>
           </>

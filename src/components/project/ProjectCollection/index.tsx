@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
+import { Button } from '@/components/common/Button';
 import { ProjectCard } from '@/components/common/ProjectCard';
 import { imageSizes } from '@/lib/image-sizes';
 import styles from './style.module.css';
@@ -67,9 +66,9 @@ export function ProjectCollection({
         <div className="empty-state">
           <h2>No Projects Found.</h2>
           <p>Try another search or browse the full collection.</p>
-          <Link href="/project" className="text-link">
-            Clear Filters <ArrowRightIcon size={17} aria-hidden="true" />
-          </Link>
+          <Button kind="link" href="/project" variant="text">
+            Clear Filters
+          </Button>
         </div>
       ) : null}
     </>

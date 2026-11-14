@@ -1,4 +1,4 @@
-import { ExternalLink } from '@/components/common/ExternalLink';
+import { Button } from '@/components/common/Button';
 import type { getSiteContent } from '@/lib/content';
 
 export function PublishedSocialLinks({
@@ -12,9 +12,9 @@ export function PublishedSocialLinks({
   return (
     <nav className="hero-actions" aria-label="Published social links">
       {links.map(({ label, url }) => (
-        <ExternalLink key={label} href={url} className="text-link">
+        <Button key={label} kind="external" href={url} variant="text">
           {label}
-        </ExternalLink>
+        </Button>
       ))}
     </nav>
   );

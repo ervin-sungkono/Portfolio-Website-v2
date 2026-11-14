@@ -2,7 +2,7 @@
 
 Portfolio built with Next.js 16.4 App Router, React, and strict TypeScript. Public pages render on the server with focused client components for navigation, contact, and decorative motion. The owner can manage published projects, homepage copy, taxonomy, and images through a GitHub-backed `/admin` workspace without a database or separate backend.
 
-Development starts from `dev`. The previous Neon-based [PR #3](https://github.com/ervin-sungkono/Portfolio-Website-v2/pull/3) was closed without merging; this implementation follows the separate public GitHub content repository architecture. See [verification](docs/verification.md) for dated checks and remaining integration work.
+Development starts from `dev`. See [verification](docs/verification.md) for dated checks and remaining integration work.
 
 ## Development
 
@@ -14,7 +14,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Configure the server-side GitHub PAT and content repository before reading public content locally; the Dribbble token supplies selected design details. Owner sign-in also needs the Auth.js settings. See [CMS setup](docs/architecture.md#github-cms). Contact provider credentials are needed only for live contact integration. ESLint applies the Next.js Core Web Vitals and TypeScript recommendations; Stylelint applies the standard CSS rules. Both enforce LF line endings and final newlines, while `.editorconfig` and `.gitattributes` set the repository defaults. The available checks are:
+Configure the server-side GitHub PAT and content repository before reading public content locally; the Dribbble token supplies selected design details. Owner sign-in also needs the Auth.js settings. See [CMS setup](docs/architecture.md#github-cms). Contact provider credentials are needed only for live contact integration. ESLint applies the Next.js Core Web Vitals and TypeScript recommendations; Stylelint applies the standard CSS rules. Both enforce LF line endings and final newlines; `.gitattributes` sets the repository text-file defaults. The available checks are:
 
 ```sh
 npm run typecheck
@@ -68,32 +68,40 @@ The public fixture does not test real OAuth or Dribbble. Form tests mock CAPTCHA
 
 To exercise the public browser suite against an already-running `http://localhost:3000`, use `npm run test:live`. It does not start or restart the server; contact form requests are intercepted. Assertions that name projects assume the expected portfolio content is present in that server's configuration.
 
+## Finding the code
+
+| Task                                      | Start here                                                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Change a page or its metadata             | `src/app`, then its section in `src/components`                                                                    |
+| Change shared buttons or links            | `src/components/common/Button`, `ExternalLink`, and `src/styles/globals.css`                                       |
+| Change shared motion or the About artwork | `src/components/common/Typewriter`, `Reveal`, `PointerSurface`, and `src/components/about/AboutIntro/AboutArtwork` |
+| Trace portfolio content                   | `src/lib/content.ts` and `src/lib/cms/public.ts`                                                                   |
+| Change CMS editing or local drafts        | `src/components/admin/CmsEditor` and `src/components/admin/CmsDraftProvider`                                       |
+| Trace CMS sign-in or publishing           | `src/lib/cms/auth.ts`, `src/app/api/cms/route.ts`, and `src/lib/cms/draft-finalization.ts`                         |
+| Change contact validation or delivery     | `src/components/contact/ContactForm`, `src/app/api/contact/route.ts`, and `src/lib/contact`                        |
+
+The [architecture flow map](docs/architecture.md#request-and-publishing-flows) connects these entry points to their supporting modules. Browser and HTTP fixture helpers live under `tests/support` and `tests/http`.
+
 ## Documentation
 
-The documentation was consolidated on **23 October 2026 (Asia/Jakarta)**. Each topic has one primary reference:
+Each topic has one primary reference:
 
 | Document                                                                      | Contents                                                                                                          |
 | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | [Architecture and operations](docs/architecture.md)                           | Code/content boundaries, provenance, SEO, contact configuration, current image delivery, and release constraints. |
-| [Visual system, responsive layout, and motion](docs/responsive-and-motion.md) | Design tokens, page composition, accessibility, hero crossfade, parallax, cursor, and particles.                  |
-| [Verification and remaining work](docs/verification.md)                       | Current repository observations, automated coverage, consolidated dated evidence, and unresolved checks.          |
+| [Visual system, responsive layout, and motion](docs/responsive-and-motion.md) | Design tokens, responsive behavior, accessibility, hero motion, parallax, and cursor behavior.                    |
+| [Verification and remaining work](docs/verification.md)                       | Repeatable checks, historical evidence, and remaining release checks.                                             |
 
 `images.unoptimized` is currently enabled as a temporary workaround. See [image delivery](docs/architecture.md#image-delivery) before relying on earlier optimizer/cache results. Component structure and style ownership are documented in [architecture](docs/architecture.md#code-boundaries).
 
 ## Updating content
 
-Portfolio content is read from the configured public GitHub repository at build time and after on-demand revalidation. The owner workspace edits projects, homepage copy, taxonomy, and the selected Dribbble shot IDs; `/admin/import` maps accessible GitHub repositories into project drafts. Profile, skills, project walkthroughs, and the ordered design selection are in `content/portfolio.json`. Design titles, links, and images come from Dribbble at runtime. There is no checked-in application data fallback. For direct GitHub edits to project files, update `content/project-index.json` when adding or removing a project, then use **Refresh public content**; refresh only invalidates caches and does not rebuild the index.
+Portfolio content is read from the configured public GitHub repository during prerendering and when the server regenerates cached content. The owner workspace edits projects, homepage copy, taxonomy, and the selected Dribbble shot IDs; `/admin/import` maps accessible GitHub repositories into project drafts. Profile, skills, project walkthroughs, and the ordered design selection are in `content/portfolio.json`. Selected design details come from Dribbble through a server-side cache. Cache invalidation or a cache miss can trigger provider requests after the build. There is no checked-in application data fallback. Direct GitHub edits do not automatically invalidate the cache. When adding or removing projects, update `content/project-index.json`; cached public content may remain stale until it regenerates or a later CMS publication invalidates it.
 
-Edits in the owner workspace stay in this browser's Cache Storage until **Submit all changes**. They remain after a reload in the same browser profile, but are not uploaded or synchronized to another browser or device before submission. CMS editing requires a secure browser context with Web Locks support and allows one `/admin` or `/admin/import` tab per origin at a time. A browser prompt warns before leaving while a draft save is pending or still needs a retry. Browser storage quotas, eviction, or clearing site data can still remove a draft. The final action confirms and publishes the saved content and selected images in one Git commit. A content conflict keeps the local draft available for review; after a commit succeeds, **Retry public refresh** only retries cache invalidation and does not submit another commit.
+The CMS dashboard shows projects and taxonomy in tables, designs and repository images in card grids, and the site profile in an inline multi-step form. Project import is available in Projects. Editing steps keep the current browser draft; image deletions and their reference changes are also staged locally. Edits stay in this browser's Cache Storage until **Submit draft**. **Delete draft** asks for confirmation before removing unsubmitted changes. Drafts remain after a reload in the same browser profile, but are not uploaded or synchronized to another browser or device before submission. CMS editing requires a secure browser context with Web Locks support and allows one `/admin` or `/admin/import` tab per origin at a time. A browser prompt warns before leaving while a draft save is pending or still needs a retry. Browser storage quotas, eviction, or clearing site data can still remove a draft. Submitting shows a change review and publishes the confirmed draft in one Git commit. A content conflict keeps the local draft available for review. **Retry public refresh** appears only when a successful commit leaves cache invalidation pending; retrying does not submit another commit.
 
-Follow [GitHub CMS setup and operation](docs/architecture.md#github-cms) for credentials, initialization, importing, and publishing. For a legacy content review, use the [LLM mapping instructions](docs/web-assets-migration-agent.md). The content repository must be separate from the application and must not be a Vercel deployment source. Content publishes invalidate ISR without redeploying.
+Follow [GitHub CMS setup and operation](docs/architecture.md#github-cms) for credentials, initialization, importing, and publishing. The content repository must be separate from the application and must not be a Vercel deployment source. Content publishes invalidate ISR without redeploying.
 
-Run `npm run test:cms:browser` for the isolated production CMS browser workflow, `npm run test:http:fixture` for its real HTTP boundary checks, or `npm run test:cms:fixture` for both. They use simulated GitHub storage and encrypted test sessions, never a real GitHub write or email. The runner builds `.next` in the checkout where it is invoked and uses port 3104. If a development server is using that checkout's `.next`, run the fixture from an isolated copy and rebuild normally afterward.
-
-These commands require Node.js 24. For example, copy the repository to `artifacts/cms-verification`, open a shell in that copy, then run:
-
-```powershell
-npm run test:cms:fixture
-```
+CI builds with the `cms-runtime` fixture, then runs `npx playwright test --config=playwright.cms.config.ts` in a separate job with isolated fixture credentials and override storage. CMS unit and API/storage integration coverage is available through `npm test`; these tests use mocks and never make real GitHub writes or send email.
 
 Contact variables and provider behavior are documented in [contact integration](docs/architecture.md#contact-integration) and `.env.example`. Professional content expansion remains deferred. Read [AGENTS.md](AGENTS.md) before implementation work.

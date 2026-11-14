@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowRightIcon, ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
+import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
+import { Button } from '@/components/common/Button';
 import { ExternalLink } from '@/components/common/ExternalLink';
 import { ParallaxImage } from '@/components/common/ParallaxImage';
 import { Reveal } from '@/components/common/Reveal';
@@ -65,16 +65,24 @@ export async function DesignPreview() {
                 )}
               </div>
               <div className="design-caption">
-                <h3>{design.title.replace(' - ', ': ')}</h3>
+                <div>
+                  <p className={styles.designMeta}>Design · Dribbble</p>
+                  <h3>{design.title.replace(' - ', ': ')}</h3>
+                </div>
                 <ArrowUpRightIcon size={19} aria-hidden="true" />
               </div>
             </ExternalLink>
           </Reveal>
         ))}
       </div>
-      <Link href="/design" className={`text-link section-link ${styles.collectionLink}`}>
-        Explore Designs <ArrowRightIcon size={18} aria-hidden="true" />
-      </Link>
+      <Button
+        kind="link"
+        href="/design"
+        variant="text"
+        className={`section-link ${styles.collectionLink}`}
+      >
+        Explore Designs
+      </Button>
     </section>
   );
 }

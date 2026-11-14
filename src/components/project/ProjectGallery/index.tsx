@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '@/components/common/Button';
+
 import Image from 'next/image';
 import { useId, useRef, useState, useSyncExternalStore } from 'react';
 import type { KeyboardEvent } from 'react';
@@ -151,9 +153,11 @@ export function ProjectGallery({ project }: ProjectGalleryProps) {
         aria-label={`${project.name} screenshot controls`}
         hidden={!enhanced}
       >
-        <button
+        <Button
+          kind="action"
+          variant="icon"
           type="button"
-          className={`icon-button ${styles.control}`}
+          className={styles.control}
           aria-label={`Previous screenshot for ${project.name}`}
           aria-controls={viewportId}
           onClick={() => showSlide(activeIndex - 1)}
@@ -168,15 +172,17 @@ export function ProjectGallery({ project }: ProjectGalleryProps) {
           >
             <path d="m15 18-6-6 6-6" />
           </svg>
-        </button>
+        </Button>
 
         <span className={styles.position} aria-hidden="true">
           {activeIndex + 1} / {images.length}
         </span>
 
-        <button
+        <Button
+          kind="action"
+          variant="icon"
           type="button"
-          className={`icon-button ${styles.control}`}
+          className={styles.control}
           aria-label={`Next screenshot for ${project.name}`}
           aria-controls={viewportId}
           onClick={() => showSlide(activeIndex + 1)}
@@ -191,7 +197,7 @@ export function ProjectGallery({ project }: ProjectGalleryProps) {
           >
             <path d="m9 18 6-6-6-6" />
           </svg>
-        </button>
+        </Button>
 
         <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
           Image {activeIndex + 1} of {images.length}

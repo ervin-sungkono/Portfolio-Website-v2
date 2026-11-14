@@ -11,19 +11,10 @@ for (const theme of ['light', 'dark'] as const) {
       route.fulfill({
         contentType: 'application/javascript',
         body: `window.grecaptcha = {
-          render: function(container) {
-            const badge = document.createElement('div');
-            badge.className = 'grecaptcha-badge';
-            badge.style.width = '256px';
-            badge.style.height = '60px';
-            const inner = document.createElement('div');
-            inner.style.width = '256px';
-            badge.appendChild(inner);
-            container.appendChild(badge);
-            return 0;
-          }
+          ready: callback => callback(),
+          execute: () => Promise.resolve('test-captcha-token')
         };
-        window.portfolioCaptchaReady?.();`,
+        document.body.insertAdjacentHTML('beforeend', '<div class="grecaptcha-badge"></div>');`,
       }),
     );
 
@@ -35,7 +26,8 @@ for (const theme of ['light', 'dark'] as const) {
         await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
         if (route === '/contact') {
-          await expect(page.locator('.grecaptcha-badge')).toBeVisible();
+          await expect(page.locator('.grecaptcha-badge')).toHaveCSS('visibility', 'hidden');
+          await expect(page.getByText(/This site is protected by reCAPTCHA/)).toBeVisible();
         }
         await page.keyboard.press('Tab');
         const skip = page.getByRole('link', { name: 'Skip to Content' });
@@ -57,12 +49,6 @@ for (const theme of ['light', 'dark'] as const) {
           await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
           const enlarged = await documentWidth();
           expect(enlarged.actual, `${theme} ${width}px ${route} enlarged text overflow`).toBeLessThanOrEqual(enlarged.viewport + 1);
-          if (route === '/contact') {
-            const badge = await page.locator('.grecaptcha-badge').boundingBox();
-            expect(badge).not.toBeNull();
-            expect(badge!.x).toBeGreaterThanOrEqual(0);
-            expect(badge!.x + badge!.width).toBeLessThanOrEqual(width);
-          }
         }
       }
     }
@@ -76,7 +62,7 @@ test('mobile menu remains keyboard accessible on a short screen', async ({ page 
     document.documentElement.style.fontSize = '200%';
   });
 
-  const menu = page.getByRole('button', { name: 'Open menu' });
+  const menu = page.locator('.site-header-menu');
   await page.getByRole('link', { name: 'Skip to Content' }).focus();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
@@ -85,8 +71,13 @@ test('mobile menu remains keyboard accessible on a short screen', async ({ page 
   await page.keyboard.press('Enter');
   const close = page.getByRole('button', { name: 'Close menu' });
   await expect(close).toHaveAttribute('aria-expanded', 'true');
+  await expect(
+    page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Home' }),
+  ).toBeVisible();
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Home' })).toBeFocused();
+  const home = page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Home' });
+  await expect(home).toBeFocused();
+  await expect(home).toHaveCSS('opacity', '1');
   await page.keyboard.press('Escape');
   await expect(menu).toBeFocused();
   await expect(menu).toHaveAttribute('aria-expanded', 'false');
@@ -97,4 +88,40 @@ test('mobile menu remains keyboard accessible on a short screen', async ({ page 
   await expect(contact).toBeInViewport();
   await page.keyboard.press('Tab');
   await expect(menu).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('mobile menu scales before staggering links and opens immediately for reduced motion', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+
+  const menu = page.locator('.site-header-menu');
+  const navigation = page.getByRole('navigation', { name: 'Primary' });
+  const links = navigation.locator('.site-header-nav-content > a');
+  await menu.click();
+
+  const state = await links.evaluateAll((elements) =>
+    elements.map((element) => {
+      const style = getComputedStyle(element);
+      return {
+        opacity: style.opacity,
+        delay: Number.parseFloat(style.transitionDelay.split(',')[2]),
+      };
+    }),
+  );
+  expect(state[0]?.opacity).toBe('0');
+  expect(state[0]?.delay).toBeGreaterThan(0.24);
+  expect(state.every((item, index) => index === 0 || item.delay > state[index - 1]!.delay)).toBe(
+    true,
+  );
+  await expect(links.first()).toHaveCSS('opacity', '1');
+  await expect(links.last()).toHaveCSS('opacity', '1');
+
+  await menu.click();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await menu.click();
+  await expect(links.first()).toHaveCSS('opacity', '1');
+  await expect(links.first()).toHaveCSS('transform', 'none');
 });

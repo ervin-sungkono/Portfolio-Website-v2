@@ -326,7 +326,7 @@ test('updates target geometry through scrolling and reflow, then releases when t
   await expect(page.locator('html')).toHaveAttribute('data-custom-cursor', 'active');
 });
 
-test('restores the native cursor over inputs, editable content, and disabled controls', async ({
+test('frames contact inputs and restores the native cursor over editable content and disabled controls', async ({
   page,
 }) => {
   await page.goto('/contact');
@@ -339,10 +339,12 @@ test('restores the native cursor over inputs, editable content, and disabled con
   const nameInput = page.getByLabel('Name');
   await nameInput.scrollIntoViewIfNeeded();
   await moveToFraction(page, nameInput);
-  await expect(page.locator('html')).not.toHaveAttribute('data-custom-cursor', 'active');
+  await expect(page.locator('html')).toHaveAttribute('data-custom-cursor', 'active');
+  await expect(cursor(page)).toHaveAttribute('data-cursor-hovered', 'true');
+  await expectFrameToMatch(page, nameInput);
   await expect
     .poll(() => nameInput.evaluate((element) => getComputedStyle(element).cursor))
-    .not.toBe('none');
+    .toBe('none');
   await nameInput.fill('Ada Lovelace');
   await expect(nameInput).toHaveValue('Ada Lovelace');
 

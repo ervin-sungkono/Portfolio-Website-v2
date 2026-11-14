@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRightIcon, ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
+import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
+import { Button } from '@/components/common/Button';
 import { ProjectCard } from '@/components/common/ProjectCard';
 import { Reveal } from '@/components/common/Reveal';
 import { getDesigns, type Design, type Project } from '@/lib/content';
@@ -26,9 +27,9 @@ export async function SelectedProjects({ projects }: { projects: readonly Projec
         <h2 id="selected-heading">Selected Projects.</h2>
         <p>Interfaces, integrations, and the engineering behind them.</p>
       </Reveal>
-      <div className={styles.bentoGrid}>
-        <div className={styles.primaryProject}>
-          {mainProject && (
+      <div className={styles.bentoGrid} data-project-count={Math.min(projects.length, 3)}>
+        {mainProject && (
+          <div className={styles.primaryProject}>
             <ProjectCard
               project={mainProject}
               featured
@@ -36,28 +37,28 @@ export async function SelectedProjects({ projects }: { projects: readonly Projec
               sizes={imageSizes.homePrimary}
               parallaxTravel={1.5}
             />
-          )}
-        </div>
-        <div className={styles.secondaryProject}>
-          {secondaryProject && (
+          </div>
+        )}
+        {secondaryProject && (
+          <div className={styles.secondaryProject}>
             <ProjectCard
               project={secondaryProject}
               index={2}
               sizes={imageSizes.homeSecondary}
               parallaxTravel={1}
             />
-          )}
-        </div>
-        <div className={styles.additionalProject}>
-          {additionalProject && (
+          </div>
+        )}
+        {additionalProject && (
+          <div className={styles.additionalProject}>
             <ProjectCard
               project={additionalProject}
               index={3}
               sizes={imageSizes.homeAdditional}
               parallaxTravel={1}
             />
-          )}
-        </div>
+          </div>
+        )}
         <Link href="/design" className={styles.designTeaser} data-cursor="link">
           <span className={styles.teaserKicker}>Interface studies</span>
           {design && (
@@ -78,9 +79,14 @@ export async function SelectedProjects({ projects }: { projects: readonly Projec
           </span>
         </Link>
       </div>
-      <Link href="/project" className={`text-link section-link ${styles.collectionLink}`}>
-        Explore Projects <ArrowRightIcon size={18} aria-hidden="true" />
-      </Link>
+      <Button
+        kind="link"
+        href="/project"
+        variant="text"
+        className={`section-link ${styles.collectionLink}`}
+      >
+        Explore Projects
+      </Button>
     </section>
   );
 }

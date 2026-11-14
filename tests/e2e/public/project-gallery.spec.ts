@@ -38,6 +38,26 @@ test.describe('project screenshot carousel', () => {
     });
     await expect(gallery).toHaveAttribute('aria-roledescription', 'carousel');
 
+    const frames = await gallery.locator('figure').evaluateAll((figures) =>
+      figures.map((figure) => {
+        const frame = figure.firstElementChild!;
+        const image = frame.querySelector('img')!;
+        return {
+          frameHeight: frame.getBoundingClientRect().height,
+          imageHeight: image.getBoundingClientRect().height,
+          fit: getComputedStyle(image).objectFit,
+        };
+      }),
+    );
+    for (const frame of frames) {
+      expect(frame.frameHeight).toBeCloseTo(frames[0].frameHeight, 0);
+      expect(frame.imageHeight).toBeCloseTo(frame.frameHeight - 2, 0);
+      expect(frame.fit).toBe('contain');
+    }
+    expect(frames[0].frameHeight).toBeLessThanOrEqual(
+      (await page.evaluate(() => innerHeight)) * 0.7 + 1,
+    );
+
     const previous = gallery.getByRole('button', { name: 'Previous screenshot for Frontend Mentor' });
     const next = gallery.getByRole('button', { name: 'Next screenshot for Frontend Mentor' });
     const status = gallery.getByRole('status');

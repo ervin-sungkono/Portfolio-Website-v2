@@ -1,6 +1,5 @@
-import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { ContactForm } from '@/components/contact/ContactForm';
-import { ExternalLink } from '@/components/common/ExternalLink';
+import { Button } from '@/components/common/Button';
 import { getPortfolio } from '@/lib/content';
 import styles from './style.module.css';
 
@@ -15,9 +14,9 @@ export async function ContactDetails() {
           Share a little context about your team or project. You can also connect with me on
           LinkedIn.
         </p>
-        <ExternalLink href={profile.linkedin} className="text-link">
-          View LinkedIn <ArrowUpRightIcon size={17} aria-hidden="true" />
-        </ExternalLink>
+        <Button kind="external" href={profile.linkedin} variant="text">
+          View LinkedIn
+        </Button>
       </div>
       <ContactForm siteKey={process.env.NEXT_PUBLIC_RECAPTCHA_KEY} />
     </section>

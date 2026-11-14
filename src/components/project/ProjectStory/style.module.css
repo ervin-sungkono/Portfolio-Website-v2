@@ -84,6 +84,10 @@
   margin-top: var(--space-5);
 }
 
+.description {
+  white-space: pre-line;
+}
+
 .contents {
   margin-top: var(--space-8);
   display: grid;

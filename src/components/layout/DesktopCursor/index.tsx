@@ -10,10 +10,11 @@ const CURSOR_MEDIA_QUERY =
 const FRAME_MORPH_DURATION = 160;
 const IDLE_FRAME_SIZE = 32;
 const HOVER_FRAME_GAP = 8;
-const INTERACTIVE_SELECTOR = 'a[href], button, [role="button"], [data-cursor]';
+const INTERACTIVE_SELECTOR =
+  'a[href], button, input, textarea, select, [role="button"], [data-cursor]';
 
 function isNativeCursorRegion(element: Element) {
-  if (element.closest('input, textarea, select, iframe')) {
+  if (element.closest('iframe, [data-native-cursor]')) {
     return true;
   }
   const editable = element.closest('[contenteditable]');

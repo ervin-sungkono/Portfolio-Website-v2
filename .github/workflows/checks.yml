@@ -37,4 +37,37 @@ jobs:
           GITHUB_REPO: web-assets
           DRIBBBLE_TOKEN: fixture-dribbble-token
           NODE_OPTIONS: --import=./tests/support/fixtures/public-runtime.mjs
-      - run: npm run test:cms:fixture
+
+  cms-browser:
+    runs-on: ubuntu-latest
+    env:
+      PORT: '3104'
+      CMS_FIXTURE_PORT: '3104'
+      CMS_FIXTURE_PORTFOLIO_OVERRIDE: ${{ runner.temp }}/cms-portfolio-override.json
+      NODE_DISABLE_COMPILE_CACHE: '1'
+      AUTH_SECRET: cms-browser-fixture-secret-with-at-least-thirty-two-characters
+      AUTH_TRUST_HOST: 'true'
+      AUTH_GITHUB_ID: fixture-github-client-id
+      AUTH_GITHUB_SECRET: fixture-github-client-secret
+      GITHUB_PAT: fixture-owner-token
+      DRIBBBLE_TOKEN: fixture-dribbble-token
+      GITHUB_REPO: portfolio-content-fixture
+      NEXT_PUBLIC_RECAPTCHA_KEY: review-test-key
+      EMAIL: ''
+      EMAIL_PASS: ''
+      RECAPTCHA_SECRET: ''
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NODE_OPTIONS: --import=./tests/support/fixtures/cms-runtime.mjs
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config=playwright.cms.config.ts
+        env:
+          NODE_OPTIONS: --import=./tests/support/fixtures/cms-runtime.mjs
