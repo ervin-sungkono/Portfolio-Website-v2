@@ -287,6 +287,33 @@ describe('private CMS HTTP handlers', () => {
     expect(fixtureGitStats()).toEqual(after);
   });
 
+  test('reports stale project and post deletions in order without creating any Git objects', async () => {
+    const snapshot = await getSnapshot(cmsPat);
+    const project = snapshot.projects[0];
+    const post = snapshot.posts[0];
+    const before = fixtureGitStats();
+    const expectedSha = 'f'.repeat(40);
+    const response = await cms.POST(
+      await request('/api/cms', {
+        githubId: cmsPatUserId,
+        origin: cmsBaseUrl,
+        data: {
+          kind: 'finalize',
+          repositoryKey: repositoryKey(snapshot.repository),
+          projects: { upsert: [], delete: [{ slug: project.slug, expectedSha }] },
+          posts: { upsert: [], delete: [{ slug: post.slug, expectedSha }] },
+          media: [],
+        },
+      }),
+    );
+    expect(response.status).toBe(409);
+    expect((await response.json()).conflicts).toEqual([
+      { path: `content/projects/${project.slug}.json`, expectedSha, currentSha: project.sha },
+      { path: `content/posts/${post.slug}.json`, expectedSha, currentSha: post.sha },
+    ]);
+    expect(fixtureGitStats()).toEqual(before);
+  });
+
   test('media staging does not move the ref and final submit writes one atomic commit', async () => {
     const snapshotResponse = await cms.GET(await request('/api/cms', { githubId: cmsPatUserId }));
     expect(snapshotResponse.status).toBe(200);

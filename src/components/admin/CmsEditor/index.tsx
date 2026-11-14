@@ -13,6 +13,7 @@ import {
   technologiesSchema,
   finalizeCmsDraftSchema,
   type Categories,
+  type CmsSnapshot,
   type ProjectDocument,
   type PostDocument,
   type SiteDocument,
@@ -30,12 +31,13 @@ import { PostsPanel } from './PostsPanel';
 import { PublishSummary } from './PublishSummary';
 import { SiteProfilePanel } from './SiteProfilePanel';
 import { TechnologiesPanel } from './TechnologiesPanel';
-import type { BusySection, LoadState, CmsSection, CmsSnapshot, EditorMessage } from './type';
+import type { BusySection, LoadState, CmsSection, EditorMessage } from './type';
 import { errorFrom, parseSnapshot, readJson } from './response';
 import { safeCommitUrl } from './utils';
 import {
   applyDraft,
   bindDraftRepository,
+  emptyProject,
   hasDraftChanges,
   repositoryKey,
   stageProject,
@@ -57,25 +59,6 @@ const sectionLabels: Record<CmsSection, string> = {
   designs: 'Designs',
   images: 'Images',
 };
-
-function emptyProject(): ProjectDocument {
-  return {
-    schemaVersion: 2,
-    title: '',
-    summary: '',
-    description: '',
-    published: false,
-    featured: false,
-    sortOrder: 0,
-    githubRepositoryId: null,
-    year: new Date().getFullYear(),
-    categories: [],
-    technologies: [],
-    tags: [],
-    links: { demo: undefined, source: undefined },
-    media: { cover: '', gallery: [] },
-  };
-}
 
 function emptySite(): SiteDocument {
   return { schemaVersion: 1, siteTitle: '', headline: '', introduction: '', socialLinks: [] };
@@ -312,7 +295,7 @@ export function CmsEditor() {
         if (firstLoad || options.discardSection === 'posts' || !hasPostDraft) {
           const newDraft = firstLoad ? getDraft().newPost : undefined;
           const selected =
-            next.posts?.find((post) => post.slug === selectedPostSlug) || next.posts?.[0];
+            next.posts.find((post) => post.slug === selectedPostSlug) || next.posts[0];
           setSelectedPostSlug(newDraft ? '' : selected?.slug || '');
           setNewPostSlug(newDraft?.slug || '');
           resetPostForm(newDraft?.data || selected?.data || emptyPost());
@@ -429,14 +412,14 @@ export function CmsEditor() {
       setSectionMessage('posts', { tone: 'error', text: 'Enter a valid blog post URL slug.' });
       return;
     }
-    if (!selectedPostSlug && snapshot?.posts?.some((post) => post.slug === slug)) {
+    if (!selectedPostSlug && snapshot?.posts.some((post) => post.slug === slug)) {
       setSectionMessage('posts', {
         tone: 'error',
         text: 'A blog post with this URL slug already exists.',
       });
       return;
     }
-    const baseline = remoteSnapshotRef.current?.posts?.find((post) => post.slug === slug);
+    const baseline = remoteSnapshotRef.current?.posts.find((post) => post.slug === slug);
     if (
       !(await updateDraft((value) => ({
         ...synchronizePost(value, slug, baseline, data),
@@ -453,7 +436,7 @@ export function CmsEditor() {
   }
 
   async function deletePost(slug: string): Promise<boolean> {
-    const current = snapshot?.posts?.find((post) => post.slug === slug);
+    const current = snapshot?.posts.find((post) => post.slug === slug);
     if (
       !current ||
       !(await confirm({
@@ -504,7 +487,7 @@ export function CmsEditor() {
     }
     if (selectedPostSlug || postIsDirty || newPostSlug.trim()) {
       const data = postForm.getValues();
-      const baseline = remoteSnapshotRef.current?.posts?.find(
+      const baseline = remoteSnapshotRef.current?.posts.find(
         (post) => post.slug === selectedPostSlug,
       );
       const saved = await updateDraft((value) =>
@@ -521,7 +504,7 @@ export function CmsEditor() {
       }
     }
     const view = snapshot && applyDraft(remoteSnapshotRef.current ?? snapshot, getDraft());
-    const selected = view?.posts?.find((post) => post.slug === slug);
+    const selected = view?.posts.find((post) => post.slug === slug);
     if (slug && !selected) {
       return false;
     }
@@ -732,7 +715,7 @@ export function CmsEditor() {
       next = synchronizePost(
         next,
         selectedPostSlug,
-        baseline.posts?.find((post) => post.slug === selectedPostSlug),
+        baseline.posts.find((post) => post.slug === selectedPostSlug),
         postForm.getValues(),
       );
     } else if (postForm.formState.isDirty || newPostSlug.trim()) {
@@ -764,14 +747,14 @@ export function CmsEditor() {
         setActiveSection('posts');
         throw new Error('Enter a valid blog post URL slug before submitting.');
       }
-      if (snapshot.posts?.some((post) => post.slug === slug)) {
+      if (snapshot.posts.some((post) => post.slug === slug)) {
         throw new Error('A blog post with this URL slug already exists.');
       }
       next = {
         ...synchronizePost(
           next,
           slug,
-          baseline.posts?.find((post) => post.slug === slug),
+          baseline.posts.find((post) => post.slug === slug),
           next.newPost.data,
         ),
         newPost: undefined,
@@ -797,7 +780,7 @@ export function CmsEditor() {
       }
       setSnapshot(applyDraft(baseline, next));
       if (promotedPostSlug) {
-        const restored = baseline.posts?.find((post) => post.slug === promotedPostSlug);
+        const restored = baseline.posts.find((post) => post.slug === promotedPostSlug);
         setSelectedPostSlug(promotedPostSlug);
         setNewPostSlug('');
         postForm.reset(restored?.data || emptyPost());

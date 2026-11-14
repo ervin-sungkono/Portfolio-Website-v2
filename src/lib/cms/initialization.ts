@@ -17,11 +17,10 @@ import {
   listContentDirectory,
   readContentFile,
   resolveOwner,
-  type CmsSnapshot,
   type RepositoryContext,
   ProjectIndex,
 } from './repository.ts';
-import type { Categories, SiteDocument, Technologies } from './schemas.ts';
+import type { Categories, CmsSnapshot, SiteDocument, Technologies } from './schemas.ts';
 
 const seedSite: SiteDocument = {
   schemaVersion: 1,

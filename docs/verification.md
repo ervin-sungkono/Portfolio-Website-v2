@@ -23,6 +23,18 @@ CI uses a separate job to build with `tests/support/fixtures/cms-runtime.mjs`, t
 
 GitHub Actions workflow definitions describe intended CI checks, not actual run status. Inspect the run for the relevant commit before reporting CI success. Browser coverage is targeted regression coverage, not a full responsive or accessibility audit.
 
+## Full public verification before PR update — 14 November 2026
+
+After the blog integration and architecture cleanup, the read-only public fixture production build and all 43 public Chromium checks passed on Node.js 24.22.1. The full repository Prettier check also passed. Coverage includes blog recovery with and without JavaScript, portfolio route reflow, mobile navigation, project focus and galleries, hero input and motion, theme selection, the cursor, and mocked contact behavior. This supplements the 144 unit/integration and 39 CMS browser checks recorded below; it does not establish current hosted OAuth, provider writes, email delivery, or deployment behavior.
+
+## Architecture simplification — 14 November 2026
+
+Two read-only audits reviewed exported-symbol references, dependencies, module ownership, and duplicate logic against the existing working tree, including the uncommitted blog integration. No confirmed dead production modules or unused direct dependencies were identified. The focused refactor centralized snapshot and Dribbble contracts, project defaults, collection staging, SHA checks, media validation, and date formatting. Source files decreased from 214 to 213 and source lines from 22,485 to 22,416; package.json and the lockfile were unchanged by this review.
+
+On Node.js 24.22.1, all 144 unit/integration tests, application and test typechecks, ESLint, Stylelint, scoped Prettier, whitespace checks, and an isolated CMS production build passed. All 39 CMS Chromium checks and three public blog checks passed against simulated providers. Added checks cover retaining null SHA baselines, avoiding duplicate draft saves, and rejecting ordered project/post deletion conflicts before creating Git objects.
+
+The full public browser suite was not rerun for this focused refactor. Live OAuth/provider writes, email delivery, hosted cache behavior, screen readers, and physical-device performance were not tested. The large editor/importer orchestration and separate index implementations were retained to avoid broader state or publishing changes.
+
 ## Blog and CMS integration — 14 November 2026
 
 On Node.js 24.22.1, 141 unit/integration tests, application and test typechecks, ESLint, Stylelint, scoped Prettier, and whitespace checks passed. Production builds passed with the read-only public fixture and with isolated CMS fixtures containing either no post index or existing published posts. The populated build prerendered the three published fixture articles; unpublished and unindexed drafts were excluded from public discovery.

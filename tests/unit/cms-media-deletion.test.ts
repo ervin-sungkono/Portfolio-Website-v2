@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyDraft } from '@/components/admin/CmsDraftProvider/type';
 import { stageMediaDeletion } from '@/components/admin/CmsEditor/ImagesPanel/media-deletion';
-import type { CmsSnapshot } from '@/components/admin/CmsEditor/type';
-import type { ProjectDocument } from '@/lib/cms/schemas';
+import type { CmsSnapshot, ProjectDocument } from '@/lib/cms/schemas';
 
 const cover = 'media/projects/example/cover.png';
 const gallery = 'media/projects/example/gallery.png';
@@ -41,6 +40,7 @@ const snapshot: CmsSnapshot = {
     data: { one: { label: 'One', icon }, two: { label: 'Two', icon } },
   },
   projects: [{ slug: 'example', sha: 'd'.repeat(40), data: project }],
+  posts: [],
 };
 const current = {
   selectedSlug: 'example',

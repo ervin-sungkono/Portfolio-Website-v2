@@ -94,7 +94,7 @@ export function PostsPanel({
             </tr>
           </thead>
           <tbody>
-            {(snapshot.posts ?? []).map((post) => (
+            {snapshot.posts.map((post) => (
               <tr key={post.slug}>
                 <th scope="row">
                   {post.data.title || post.slug}
@@ -129,7 +129,7 @@ export function PostsPanel({
                 </td>
               </tr>
             ))}
-            {!snapshot.posts?.length && (
+            {!snapshot.posts.length && (
               <tr>
                 <td colSpan={4}>No blog posts yet. Add a post to start writing.</td>
               </tr>

@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/common/Button';
 import { Select } from '@/components/common/Select';
 import { useWatch } from 'react-hook-form';
-import type { ProjectDocument, Technologies } from '@/lib/cms/schemas';
+import { cmsMediaPathSchema, type ProjectDocument, type Technologies } from '@/lib/cms/schemas';
 import { useConfirmDialog } from '../../ConfirmDialog';
 import { useCmsDraft } from '../../CmsDraftProvider';
 import type { DraftMedia } from '../../CmsDraftProvider/type';
@@ -18,8 +18,6 @@ import './style.css';
 const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const maxImageSize = 1024 * 1024;
 const projectSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const mediaPathPattern =
-  /^media\/(?:projects\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-zA-Z0-9][a-zA-Z0-9._-]*\.(?:png|jpe?g|webp)|technologies\/[a-zA-Z0-9][a-zA-Z0-9._-]*\.(?:png|jpe?g|webp|svg))$/i;
 type RepositoryImage = { path: string; sha: string };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -127,7 +125,7 @@ export function ImagesPanel({
             if (
               !isRecord(entry) ||
               typeof entry.path !== 'string' ||
-              !mediaPathPattern.test(entry.path) ||
+              !cmsMediaPathSchema.safeParse(entry.path).success ||
               typeof entry.sha !== 'string' ||
               !/^[a-f0-9]{40}$/i.test(entry.sha)
             ) {

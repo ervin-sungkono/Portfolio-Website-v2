@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { ProjectDocument, Technologies } from '@/lib/cms/schemas';
-import type { CmsSnapshot } from '../type';
+import type { CmsSnapshot, ProjectDocument, Technologies } from '@/lib/cms/schemas';
 
 export type ImageUploadTarget = {
   kind: 'project' | 'technology';

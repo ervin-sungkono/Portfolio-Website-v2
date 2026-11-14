@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PostDocument } from '@/lib/cms/schemas';
+import type { CmsSnapshot, PostDocument } from '@/lib/cms/schemas';
 import { emptyDraft } from '@/components/admin/CmsDraftProvider/type';
 import {
   applyDraft,
@@ -10,7 +10,6 @@ import {
 } from '@/components/admin/CmsEditor/draft';
 import { rebaseReviewedVersions } from '@/components/admin/CmsEditor/conflicts';
 import { summarizePublishDraft } from '@/components/admin/CmsEditor/publish-summary';
-import type { CmsSnapshot } from '@/components/admin/CmsEditor/type';
 
 const post: PostDocument = {
   schemaVersion: 1,
@@ -61,13 +60,24 @@ describe('CMS post drafts', () => {
     expect(bindDraftRepository(draft, 'owner/content@other')).toBeNull();
   });
 
+  it('keeps a new post unversioned and avoids another save for identical values', () => {
+    const draft = emptyDraft('owner/content@main');
+    draft.posts = { upsert: [], delete: [{ slug: 'article', expectedSha: 'a'.repeat(40) }] };
+    const staged = stagePost(draft, 'article', null, post);
+    expect(staged.posts?.delete).toEqual([]);
+    expect(draft.posts.delete).toHaveLength(1);
+    expect(stagePost(staged, 'article', 'b'.repeat(40), post)).toBe(staged);
+    const edited = stagePost(staged, 'article', 'b'.repeat(40), { ...post, title: 'Edited' });
+    expect(edited.posts?.upsert[0].expectedSha).toBeNull();
+  });
+
   it('removes reverted post changes while retaining other drafts', () => {
     let draft = stagePost(emptyDraft('owner/content@main'), 'article', 'd'.repeat(40), {
       ...post,
       title: 'Temporary',
     });
     draft = stagePost(draft, 'new-post', null, post);
-    draft = synchronizePost(draft, 'article', baseline.posts?.[0], post);
+    draft = synchronizePost(draft, 'article', baseline.posts[0], post);
     expect(draft.posts?.upsert.map((item) => item.slug)).toEqual(['new-post']);
   });
 
@@ -91,9 +101,9 @@ describe('CMS post drafts', () => {
       ...emptyDraft('owner/content@main'),
       posts: { upsert: [], delete: [{ slug: 'article', expectedSha: 'd'.repeat(40) }] },
     };
-    const restored = synchronizePost(draft, 'article', baseline.posts?.[0], post);
+    const restored = synchronizePost(draft, 'article', baseline.posts[0], post);
     expect(hasDraftChanges(restored)).toBe(false);
-    const replaced = synchronizePost(draft, 'article', baseline.posts?.[0], {
+    const replaced = synchronizePost(draft, 'article', baseline.posts[0], {
       ...post,
       body: 'Replaced',
     });

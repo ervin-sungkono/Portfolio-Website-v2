@@ -1,11 +1,3 @@
-import type {
-  Categories,
-  PostDocument,
-  ProjectDocument,
-  SiteDocument,
-  Technologies,
-} from '@/lib/cms/schemas';
-
 export type CmsSection =
   | 'projects'
   | 'posts'
@@ -16,15 +8,6 @@ export type CmsSection =
   | 'images';
 
 export type FieldErrorProps = { id: string; message?: string };
-
-export type CmsSnapshot = {
-  repository: { owner: string; name: string; defaultBranch: string };
-  site: { data: SiteDocument; sha: string };
-  categories: { data: Categories; sha: string };
-  technologies: { data: Technologies; sha: string };
-  projects: Array<{ slug: string; data: ProjectDocument; sha: string }>;
-  posts?: Array<{ slug: string; data: PostDocument; sha: string }>;
-};
 
 export type EditorMessage = {
   tone: 'success' | 'error' | 'conflict';

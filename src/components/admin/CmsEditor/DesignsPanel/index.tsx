@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/common/Button';
 import { useCmsDraft } from '../../CmsDraftProvider';
 import { readJson } from '../response';
-import type { DesignsPanelProps, DribbbleShot } from './type';
+import type { DesignsPanelProps } from './type';
+import type { DribbbleShot } from '@/lib/dribbble';
 import './style.css';
 
 type SelectionResponse = {

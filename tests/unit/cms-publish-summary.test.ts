@@ -1,8 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import type { Categories, ProjectDocument, SiteDocument, Technologies } from '@/lib/cms/schemas';
+import type {
+  Categories,
+  CmsSnapshot,
+  ProjectDocument,
+  SiteDocument,
+  Technologies,
+} from '@/lib/cms/schemas';
 import { emptyDraft } from '@/components/admin/CmsDraftProvider/type';
 import { summarizePublishDraft } from '@/components/admin/CmsEditor/publish-summary';
-import type { CmsSnapshot } from '@/components/admin/CmsEditor/type';
 
 function project(title: string, summary = 'Project summary'): ProjectDocument {
   return {
@@ -44,6 +49,7 @@ function snapshot(): CmsSnapshot {
     site: { data: site, sha: '1'.repeat(40) },
     categories: { data: categories, sha: '2'.repeat(40) },
     technologies: { data: technologies, sha: '3'.repeat(40) },
+    posts: [],
     projects: [
       { slug: 'alpha', data: project('Alpha'), sha: '4'.repeat(40) },
       { slug: 'remove-me', data: project('Remove Me'), sha: '5'.repeat(40) },

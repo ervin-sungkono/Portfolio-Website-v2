@@ -9,19 +9,19 @@ import {
   projectSchema,
   technologiesSchema,
   type ProjectDocument,
+  type CmsSnapshot,
   type Technologies,
 } from '@/lib/cms/schemas';
 import { useConfirmDialog } from '../ConfirmDialog';
 import { useCmsDraft } from '../CmsDraftProvider';
-import { applyDraft, bindDraftRepository, repositoryKey } from '../CmsEditor/draft';
+import { applyDraft, bindDraftRepository, emptyProject, repositoryKey } from '../CmsEditor/draft';
 import { CmsMessage } from '../CmsEditor/CmsMessage';
 import { ImagesPanel } from '../CmsEditor/ImagesPanel';
 import { ProjectPanel } from '../CmsEditor/ProjectPanel';
-import type { CmsSnapshot, EditorMessage } from '../CmsEditor/type';
+import type { EditorMessage } from '../CmsEditor/type';
 import { errorFrom, parseSnapshot, readJson } from '../CmsEditor/response';
 import type { ImportRepository } from './type';
 import {
-  emptyProject,
   formatUpdatedAt,
   isHttpsUrl,
   parseRepositories,

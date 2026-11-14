@@ -72,6 +72,17 @@ describe('browser draft conflict handling', () => {
     });
   });
 
+  it('keeps a new project unversioned and avoids another save for identical values', () => {
+    const draft = emptyDraft('owner/repo@master');
+    draft.projects.delete.push({ slug: 'example', expectedSha: 'a'.repeat(40) });
+    const staged = stageProject(draft, 'example', null, project);
+    expect(staged.projects.delete).toEqual([]);
+    expect(draft.projects.delete).toHaveLength(1);
+    expect(stageProject(staged, 'example', 'b'.repeat(40), project)).toBe(staged);
+    const edited = stageProject(staged, 'example', 'b'.repeat(40), { ...project, title: 'Edited' });
+    expect(edited.projects.upsert[0].expectedSha).toBeNull();
+  });
+
   it('updates only reviewed baselines and preserves the draft values', () => {
     const initial = stageProject(
       emptyDraft('owner/repo@master'),

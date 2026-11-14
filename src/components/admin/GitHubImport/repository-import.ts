@@ -1,27 +1,7 @@
-import type { ProjectDocument } from '@/lib/cms/schemas';
+import type { CmsSnapshot, ProjectDocument } from '@/lib/cms/schemas';
 import type { CmsDraft } from '../CmsDraftProvider/type';
-import { stageProject, synchronizeProject } from '../CmsEditor/draft';
-import type { CmsSnapshot } from '../CmsEditor/type';
+import { emptyProject, stageProject, synchronizeProject } from '../CmsEditor/draft';
 import type { ImportRepository } from './type';
-
-export function emptyProject(repositoryId: number | null = null): ProjectDocument {
-  return {
-    schemaVersion: 2,
-    githubRepositoryId: repositoryId,
-    title: '',
-    summary: '',
-    description: '',
-    published: false,
-    featured: false,
-    sortOrder: 0,
-    year: new Date().getFullYear(),
-    categories: [],
-    technologies: [],
-    tags: [],
-    links: { demo: undefined, source: undefined },
-    media: { cover: '', gallery: [] },
-  };
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

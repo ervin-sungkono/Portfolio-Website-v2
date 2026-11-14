@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BlogBody } from '@/components/blog/BlogBody';
-import { formatPublishedDate } from '@/components/blog/formatPublishedDate';
+import { formatPublishedDate } from '@/lib/dates';
 import { Button } from '@/components/common/Button';
 import { findBlogPost, getPortfolio, getBlogPosts } from '@/lib/content';
 import { pageMetadata } from '@/lib/metadata';
